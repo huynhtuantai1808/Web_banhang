@@ -4,17 +4,41 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.db.session import get_db
-from app.models.product import Product
+from app.models.product import Product, Brand, Category
 from app.schemas.product import ProductCreate, ProductOut
+from app.core.security import require_employee
+from app.services.catalog_service import (
+    get_or_create_brand, get_or_create_category, get_brand_name, get_category_name,
+)
 
 router = APIRouter(prefix="/products", tags=["Products"])
+
+
+def _row_to_out(product: Product, brand_name: str | None, category_name: str | None) -> ProductOut:
+    """Ghép entity Product (lưu brand_id/category_id) với tên hãng/danh mục đã join sẵn."""
+    return ProductOut(
+        id=product.id,
+        product_code=product.product_code,
+        name=product.name,
+        description=product.description,
+        brand=brand_name,
+        category=category_name,
+        color=product.color,
+        material=product.material,
+        size_dimension=product.size_dimension,
+        specification=product.specification,
+        price=float(product.price),
+        discount_price=float(product.discount_price) if product.discount_price is not None else None,
+        is_installment_eligible=product.is_installment_eligible,
+        status=product.status,
+    )
 
 
 @router.get("", response_model=list[ProductOut])
 async def list_products(
     keyword: str | None = Query(None, description="Từ khoá tìm kiếm tên sản phẩm"),
-    brand_id: int | None = None,
-    category_id: int | None = None,
+    brand: str | None = Query(None, description="Lọc theo tên hãng"),
+    category: str | None = Query(None, description="Lọc theo tên danh mục"),
     min_price: float | None = None,
     max_price: float | None = None,
     page: int = 1,
@@ -22,14 +46,19 @@ async def list_products(
     db: AsyncSession = Depends(get_db),
 ):
     """Danh mục sản phẩm theo hãng - giá - loại + thanh tìm kiếm."""
-    stmt = select(Product).where(Product.status == "active")
+    stmt = (
+        select(Product, Brand.name, Category.name)
+        .outerjoin(Brand, Product.brand_id == Brand.id)
+        .outerjoin(Category, Product.category_id == Category.id)
+        .where(Product.status == "active")
+    )
 
     if keyword:
         stmt = stmt.where(Product.name.ilike(f"%{keyword}%"))
-    if brand_id:
-        stmt = stmt.where(Product.brand_id == brand_id)
-    if category_id:
-        stmt = stmt.where(Product.category_id == category_id)
+    if brand:
+        stmt = stmt.where(Brand.name.ilike(f"%{brand}%"))
+    if category:
+        stmt = stmt.where(Category.name.ilike(f"%{category}%"))
     if min_price is not None:
         stmt = stmt.where(Product.price >= min_price)
     if max_price is not None:
@@ -37,47 +66,105 @@ async def list_products(
 
     stmt = stmt.offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(stmt)
-    return result.scalars().all()
+    return [_row_to_out(p, b, c) for p, b, c in result.all()]
 
 
 @router.get("/{product_id}", response_model=ProductOut)
 async def get_product(product_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Product).where(Product.id == product_id))
-    product = result.scalar_one_or_none()
-    if not product:
+    stmt = (
+        select(Product, Brand.name, Category.name)
+        .outerjoin(Brand, Product.brand_id == Brand.id)
+        .outerjoin(Category, Product.category_id == Category.id)
+        .where(Product.id == product_id)
+    )
+    result = await db.execute(stmt)
+    row = result.first()
+    if not row:
         raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm")
-    return product
+    return _row_to_out(row[0], row[1], row[2])
 
 
 @router.post("", response_model=ProductOut, status_code=201)
-async def create_product(payload: ProductCreate, db: AsyncSession = Depends(get_db)):
-    """Dành cho nhân viên quản lý — tạo sản phẩm mới (nhập kho ban đầu)."""
-    product = Product(id=uuid.uuid4(), **payload.model_dump())
+async def create_product(
+    payload: ProductCreate,
+    db: AsyncSession = Depends(get_db),
+    _employee_id: str = Depends(require_employee),
+):
+    """Dành cho nhân viên quản lý — nhập sản phẩm mới. Hãng/danh mục nhập tên tự do,
+    hệ thống tự tạo mới nếu chưa tồn tại (giống cách file Excel/CSV import hoạt động)."""
+    existing = await db.execute(select(Product).where(Product.product_code == payload.product_code))
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail=f"Mã sản phẩm '{payload.product_code}' đã tồn tại")
+
+    brand_id = await get_or_create_brand(db, payload.brand)
+    category_id = await get_or_create_category(db, payload.category)
+
+    product = Product(
+        id=uuid.uuid4(),
+        product_code=payload.product_code,
+        name=payload.name,
+        description=payload.description,
+        brand_id=brand_id,
+        category_id=category_id,
+        color=payload.color,
+        material=payload.material,
+        size_dimension=payload.size_dimension,
+        specification=payload.specification,
+        price=payload.price,
+        discount_price=payload.discount_price,
+        is_installment_eligible=payload.is_installment_eligible,
+    )
     db.add(product)
     await db.commit()
     await db.refresh(product)
-    return product
+
+    brand_name = await get_brand_name(db, product.brand_id)
+    category_name = await get_category_name(db, product.category_id)
+    return _row_to_out(product, brand_name, category_name)
 
 
 @router.put("/{product_id}", response_model=ProductOut)
-async def update_product(product_id: uuid.UUID, payload: ProductCreate, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Product).where(Product.id == product_id))
-    product = result.scalar_one_or_none()
+async def update_product(
+    product_id: uuid.UUID,
+    payload: ProductCreate,
+    db: AsyncSession = Depends(get_db),
+    _employee_id: str = Depends(require_employee),
+):
+    product = await db.get(Product, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm")
 
-    for field, value in payload.model_dump().items():
-        setattr(product, field, value)
+    brand_id = await get_or_create_brand(db, payload.brand)
+    category_id = await get_or_create_category(db, payload.category)
+
+    product.product_code = payload.product_code
+    product.name = payload.name
+    product.description = payload.description
+    product.brand_id = brand_id
+    product.category_id = category_id
+    product.color = payload.color
+    product.material = payload.material
+    product.size_dimension = payload.size_dimension
+    product.specification = payload.specification
+    product.price = payload.price
+    product.discount_price = payload.discount_price
+    product.is_installment_eligible = payload.is_installment_eligible
 
     await db.commit()
     await db.refresh(product)
-    return product
+
+    brand_name = await get_brand_name(db, product.brand_id)
+    category_name = await get_category_name(db, product.category_id)
+    return _row_to_out(product, brand_name, category_name)
 
 
 @router.delete("/{product_id}", status_code=204)
-async def delete_product(product_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Product).where(Product.id == product_id))
-    product = result.scalar_one_or_none()
+async def delete_product(
+    product_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _employee_id: str = Depends(require_employee),
+):
+    product = await db.get(Product, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm")
     product.status = "discontinued"

@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from app.db.session import get_db
 from app.models.product import InventoryTransaction, Product
+from app.core.security import require_employee
 
 router = APIRouter(prefix="/inventory", tags=["Inventory (Quản lý kho)"])
 
@@ -19,7 +20,11 @@ class InventoryTransactionCreate(BaseModel):
 
 
 @router.post("", status_code=201)
-async def create_inventory_transaction(payload: InventoryTransactionCreate, db: AsyncSession = Depends(get_db)):
+async def create_inventory_transaction(
+    payload: InventoryTransactionCreate,
+    db: AsyncSession = Depends(get_db),
+    _employee_id: str = Depends(require_employee),
+):
     if payload.type not in ("import", "export"):
         raise HTTPException(status_code=400, detail="type phải là 'import' hoặc 'export'")
 

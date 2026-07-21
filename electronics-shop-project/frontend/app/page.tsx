@@ -1,43 +1,63 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import SearchBar from "@/components/SearchBar";
 import FilterTabs from "@/components/FilterTabs";
 import ProductCard, { Product } from "@/components/ProductCard";
+import SiteHeader from "@/components/SiteHeader";
+import { listProducts, ProductOut } from "@/lib/services/products";
+import { getMediaUrl } from "@/lib/media";
+import { ApiError } from "@/lib/apiClient";
+import { Loader2 } from "lucide-react";
 
-// Dữ liệu mẫu — thay bằng gọi API thật tới /api/v1/products
-const SAMPLE_PRODUCTS: Product[] = [
-  {
-    id: "1",
-    name: "Laptop Gaming ROG Strix G16",
-    brand: "Asus",
-    price: 42990000,
-    discountPrice: 38990000,
-    imageUrl: "/placeholder-laptop.png",
-    specHighlight: "i9-14900H / RTX 4070 / 16GB / 1TB",
-  },
-  {
-    id: "2",
-    name: "iPhone 16 Pro Max 256GB",
-    brand: "Apple",
-    price: 34990000,
-    imageUrl: "/placeholder-phone.png",
-    specHighlight: "A18 Pro / 256GB / Titan",
-  },
-  {
-    id: "3",
-    name: "iPad Pro M4 11 inch",
-    brand: "Apple",
-    price: 26990000,
-    discountPrice: 24990000,
-    imageUrl: "/placeholder-tablet.png",
-    specHighlight: "Chip M4 / 256GB / Wifi",
-  },
-];
+/** Chuyển đổi dữ liệu thô từ Backend sang shape mà <ProductCard> cần hiển thị. */
+function toDisplayProduct(p: ProductOut): Product {
+  const spec = p.specification
+    ? Object.entries(p.specification).map(([k, v]) => `${k}: ${v}`).join(" / ")
+    : [p.color, p.size_dimension].filter(Boolean).join(" / ");
+
+  return {
+    id: p.id,
+    name: p.name,
+    brand: p.brand || "",
+    price: p.price,
+    discountPrice: p.discount_price ?? undefined,
+    imageUrl: getMediaUrl((p as any).primary_image_url) || "/placeholder-product.png",
+    specHighlight: spec || "—",
+  };
+}
 
 export default function HomePage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  async function loadProducts(keyword?: string) {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await listProducts(keyword ? { keyword } : {});
+      setProducts(data.map(toDisplayProduct));
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Không tải được sản phẩm từ máy chủ. Vui lòng thử lại sau."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
   return (
     <main className="max-w-7xl mx-auto px-6 py-10">
+      <SiteHeader />
+
       {/* HERO — thesis: bo mạch điện tử là ngôn ngữ hình ảnh xuyên suốt */}
       <motion.section
         initial={{ opacity: 0, y: 16 }}
@@ -56,7 +76,7 @@ export default function HomePage() {
           bảo hành chính hãng, giao nhanh toàn quốc.
         </p>
         <div className="mt-6 max-w-md">
-          <SearchBar />
+          <SearchBar onSearch={loadProducts} />
         </div>
       </motion.section>
 
@@ -65,17 +85,39 @@ export default function HomePage() {
           <FilterTabs />
         </aside>
 
-        <section className="md:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {SAMPLE_PRODUCTS.map((product, i) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: i * 0.08 }}
-            >
-              <ProductCard product={product} />
-            </motion.div>
-          ))}
+        <section className="md:col-span-3">
+          {loading && (
+            <div className="flex items-center justify-center py-20 text-circuit-muted">
+              <Loader2 className="animate-spin mr-2" size={18} /> Đang tải sản phẩm từ máy chủ...
+            </div>
+          )}
+
+          {!loading && error && (
+            <div className="rounded-md border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm text-red-300">
+              {error}
+            </div>
+          )}
+
+          {!loading && !error && products.length === 0 && (
+            <div className="text-center py-20 text-circuit-muted">
+              Chưa có sản phẩm nào. Hãy nhập sản phẩm ở trang quản trị.
+            </div>
+          )}
+
+          {!loading && !error && products.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {products.map((product, i) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: i * 0.08 }}
+                >
+                  <ProductCard product={product} />
+                </motion.div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </main>

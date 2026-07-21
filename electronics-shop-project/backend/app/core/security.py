@@ -1,9 +1,12 @@
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
-from jose import jwt
+from jose import jwt, JWTError
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+bearer_scheme = HTTPBearer(auto_error=True)
 
 
 def hash_password(password: str) -> str:
@@ -35,3 +38,37 @@ def create_refresh_token(subject: str) -> str:
 
 def decode_token(token: str) -> dict:
     return jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+
+
+async def get_current_user_id(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> str:
+    """Dependency dùng cho các route cần đăng nhập (khớp với nút Authorize trên Swagger)."""
+    try:
+        payload = decode_token(credentials.credentials)
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise ValueError("Token thiếu 'sub'")
+        return user_id
+    except (JWTError, ValueError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token không hợp lệ hoặc đã hết hạn",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+
+async def require_employee(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> str:
+    """Dependency dành riêng cho các route quản trị (chỉ nhân viên mới gọi được)."""
+    try:
+        payload = decode_token(credentials.credentials)
+        if payload.get("role") != "employee":
+            raise ValueError("Không đủ quyền")
+        return payload.get("sub")
+    except (JWTError, ValueError):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Chỉ nhân viên quản lý mới được thực hiện thao tác này",
+        )
