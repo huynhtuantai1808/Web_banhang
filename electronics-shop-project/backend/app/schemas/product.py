@@ -32,6 +32,8 @@ class ProductOut(BaseModel):
     discount_price: float | None = None
     is_installment_eligible: bool
     status: str
+    primary_image_url: str | None = None
+    primary_image_url: str | None = None   # ảnh đại diện — path tương đối, FE tự ghép domain BE
 
     class Config:
         from_attributes = True
@@ -41,6 +43,7 @@ class ProductFilter(BaseModel):
     keyword: str | None = None
     brand: str | None = None
     category: str | None = None
+    feature: str | None = None
     min_price: float | None = None
     max_price: float | None = None
     page: int = 1

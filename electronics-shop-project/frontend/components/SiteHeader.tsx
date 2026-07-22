@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { LogIn, UserPlus, LogOut, Cpu } from "lucide-react";
+import { LogIn, UserPlus, LogOut, ShoppingCart } from "lucide-react";
 import { isCustomerLoggedIn } from "@/lib/auth-storage";
 import { customerLogout } from "@/lib/services/auth";
+import Logo from "@/components/Logo";
 
 export default function SiteHeader() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -21,12 +22,18 @@ export default function SiteHeader() {
 
   return (
     <header className="flex items-center justify-between mb-6">
-      <Link href="/" className="flex items-center gap-2 font-display text-lg text-circuit-text">
-        <Cpu size={20} className="text-circuit-copperLight" />
-        TechTrace
+      <Link href="/">
+        <Logo />
       </Link>
 
       <nav className="flex items-center gap-3">
+        <Link
+          href="/cart"
+          className="p-2 rounded-md border border-circuit-line hover:border-circuit-copper text-circuit-muted hover:text-circuit-copperLight transition-colors"
+          title="Giỏ hàng"
+        >
+          <ShoppingCart size={18} />
+        </Link>
         {loggedIn ? (
           <button
             onClick={handleLogout}

@@ -34,6 +34,9 @@ CREATE TABLE employees (
     email           VARCHAR(150) UNIQUE NOT NULL,
     password_hash   VARCHAR(255) NOT NULL,
     role_id         INT REFERENCES roles(id),
+    -- Phân quyền chi tiết cho nhân viên vai trò "staff": {"can_create": true, "can_edit": true, "can_delete": false}
+    -- Vai trò "admin" (Quản lý) luôn full quyền, không phụ thuộc cột này.
+    permissions     JSONB DEFAULT '{}'::jsonb,
     is_active       BOOLEAN DEFAULT TRUE,
     created_at      TIMESTAMPTZ DEFAULT now()
 );

@@ -61,7 +61,7 @@ async def get_current_user_id(
 async def require_employee(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
 ) -> str:
-    """Dependency dành riêng cho các route quản trị (chỉ nhân viên mới gọi được)."""
+    """Dependency dành riêng cho các route quản trị (bất kỳ nhân viên nào, không phân biệt admin/staff)."""
     try:
         payload = decode_token(credentials.credentials)
         if payload.get("role") != "employee":
@@ -72,3 +72,73 @@ async def require_employee(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Chỉ nhân viên quản lý mới được thực hiện thao tác này",
         )
+
+
+async def require_customer(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> str:
+    """Dependency dành cho các route chỉ khách hàng mới gọi được (giỏ hàng, đơn hàng...)."""
+    try:
+        payload = decode_token(credentials.credentials)
+        if payload.get("role") != "customer":
+            raise ValueError("Không đủ quyền")
+        return payload.get("sub")
+    except (JWTError, ValueError):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Chỉ tài khoản khách hàng mới được thực hiện thao tác này",
+        )
+
+
+async def require_admin(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> str:
+    """Dependency dành riêng cho vai trò 'admin' (Quản lý) — full quyền, VD: quản lý tài khoản nhân viên."""
+    try:
+        payload = decode_token(credentials.credentials)
+        if payload.get("role") != "employee" or payload.get("employee_role") != "admin":
+            raise ValueError("Không đủ quyền")
+        return payload.get("sub")
+    except (JWTError, ValueError):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Chỉ tài khoản Quản lý (admin) mới được thực hiện thao tác này",
+        )
+
+
+def require_permission(permission_key: str):
+    """Factory tạo dependency kiểm tra quyền chi tiết cho nhân viên vai trò 'staff' (Nhân viên).
+
+    - Vai trò 'admin' (Quản lý): luôn được phép, bỏ qua kiểm tra permissions.
+    - Vai trò 'staff' (Nhân viên): chỉ được phép nếu Quản lý đã bật quyền tương ứng
+      (VD: can_create, can_edit, can_delete) khi tạo/sửa tài khoản nhân viên đó.
+
+    Lưu ý: permissions được nhúng vào JWT tại thời điểm đăng nhập — nếu Quản lý vừa đổi quyền
+    của một nhân viên đang đăng nhập, nhân viên đó cần đăng nhập lại để quyền mới có hiệu lực.
+    """
+
+    async def checker(
+        credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    ) -> str:
+        try:
+            payload = decode_token(credentials.credentials)
+            if payload.get("role") != "employee":
+                raise ValueError("Không đủ quyền")
+
+            if payload.get("employee_role") == "admin":
+                return payload.get("sub")  # admin luôn full quyền
+
+            permissions = payload.get("permissions") or {}
+            if not permissions.get(permission_key, False):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"Bạn không có quyền '{permission_key}'. Liên hệ Quản lý để được cấp quyền.",
+                )
+            return payload.get("sub")
+        except (JWTError, ValueError):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Token không hợp lệ hoặc không đủ quyền",
+            )
+
+    return checker

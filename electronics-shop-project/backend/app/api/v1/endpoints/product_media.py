@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from app.db.session import get_db
 from app.models.product import Product, ProductImage
-from app.core.security import require_employee
+from app.core.security import require_permission
 from app.services.file_service import save_product_image
 from app.services.import_service import import_products_from_file
 
@@ -20,7 +20,7 @@ async def upload_product_image(
     file: UploadFile = File(..., description="Ảnh sản phẩm (JPEG/PNG/WEBP/GIF, tối đa 5MB)"),
     is_primary: bool = False,
     db: AsyncSession = Depends(get_db),
-    _employee_id: str = Depends(require_employee),
+    _employee_id: str = Depends(require_permission("can_edit")),
 ):
     """Tải ảnh sản phẩm lên từ client (dùng multipart/form-data trong Swagger: chọn file trực tiếp)."""
     product = await db.get(Product, product_id)
@@ -52,7 +52,7 @@ async def list_product_images(product_id: uuid.UUID, db: AsyncSession = Depends(
 async def delete_product_image(
     image_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _employee_id: str = Depends(require_employee),
+    _employee_id: str = Depends(require_permission("can_edit")),
 ):
     image = await db.get(ProductImage, image_id)
     if not image:
@@ -70,7 +70,7 @@ async def bulk_import_products(
         "Cột tuỳ chọn: description, brand, category, color, material, size_dimension, discount_price.",
     ),
     db: AsyncSession = Depends(get_db),
-    _employee_id: str = Depends(require_employee),
+    _employee_id: str = Depends(require_permission("can_create")),
 ):
     """Nhập dữ liệu sản phẩm hàng loạt — dành cho nhân viên quản lý nhập kho ban đầu.
 

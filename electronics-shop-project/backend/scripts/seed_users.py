@@ -64,6 +64,7 @@ async def seed_admin(db) -> str:
         email=ADMIN_ACCOUNT["email"],
         password_hash=hash_password(ADMIN_ACCOUNT["password"]),
         role_id=role.id,
+        permissions={},  # admin (Quản lý) luôn full quyền, không phụ thuộc permissions
         is_active=True,
     )
     db.add(employee)

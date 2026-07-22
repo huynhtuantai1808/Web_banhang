@@ -1,9 +1,9 @@
 import axios, { AxiosError, AxiosInstance } from "axios";
 import { API_BASE_URL, API_TIMEOUT_MS } from "./config";
-import { getEmployeeToken } from "./auth-storage";
+import { getEmployeeToken, getCustomerToken } from "./auth-storage";
 
 /**
- * Instance axios DUY NHẤT cho toàn bộ app. Mọi service (products, employees, auth...)
+ * Instance axios DUY NHẤT cho toàn bộ app. Mọi service (products, employees, auth, cart...)
  * phải dùng qua đây, để đảm bảo baseURL (đọc từ NEXT_PUBLIC_API_BASE_URL) và cách gắn
  * token luôn nhất quán.
  */
@@ -12,9 +12,13 @@ export const apiClient: AxiosInstance = axios.create({
   timeout: API_TIMEOUT_MS,
 });
 
-// Tự động gắn Bearer token (nếu có) vào mọi request — áp dụng cho cả route quản trị lẫn khách hàng
+// Tự động gắn đúng loại Bearer token theo nhóm route:
+// - /cart/*             → token khách hàng (customer_token)
+// - còn lại (mặc định)  → token nhân viên (employee_token), dùng cho các route quản trị
 apiClient.interceptors.request.use((requestConfig) => {
-  const token = getEmployeeToken();
+  const url = requestConfig.url || "";
+  const token = url.startsWith("/cart") ? getCustomerToken() : getEmployeeToken();
+
   if (token) {
     requestConfig.headers = requestConfig.headers ?? {};
     requestConfig.headers.Authorization = `Bearer ${token}`;

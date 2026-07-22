@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { BRANDING } from "@/lib/branding";
 
 export const metadata: Metadata = {
-  title: "TechTrace — Điện thoại, Laptop, Tablet, PC Gaming",
-  description: "Cửa hàng đồ điện tử chính hãng — trả góp linh hoạt, giao nhanh toàn quốc.",
+  title: `${BRANDING.siteName} — Điện thoại, Laptop, Tablet, PC Gaming`,
+  description: BRANDING.description,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -27,6 +27,10 @@ TAGS_METADATA = [
         "description": "Tra cứu danh sách hãng và danh mục hiện có (đọc công khai, dùng để gợi ý khi nhập sản phẩm).",
     },
     {
+        "name": "Cart (Giỏ hàng)",
+        "description": "Thêm/xem/sửa/xoá sản phẩm trong giỏ hàng — chỉ khách hàng đã đăng nhập.",
+    },
+    {
         "name": "Health",
         "description": "Kiểm tra tình trạng hoạt động của API.",
     },

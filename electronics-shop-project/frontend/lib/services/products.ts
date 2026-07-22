@@ -15,6 +15,7 @@ export interface ProductOut {
   discount_price?: number | null;
   is_installment_eligible: boolean;
   status: string;
+  primary_image_url?: string | null;
 }
 
 export interface ProductInput {
@@ -36,6 +37,7 @@ export interface ProductFilters {
   keyword?: string;
   brand?: string;
   category?: string;
+  feature?: string;
   min_price?: number;
   max_price?: number;
   page?: number;

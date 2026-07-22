@@ -2,6 +2,8 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
+import Link from "next/link";
+import { Loader2, ShoppingCart, Check } from "lucide-react";
 
 export interface Product {
   id: string;
@@ -17,9 +19,32 @@ function formatVND(value: number) {
   return value.toLocaleString("vi-VN") + "₫";
 }
 
-export default function ProductCard({ product }: { product: Product }) {
+export default function ProductCard({
+  product,
+  onAddToCart,
+}: {
+  product: Product;
+  /** Gọi khi bấm "Thêm vào giỏ". Component cha xử lý gọi API + điều hướng đăng nhập nếu cần. */
+  onAddToCart?: (productId: string) => Promise<void> | void;
+}) {
   const [hover, setHover] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(false);
   const hasDiscount = !!product.discountPrice && product.discountPrice < product.price;
+
+  async function handleAddToCart(e: React.MouseEvent) {
+    e.preventDefault(); // không cho nổi bọt lên <Link> bao ngoài (nếu có) và không điều hướng
+    e.stopPropagation();
+    if (!onAddToCart || adding) return;
+    setAdding(true);
+    try {
+      await onAddToCart(product.id);
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1500);
+    } finally {
+      setAdding(false);
+    }
+  }
 
   return (
     <motion.div
@@ -28,24 +53,9 @@ export default function ProductCard({ product }: { product: Product }) {
       whileHover={{ y: -6 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
       className="relative rounded-lg bg-circuit-panel border border-circuit-line p-4 overflow-hidden"
+      style={{ borderColor: hover ? "#C87F45" : undefined, transition: "border-color 0.2s" }}
     >
-      {/* Viền "mạch đồng" chạy quanh card khi hover — chi tiết chữ ký thương hiệu */}
-      <svg
-        className="absolute inset-0 h-full w-full pointer-events-none"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-      >
-        <rect
-          x="1" y="1" width="98" height="98" rx="3"
-          fill="none"
-          stroke="#C87F45"
-          strokeWidth={hover ? 1.2 : 0}
-          className={hover ? "pcb-trace" : ""}
-          style={{ transition: "stroke-width 0.2s" }}
-        />
-      </svg>
-
-      <div className="relative z-10">
+      <Link href={`/products/${product.id}`} className="block relative z-10">
         <div className="aspect-square rounded-md bg-circuit-bg/60 mb-3 flex items-center justify-center overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -53,6 +63,10 @@ export default function ProductCard({ product }: { product: Product }) {
             alt={product.name}
             className="object-contain h-full w-full transition-transform duration-300"
             style={{ transform: hover ? "scale(1.06)" : "scale(1)" }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src =
+                "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='%23121B2E'/></svg>";
+            }}
           />
         </div>
 
@@ -74,11 +88,22 @@ export default function ProductCard({ product }: { product: Product }) {
             </span>
           )}
         </div>
+      </Link>
 
-        <button className="mt-4 w-full rounded-md border border-circuit-copper/60 py-2 text-sm font-medium text-circuit-copperLight hover:bg-circuit-copper hover:text-circuit-bg transition-colors">
-          Thêm vào giỏ
-        </button>
-      </div>
+      <button
+        onClick={handleAddToCart}
+        disabled={adding}
+        className="relative z-10 mt-4 w-full flex items-center justify-center gap-2 rounded-md border border-circuit-copper/60 py-2 text-sm font-medium text-circuit-copperLight hover:bg-circuit-copper hover:text-circuit-bg transition-colors disabled:opacity-60"
+      >
+        {adding ? (
+          <Loader2 size={16} className="animate-spin" />
+        ) : added ? (
+          <Check size={16} />
+        ) : (
+          <ShoppingCart size={16} />
+        )}
+        {added ? "Đã thêm vào giỏ" : "Thêm vào giỏ"}
+      </button>
     </motion.div>
   );
 }

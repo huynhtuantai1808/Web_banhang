@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from sqlalchemy import String, Boolean, DateTime, ForeignKey, Integer, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base
 
@@ -23,5 +23,9 @@ class Employee(Base):
     email: Mapped[str] = mapped_column(String(150), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     role_id: Mapped[int | None] = mapped_column(ForeignKey("roles.id"))
+    # Phân quyền chi tiết cho nhân viên vai trò "staff" (Nhân viên), VD:
+    # {"can_create": true, "can_edit": true, "can_delete": false}
+    # Vai trò "admin" (Quản lý) luôn có full quyền, không phụ thuộc field này.
+    permissions: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
