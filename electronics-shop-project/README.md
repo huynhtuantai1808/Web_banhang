@@ -221,7 +221,315 @@ Các API cần đăng nhập (mọi API trừ nhóm `Auth`, `Employees` login v�
 Đã build thử `npm run build` (FE, toàn bộ route mới lên đúng: `/admin/users`, `/cart`,
 `/products/[id]`...) và import `app.main` (BE, 31 routes) — không lỗi.
 
-## 10. Trạng thái hiện tại
+## 11. Cập nhật mới nhất (đợt 3) — Thanh toán & Tuỳ chỉnh giao diện
+
+**a) Thanh toán + Cổng thanh toán VNPay**
+- Backend: `Order` giờ có `payment_gateway` (`cod`|`vnpay`), `payment_status` (`pending`|`paid`|`failed`),
+  `gateway_transaction_id`. Xem `database/migrations/003_payments_and_site_settings.sql` nếu DB đã tạo
+  từ trước.
+- `app/services/vnpay_service.py` — tự dựng URL thanh toán (ký HMAC-SHA512 theo đúng chuẩn VNPay) và
+  xác thực chữ ký khi VNPay redirect khách hàng quay lại. Cấu hình qua `.env`:
+  `VNP_TMN_CODE`, `VNP_HASH_SECRET` (đăng ký merchant sandbox miễn phí tại
+  https://sandbox.vnpayment.vn), `VNP_PAY_URL`, `VNP_RETURN_URL`, `FRONTEND_URL`.
+  **Để trống `VNP_TMN_CODE`/`VNP_HASH_SECRET` thì hệ thống chỉ cho phép thanh toán COD** — API tạo
+  đơn sẽ báo lỗi rõ ràng nếu khách chọn "vnpay" mà chưa cấu hình.
+- Luồng: `POST /api/v1/orders` (tạo đơn từ giỏ hàng, chọn `cod` hoặc `vnpay`) → nếu `vnpay`, response
+  kèm `payment_url` để FE `window.location.href` sang VNPay → khách thanh toán xong, VNPay tự redirect
+  về `GET /api/v1/payments/vnpay/return` → BE xác thực chữ ký + cập nhật đơn → redirect tiếp về FE
+  tại `/orders/result?payment=...`.
+- Frontend: `app/checkout/page.tsx` (chọn địa chỉ + COD/VNPay) → `app/orders/result/page.tsx` (trang
+  kết quả) → `app/orders/page.tsx` (tra cứu đơn hàng đã đặt). Nút "Tiến hành thanh toán" ở `/cart`
+  giờ dẫn thẳng vào luồng này.
+- **Lưu ý bảo mật**: đã test roundtrip ký/xác thực chữ ký VNPay — giả mạo bất kỳ tham số nào (số
+  tiền, mã đơn...) đều khiến `verify_return_params` trả về `False`, chặn được yêu cầu giả mạo kết
+  quả thanh toán.
+
+**b) Admin tuỳ chỉnh giao diện trang khách hàng (storefront)**
+- Backend: bảng `site_settings` (dạng singleton, luôn 1 dòng `id=1`) lưu tên shop, tiêu đề/mô tả
+  banner, ảnh banner, logo, màu chủ đạo (`accent_color`, mã HEX).
+  `GET /api/v1/settings` công khai (storefront gọi lúc tải trang chủ); `PUT /api/v1/settings`,
+  `POST /api/v1/settings/banner-image`, `POST /api/v1/settings/logo-image` chỉ Quản lý (admin).
+- Frontend: `app/admin/(protected)/settings/page.tsx` (mục **"Giao diện"** trong nav admin, cạnh
+  Sản phẩm/Nhân viên) — form sửa tên shop, nhãn nhỏ + tiêu đề + mô tả banner, color picker chọn màu
+  chủ đạo, upload ảnh banner/logo.
+- `components/SiteSettingsProvider.tsx` — Context bọc toàn bộ app (`app/layout.tsx`), tự gọi
+  `GET /settings` lúc tải trang và áp `accent_color` vào CSS variable `--accent-color` /
+  `--accent-color-light` (tự tính màu sáng hơn để dùng cho hover) ngay trên `document.documentElement`.
+- Trang chủ (`app/page.tsx`), `SiteHeader`, `Logo`, `ProductCard` đều đọc từ context này thay vì
+  giá trị tĩnh — đổi 1 chỗ trong `/admin/settings`, cả trang chủ + màu điểm nhấn toàn giao diện đổi
+  theo ngay khi tải lại trang (không cần build lại code).
+- `lib/branding.ts` vẫn giữ vai trò **giá trị mặc định/fallback** — dùng khi chưa cấu hình gì trong
+  DB hoặc lúc gọi API settings thất bại, tránh trang trắng/lỗi.
+
+Đã build thử `npm run build` (FE, 14 routes, tất cả route mới lên đúng: `/checkout`, `/orders`,
+`/orders/result`, `/admin/settings`...) và import `app.main` (BE, 39 routes) — không lỗi. Đã test
+riêng logic ký/xác thực VNPay bằng script độc lập — hoạt động đúng cả trường hợp hợp lệ và giả mạo.
+
+## 13. Cập nhật mới nhất (đợt 4) — IPN VNPay & Trang chi tiết đơn hàng
+
+**a) IPN (Instant Payment Notification) — kênh xác nhận thanh toán đáng tin cậy hơn Return URL**
+- Vấn đề với chỉ dùng Return URL: nó chạy qua trình duyệt của khách hàng — nếu khách đóng tab,
+  mất mạng, hoặc trình duyệt chặn redirect ngay sau khi thanh toán xong (trước khi kịp quay về BE),
+  đơn hàng có thể mãi ở trạng thái `pending` dù tiền đã trừ thành công bên VNPay.
+- `GET /api/v1/payments/vnpay/ipn` (mới) — VNPay gọi thẳng từ **server của VNPay** tới BE, độc lập
+  hoàn toàn với trình duyệt khách hàng. Đây là kênh chính thức, đáng tin cậy để xác nhận thanh toán
+  trong production.
+- Cấu hình: vào cổng merchant VNPay (sandbox hoặc thật) → mục **IPN URL** → khai báo
+  `<domain BE của bạn>/api/v1/payments/vnpay/ipn` (cần domain public, không dùng được `localhost`
+  vì đây là lệnh gọi server-to-server).
+- Tuân thủ đúng hợp đồng response mà VNPay yêu cầu (bắt buộc trả JSON `{"RspCode": ..., "Message": ...}`):
+  - `00` — xác nhận thành công
+  - `01` — không tìm thấy đơn hàng
+  - `02` — đơn đã được xác nhận trước đó (**idempotent** — VNPay có thể gọi IPN nhiều lần cho cùng
+    1 giao dịch, BE phải nhận biết và không xử lý lại, tránh cộng dồn hoặc ghi đè sai)
+  - `04` — số tiền không khớp (chống giả mạo số tiền)
+  - `97` — chữ ký không hợp lệ (chống giả mạo toàn bộ request)
+- Cả `/vnpay/return` và `/vnpay/ipn` giờ dùng chung logic cốt lõi (`_apply_payment_outcome`,
+  `_expected_amount_x100`, `_find_order`) — sửa 1 chỗ, áp dụng cho cả 2 kênh; đồng thời `/return`
+  cũng được bổ sung kiểm tra số tiền + idempotency giống `/ipn` (trước đó `/return` chưa kiểm tra
+  số tiền, giờ đã đồng bộ).
+- Đã test riêng bằng script độc lập (không cần DB thật): xác thực chữ ký hợp lệ, số tiền khớp,
+  cập nhật đúng trạng thái, phát hiện đúng khi đơn đã thanh toán trước đó (không xử lý lại), phát
+  hiện đúng giả mạo số tiền, phát hiện đúng giả mạo chữ ký — **tất cả pass**.
+
+**b) Trang chi tiết đơn hàng** — `app/orders/[id]/page.tsx`
+- Thanh tiến trình trực quan theo trạng thái đơn: Chờ xác nhận → Đã xác nhận → Đang giao → Hoàn thành
+  (hiển thị riêng nếu đơn đã bị huỷ).
+- Thông tin thanh toán (COD/VNPay, trạng thái) + địa chỉ giao hàng.
+- Danh sách sản phẩm, tạm tính, giảm giá (nếu có), tổng cộng.
+- Trang danh sách `/orders` giờ mỗi đơn hàng là 1 `Link` dẫn vào trang chi tiết này (trước đó hiển
+  thị đầy đủ thông tin ngay trong danh sách, giờ tách gọn — danh sách chỉ hiện tóm tắt, bấm vào để
+  xem đầy đủ).
+
+Đã build thử `npm run build` (FE, 14 routes tĩnh/động, bao gồm `/orders/[id]` mới) và import
+`app.main` (BE, 40 routes) — không lỗi.
+
+## 15. Cập nhật mới nhất (đợt 5) — Khuyến mãi, Trả góp, Quản lý khách hàng, OTP Email thật
+
+Các bảng `promotions`, `promotion_customer`, `discount_rules`, `installment_plans`,
+`installment_payments` đã có sẵn trong `database/schema.sql` từ bản scaffold đầu tiên nhưng chưa
+từng có API/logic nghiệp vụ đi kèm — đợt này hoàn thiện toàn bộ phần còn thiếu đó, **không cần
+migration DB mới**.
+
+**a) Khuyến mãi / Chiết khấu**
+- `app/services/promotion_service.py` — logic lõi: mã **công khai** (ai cũng dùng được, không có
+  dòng nào trong `promotion_customer`) vs mã **phân bổ riêng** (chỉ khách hàng có dòng
+  `promotion_customer` tương ứng, chưa dùng, mới áp dụng được). Tự kiểm tra ngày hiệu lực, giới hạn
+  lượt dùng, không cho giảm vượt quá tổng giá trị đơn.
+- `endpoints/promotions.py` — CRUD mã khuyến mãi (admin), phân bổ mã cho khách hàng cụ thể theo SĐT
+  (`POST /promotions/{id}/assign`), khách hàng xem mã khả dụng (`GET /promotions/mine`) và kiểm tra
+  mã trước khi đặt hàng (`POST /promotions/validate` — chỉ xem trước, không đánh dấu đã dùng).
+- `POST /orders` giờ nhận thêm `promo_code` — **luôn tính lại discount ở Backend**, không tin số
+  liệu giảm giá từ Frontend, tránh khách sửa request để tự ý giảm giá.
+- Frontend: `app/admin/(protected)/promotions/page.tsx` (tạo/sửa/ngừng/phân bổ mã) +ở trang
+  `/checkout` có ô nhập mã + gợi ý các mã khách hàng đang có sẵn (dạng chip bấm nhanh).
+- Đã test bằng script độc lập (SQLite in-memory): mã công khai dùng được bởi bất kỳ ai ✓, mã riêng
+  chỉ khách được phân bổ mới dùng được ✓, khách khác bị từ chối đúng cách ✓, dùng lại mã đã dùng bị
+  chặn ✓ — **tất cả pass**.
+
+**b) Trả góp (Installment) — mặc định 0% lãi suất**
+- `app/services/installment_service.py` — tạo `InstallmentPlan` + toàn bộ lịch `InstallmentPayment`
+  theo từng kỳ (3/6/9/12 tháng), kỳ cuối tự gánh phần dư làm tròn để tổng các kỳ luôn khớp chính xác
+  100% với số tiền cần trả góp.
+- `POST /orders` nhận thêm `payment_method` (`full`/`installment`) + `installment_months`. Nếu
+  `installment`: bắt buộc TẤT CẢ sản phẩm trong giỏ có `is_installment_eligible=true` (chặn ở BE,
+  không chỉ ở FE), và luôn ép `payment_gateway="cod"` (trả góp trong hệ thống này thu kỳ đầu qua
+  COD, không hỗ trợ qua VNPay).
+- `GET /installment-calculator` (công khai) — máy tính nhanh, dùng ở trang chi tiết sản phẩm để
+  hiển thị "Trả góp chỉ từ ...đ/tháng" ngay cả khi khách chưa đăng nhập.
+- `GET /orders/{id}/installment` — xem lịch trả góp đầy đủ của 1 đơn hàng (chủ đơn).
+- Frontend: `/checkout` có lựa chọn Trả toàn bộ / Trả góp + chọn kỳ hạn + xem trước số tiền mỗi
+  tháng ngay khi chọn; `/products/[id]` hiển thị giá trả góp ước tính (12 tháng); `/orders/[id]`
+  hiển thị đầy đủ lịch trả góp từng kỳ kèm trạng thái.
+- Đã test: 12.000.000đ / 12 tháng / 0% lãi = đúng 1.000.000đ/tháng ✓; tạo kế hoạch 10.000.000đ / 3
+  kỳ, tổng 3 kỳ cộng lại khớp chính xác 10.000.000đ (không lệch do làm tròn) ✓.
+
+**c) Trang quản lý khách hàng cho admin**
+- `endpoints/customers.py` — `GET /customers` (danh sách + tìm theo tên/SĐT), `GET /customers/{id}`
+  (chi tiết kèm tổng số đơn đã thanh toán + tổng chi tiêu), `PUT /customers/{id}` (sửa thông tin,
+  khoá/mở khoá tài khoản) — toàn bộ chỉ Quản lý (admin).
+- Frontend: `app/admin/(protected)/customers/page.tsx` — bảng danh sách, bấm vào 1 dòng xem chi
+  tiết (modal), nút khoá/mở khoá nhanh ngay trên bảng.
+
+**d) OTP qua Email thật (SMTP)**
+- `app/services/otp_service.py` — nếu khách hàng có email VÀ Backend đã cấu hình
+  `EMAIL_SMTP_HOST`/`EMAIL_SMTP_USER`/`EMAIL_SMTP_PASSWORD` trong `.env`: gửi **email thật** chứa mã
+  OTP qua SMTP (chạy trong thread riêng qua `asyncio.to_thread`, không chặn event loop của FastAPI).
+  Nếu gửi lỗi hoặc chưa cấu hình: tự động fallback in ra console (giữ nguyên hành vi dev cũ, không
+  làm gián đoạn luồng đăng nhập).
+- **Gửi SMS thật chưa có sẵn** — cần tài khoản trả phí ở một nhà cung cấp cụ thể (Twilio, ESMS,
+  Speedsms...); điểm tích hợp đã tách rõ ràng trong `send_otp_via_sms_or_email()`, chỉ cần thêm
+  nhánh gọi API nhà cung cấp bạn chọn.
+- Ví dụ cấu hình với Gmail (dùng App Password, không dùng mật khẩu Gmail thường):
+  `EMAIL_SMTP_HOST=smtp.gmail.com`, `EMAIL_SMTP_PORT=587`, `EMAIL_SMTP_USER=<email>@gmail.com`,
+  `EMAIL_SMTP_PASSWORD=<app_password>`.
+
+Đã build thử `npm run build` (FE, 16 routes) và import `app.main` (BE, 52 routes) — không lỗi.
+
+## 17. Cập nhật mới nhất (đợt 6) — Quản lý đơn hàng, Vận chuyển, Phân loại, Chatbot & Liên hệ
+
+**a) Quản lý đơn hàng cho admin**
+- `endpoints/admin_orders.py` — `GET /admin/orders` (toàn bộ đơn của mọi khách hàng, lọc theo
+  trạng thái/thanh toán, tìm theo mã đơn/tên/SĐT), `GET /admin/orders/{id}`, `PUT /admin/orders/{id}/status`
+  (cập nhật trạng thái thủ công — yêu cầu quyền `can_edit`). Mọi nhân viên đã đăng nhập đều xem
+  được danh sách (để hỗ trợ khách), chỉ thao tác ghi mới cần quyền riêng.
+- Frontend: `app/admin/(protected)/orders/page.tsx` (mục **"Đơn hàng"** đầu tiên trong nav admin) —
+  bảng danh sách + bộ lọc, bấm vào 1 đơn để xem chi tiết, đổi trạng thái, và gán/cập nhật vận
+  chuyển ngay trong cùng 1 modal.
+
+**b) Liên kết đơn vị vận chuyển**
+- Bảng mới `shipments` + `shipment_status_logs` (lịch sử trạng thái dạng timeline).
+- **Chế độ hoạt động chính: thủ công** — nhân viên chọn đơn vị vận chuyển (Giao Hàng Nhanh, Viettel
+  Post, Ninja Van...), nhập mã vận đơn, sau đó cập nhật trạng thái (Chờ lấy hàng → Đã lấy hàng →
+  Đang vận chuyển → Đã giao/Thất bại/Hoàn trả) theo thông tin nhận được từ hãng vận chuyển qua điện
+  thoại/cổng đối tác của họ. **Hoạt động đầy đủ ngay, không cần tài khoản API của bất kỳ hãng nào.**
+- Mỗi lần đổi trạng thái vận chuyển **tự động đồng bộ** trạng thái đơn hàng tương ứng
+  (`picked_up`/`in_transit` → đơn "Đang giao"; `delivered` → đơn "Hoàn thành" + tự đánh dấu đã
+  thanh toán nếu là đơn COD; `failed`/`returned` → đơn "Đã huỷ") — xem `services/shipping_service.py`.
+- `POST /api/v1/webhooks/carrier` (mới, public nhưng bảo vệ bằng header `X-Webhook-Secret` khớp
+  `CARRIER_WEBHOOK_SECRET` trong `.env`) — điểm tích hợp cho **tự động hoá thật** sau này: nếu đơn
+  vị vận chuyển (hoặc Zapier/Make làm trung gian) hỗ trợ gọi webhook khi trạng thái thay đổi, trỏ
+  URL này vào là hệ thống tự cập nhật, không cần nhân viên nhập tay.
+- Khách hàng xem tình trạng giao hàng dạng timeline ngay trong trang chi tiết đơn hàng (`/orders/[id]`).
+- **Về tích hợp API thật (VD: Giao Hàng Nhanh - GHN)**: đã viết sẵn ghi chú chi tiết từng bước ở
+  cuối `shipping_service.py` (lấy Token/ShopId, endpoint tạo đơn, cấu hình webhook...) nhưng **chưa
+  test được với tài khoản GHN thật** (không có tài khoản để test) — cần bạn tự đăng ký và xác minh
+  khi triển khai. Toàn bộ phần còn lại (đồng bộ trạng thái, hiển thị cho khách, quản lý ở admin)
+  đã hoạt động và test đầy đủ, không phụ thuộc vào bước tích hợp API thật này.
+
+**c) Tab "Phân loại" — thêm/sửa danh mục và hãng**
+- `endpoints/catalog.py` mở rộng: `POST/PUT/DELETE /brands`, `POST/PUT/DELETE /categories` (yêu
+  cầu quyền `can_create`/`can_edit`/`can_delete` tương ứng). Xoá bị chặn với thông báo rõ ràng nếu
+  vẫn còn sản phẩm/danh mục con thuộc về nó (bắt lỗi `IntegrityError` từ ràng buộc khoá ngoại).
+- Frontend: `app/admin/(protected)/categories/page.tsx` (mục **"Phân loại"** trong nav) — 2 bảng
+  song song (Hãng / Danh mục), thêm mới, sửa inline, xoá ngay trên danh sách.
+
+**d) Chatbot tư vấn tự động + trang liên kết hotline**
+- `components/ChatWidget.tsx` — widget chat nổi góc màn hình (mọi trang khách hàng, tự ẩn ở khu
+  vực `/admin`). Hoạt động theo kiểu **rule-based FAQ** (đối sánh từ khoá tiếng Việt không dấu,
+  xem `lib/chatbotData.ts`) — **không gọi AI/LLM nào**, trả lời tức thì các câu hỏi thường gặp
+  (giao hàng, đổi trả, trả góp, bảo hành, khuyến mãi, thanh toán). Có nút gợi ý nhanh + link gọi
+  hotline/Facebook ngay trong khung chat.
+  → Muốn nâng cấp thành chatbot AI thật (hiểu ngôn ngữ tự nhiên), thay hàm `findBestReply()` bằng
+  một lệnh gọi API tới dịch vụ AI bạn chọn — đã ghi chú ngay trong file.
+- `app/contact/page.tsx` (mới) — trang liên kết Hotline/Zalo/Facebook, mỗi kênh 1 thẻ bấm được.
+- `lib/branding.ts` bổ sung mục `contact` (hotlinePhone, zaloLink, facebookLink, workingHours) —
+  **đổi thông tin liên hệ chỉ tại 1 chỗ này**, áp dụng cho cả ChatWidget và trang `/contact`.
+- `SiteHeader` thêm icon "Liên hệ" dẫn tới `/contact`.
+
+Đã build thử `npm run build` (FE, 19 routes, bao gồm `/admin/orders`, `/admin/categories`,
+`/contact`) và import `app.main` (BE, 67 routes) — không lỗi. Đã test độc lập logic đồng bộ
+shipment↔order (picked_up/in_transit → shipping, delivered → completed + tự paid nếu COD, trạng
+thái không hợp lệ bị từ chối, lịch sử ghi log đầy đủ) — tất cả pass.
+
+## 19. Cập nhật mới nhất (đợt 7) — Dọn TODO cũ + Chiết khấu tự động + Thu tiền trả góp
+
+**a) Dọn comment TODO lỗi thời trong `router.py`**
+- Comment TODO liệt kê `customers, employees, cart, orders, installment, promotions` là còn sót
+  lại từ **bản nháp đầu tiên** (Turn 1) — thực ra tất cả các router này đã được triển khai đầy đủ
+  và đăng ký từ các đợt cập nhật trước, chỉ là comment chưa được xoá. Đã xác nhận lại bằng cách
+  liệt kê toàn bộ file trong `app/api/v1/endpoints/` (15 file) và grep các route đã đăng ký — khớp
+  100%, không thiếu router nào trong danh sách đó.
+- `categories` và `search` trong TODO cũ **không cần router riêng** vì đã được phủ đầy đủ:
+  quản lý danh mục/hãng nằm trong `catalog.router` (đã có từ trước), tìm kiếm sản phẩm nằm trong
+  `products.router` (`GET /products` hỗ trợ keyword/brand/category/feature/giá, kết hợp AND).
+
+**b) Chiết khấu tự động theo hãng/danh mục/số lượng (`discount_rules`)**
+- Đây là bảng đã tồn tại từ bản scaffold đầu tiên nhưng chưa có API/logic — nay đã hoàn thiện.
+  **Khác với Promotions** (khách phải chủ động nhập mã), `discount_rules` áp dụng TỰ ĐỘNG ngay khi
+  giỏ hàng đủ điều kiện, không cần thao tác gì từ khách.
+- `services/discount_rule_service.py` — với mỗi sản phẩm trong giỏ, tìm quy tắc khớp hãng và/hoặc
+  danh mục (bỏ qua điều kiện nào không khai báo) + đủ số lượng tối thiểu; nếu nhiều quy tắc cùng
+  khớp, lấy quy tắc có % giảm cao nhất.
+- `POST/PUT/DELETE /discount-rules` (admin, theo quyền can_create/can_edit/can_delete).
+- **Thứ tự tính toán khi tạo đơn** (`POST /orders`): trừ chiết khấu tự động trước → mã khuyến mãi
+  (nếu có) tính trên phần còn lại → `discount_amount` cuối cùng = tổng cả hai. `POST
+  /promotions/validate` (xem trước ở checkout) cũng tính theo ĐÚNG thứ tự này để số hiển thị khớp
+  chính xác với số thực áp dụng lúc đặt hàng — tránh trường hợp trang xem trước và lúc đặt hàng
+  lệch nhau.
+- Frontend: mục "Chiết khấu tự động" ngay dưới bảng Khuyến mãi (`/admin/promotions`) — tạo/sửa/xoá
+  quy tắc; trang `/checkout` tự hiển thị dòng "Chiết khấu tự động" trong tóm tắt đơn hàng nếu có,
+  cộng dồn với mã khuyến mãi (nếu khách nhập thêm).
+- Đã test độc lập (SQLite in-memory, dùng fake Product object để tránh xung đột kiểu JSONB của
+  Postgres): mua chưa đủ số lượng → không giảm ✓; mua đủ số lượng đúng hãng → giảm đúng % ✓; sản
+  phẩm khác hãng không khớp rule → không giảm dù mua nhiều ✓; giỏ hàng trộn nhiều loại → chỉ sản
+  phẩm khớp rule được giảm ✓ — tất cả pass.
+
+**c) Đánh dấu đã thu tiền từng kỳ trả góp**
+- `PUT /admin/installment-payments/{id}/mark-paid` (quyền `can_edit`) — đánh dấu 1 kỳ cụ thể đã
+  thu tiền; nếu đây là kỳ cuối cùng của kế hoạch, tự động chuyển `InstallmentPlan.status` sang
+  `completed`.
+- `GET /admin/installment-plans` — toàn bộ kế hoạch trả góp kèm thông tin khách hàng + đơn hàng,
+  để nhân viên theo dõi kỳ nào sắp tới hạn/đã quá hạn.
+- Frontend: `app/admin/(protected)/installments/page.tsx` (mục **"Trả góp"** trong nav) — mỗi đơn
+  trả góp hiển thị đầy đủ lịch từng kỳ, cảnh báo (⚠) nếu kỳ đã quá hạn mà chưa thu, nút "Đánh dấu
+  đã thu" ngay trên từng dòng.
+- **Sửa 1 lỗi phát hiện khi làm phần này**: schema `InstallmentPaymentOut` trước đó thiếu trường
+  `id` (chỉ có period_no/due_date/amount/status) nên Frontend không có cách nào tham chiếu đúng kỳ
+  cần đánh dấu — đã bổ sung `id` vào schema và endpoint trả về.
+
+Đã build thử `npm run build` (FE, 20 routes) và import `app.main` (BE, 74 routes) — không lỗi.
+
+## 21. Cập nhật mới nhất (đợt 8) — Footer, Menu danh mục, Guest Checkout, Tối ưu Admin
+
+**a) Footer hiển thị thông tin cửa hàng**
+- `components/SiteFooter.tsx` — logo, mô tả shop, liên hệ (hotline/Zalo/Facebook/giờ mở cửa), link
+  hỗ trợ nhanh (Liên hệ, Tra cứu đơn hàng, Giỏ hàng, Đăng nhập). Đã thêm vào toàn bộ trang khách
+  hàng: trang chủ, chi tiết sản phẩm, danh mục, giỏ hàng, checkout, đơn hàng, liên hệ.
+
+**b) Menu danh mục dạng ☰ + giữ nguyên FilterTabs ở sidebar**
+- `components/CategoryMenu.tsx` — nút ☰ mở mega-menu 2 cột: cột trái danh mục cha (Laptop, Điện
+  thoại, Máy tính bảng, PC Gaming, Camera...), di chuột vào 1 danh mục cha hiện cột phải danh mục
+  con tương ứng. Bấm vào 1 mục điều hướng sang `/category/[slug]`.
+- **Tách biệt rõ với `<FilterTabs>`**: CategoryMenu là điều hướng theo cây danh mục (chuyển trang),
+  FilterTabs vẫn là lọc tại chỗ (hãng/giá/chức năng) trên cùng 1 trang — không thay đổi hành vi cũ.
+- `app/category/[slug]/page.tsx` (mới) — trang danh mục với breadcrumb kiểu "Laptop `>` Laptop
+  Gaming", banner riêng (nếu admin đã tải lên), giữ nguyên FilterTabs sidebar để lọc thêm trong
+  danh mục đó. Backend `GET /products?category_id=X` tự động gồm cả sản phẩm của danh mục con.
+
+**c) Đặt hàng không cần đăng ký tài khoản (Guest Checkout)**
+- Backend: `POST /orders/guest` (public) — khách gửi kèm họ tên/SĐT/địa chỉ + danh sách sản phẩm
+  ngay trong request (vì không có giỏ hàng lưu server). Hệ thống tự tạo (hoặc tái sử dụng nếu SĐT
+  đã từng mua) một hồ sơ khách hàng ở chế độ `is_verified=False` để **lưu lại thông tin đơn hàng**.
+  `GET /orders/lookup?order_code=X&phone=Y` (public) — tra cứu lại đơn hàng sau này, chỉ cần đúng
+  cả mã đơn và SĐT (không cần mật khẩu, không cần đăng nhập).
+  **Giới hạn**: khách vãng lai không dùng được trả góp (cần tài khoản xác thực để theo dõi nhiều kỳ).
+  Logic tính giá/khuyến mãi/chiết khấu tự động dùng CHUNG 1 hàm lõi (`_create_order_core`) với luồng
+  khách đã đăng nhập — đảm bảo 2 luồng không bị lệch nhau.
+- Frontend: `lib/guestCart.ts` — giỏ hàng khách vãng lai lưu ở `localStorage`. `ProductCard`/trang
+  chủ/trang danh mục giờ thêm được vào giỏ dù chưa đăng nhập. `/cart` hiển thị đúng cả 2 loại giỏ
+  hàng (server nếu đã đăng nhập, localStorage nếu chưa). `/checkout` hiện thêm form họ tên/SĐT/email
+  khi chưa đăng nhập, ẩn tuỳ chọn trả góp, gọi `POST /orders/guest` khi xác nhận. `/orders/lookup`
+  (mới) — trang tra cứu đơn hàng cho khách vãng lai.
+- Đã test độc lập (SQLite in-memory): tạo khách hàng mới từ thông tin guest ✓, tính đúng tổng tiền
+  từ danh sách sản phẩm trực tiếp (không qua giỏ hàng DB) ✓, tìm lại đúng khách cũ theo SĐT khi họ
+  quay lại đặt hàng lần 2 (không tạo trùng) ✓ — tất cả pass.
+- **Phát hiện & sửa 1 lỗi thật trong quá trình test**: `passlib[bcrypt]` không ghim version `bcrypt`
+  nên tự động cài `bcrypt==5.0.0`, phiên bản này đã xoá thuộc tính nội bộ mà `passlib` dùng để phát
+  hiện version, gây lỗi `hash_password()`/`verify_password()` — ảnh hưởng TOÀN BỘ luồng đăng ký/đăng
+  nhập, không riêng gì guest checkout. Đã ghim `bcrypt==4.0.1` trong `requirements.txt` và xác nhận
+  lại hash/verify hoạt động đúng.
+
+**d) Tối ưu quản lý Phân loại ở admin**
+- Danh mục giờ hỗ trợ đầy đủ **cấu trúc cha/con** ngay trên UI: chọn danh mục cha khi tạo/sửa, hiển
+  thị dạng cây thụt lề (`└─`) thay vì danh sách phẳng như trước.
+- Mỗi danh mục có thể **tải ảnh banner riêng** (icon 🖼 cạnh tên) — ảnh này hiển thị khi khách click
+  vào trang danh mục đó (`/category/[slug]`), khác với banner trang chủ.
+- Backend: `POST/PUT /categories` validate danh mục cha tồn tại + không cho danh mục tự làm cha của
+  chính nó; `POST /categories/{id}/banner-image` (tái dùng service upload ảnh sẵn có).
+
+**e) Hiển thị sản phẩm theo nhóm (khuyến mãi / danh mục nổi bật)**
+- Trang chủ ở trạng thái mặc định (chưa tìm kiếm/lọc gì) giờ hiển thị các hàng sản phẩm theo nhóm:
+  **"🔥 Đang giảm giá"** (sản phẩm có giá khuyến mãi, `GET /products?on_sale=true`) và 1 hàng cho
+  mỗi danh mục cấp gốc nổi bật (VD "Laptop", "Điện thoại"...), mỗi hàng có link "Xem tất cả" dẫn
+  sang trang danh mục tương ứng.
+- Khi khách gõ tìm kiếm hoặc chọn bộ lọc, các hàng nhóm này ẩn đi, chỉ hiện lưới kết quả lọc như cũ
+  (giữ nguyên trải nghiệm tìm kiếm/lọc trước đó, không xung đột).
+- `components/ProductRow.tsx` (mới) — component dùng chung cho mọi hàng nhóm sản phẩm.
+
+Đã build thử `npm run build` (FE, 22 routes) và import `app.main` (BE, 78 routes) — không lỗi.
+
+## 22. Trạng thái hiện tại
 
 Đã scaffold (Giai đoạn 1–2 trong tài liệu kiến trúc):
 - Toàn bộ DB schema (`database/schema.sql`)
@@ -239,13 +547,31 @@ Các API cần đăng nhập (mọi API trừ nhóm `Auth`, `Employees` login v�
 - Trang chi tiết sản phẩm (`/products/[id]`), trang giỏ hàng (`/cart`), trang quản lý nhân viên (`/admin/users`) đã hoạt động, nối API thật
 - FilterTabs lọc thật theo hãng/danh mục/giá/chức năng (kết hợp nhiều điều kiện), đã sửa lỗi crash insertBefore
 - Ảnh sản phẩm hiển thị đúng ở trang khách hàng sau khi admin upload (đã join primary_image_url)
-- Logo/thương hiệu tuỳ chỉnh qua `lib/branding.ts`
-- Đã build thử `npm run build` + `tsc --noEmit` (FE) và import `app.main` (BE) — thành công, không lỗi
+- Logo/thương hiệu tuỳ chỉnh qua `lib/branding.ts` (giá trị mặc định) hoặc trực tiếp qua `/admin/settings` (lưu DB, ưu tiên áp dụng)
+- Module Order + Payment: đặt hàng từ giỏ hàng, thanh toán COD hoặc VNPay (sandbox) với cả 2 kênh xác nhận Return URL và IPN, tra cứu đơn hàng + trang chi tiết đơn hàng riêng
+- Module Promotion: mã khuyến mãi công khai/riêng theo khách hàng, áp dụng thực tế vào đơn hàng (không còn discount_amount=0 cứng)
+- Module Installment: trả góp 3/6/9/12 tháng 0% lãi suất, máy tính công khai, lịch trả góp chi tiết theo từng kỳ
+- Module Customer management: admin xem danh sách/chi tiết khách hàng, khoá-mở khoá tài khoản
+- Module Orders Management (Admin): xem toàn bộ đơn của mọi khách hàng, lọc/tìm kiếm, cập nhật trạng thái
+- Module Shipping: liên kết vận chuyển (thủ công, hoạt động đầy đủ) + webhook cho tích hợp tự động sau này, đồng bộ 2 chiều với trạng thái đơn hàng
+- Module Catalog Management: admin thêm/sửa/xoá hãng và danh mục ngay trên UI (tab "Phân loại")
+- Module Discount Rules: chiết khấu tự động theo hãng/danh mục/số lượng, kết hợp cộng dồn với mã khuyến mãi
+- Module Installment (Admin): xem toàn bộ kế hoạch trả góp, đánh dấu đã thu tiền từng kỳ, tự hoàn tất kế hoạch khi thu đủ
+- Footer thông tin cửa hàng, menu danh mục ☰ (cha/con), trang danh mục riêng với breadcrumb + banner
+- Guest Checkout: đặt hàng không cần tài khoản, tự lưu thông tin đơn, tra cứu lại qua mã đơn + SĐT
+- Hiển thị sản phẩm theo nhóm ở trang chủ (đang giảm giá / theo danh mục nổi bật)
+- Quản lý Phân loại tối ưu: cây danh mục cha/con + banner riêng từng danh mục
+- Chatbot tư vấn tự động (rule-based FAQ) + trang liên kết hotline/Zalo/Facebook
+- OTP qua Email thật (SMTP) nếu đã cấu hình, fallback console nếu chưa — SMS thật cần tích hợp thêm nhà cung cấp trả phí
+- Module Site Settings: admin tuỳ chỉnh tên shop/banner/mô tả/màu chủ đạo/logo, áp dụng trực tiếp lên storefront
+- Đã build thử `npm run build` (FE, 22 routes) + `tsc --noEmit` và import `app.main` (BE, 78 routes) — thành công, không lỗi
+- Đã test bằng script độc lập: chữ ký/IPN VNPay, khuyến mãi, trả góp, đồng bộ shipment↔order, chiết khấu tự động, guest checkout — tất cả pass
+- Đã phát hiện và sửa 1 lỗi thật: ghim `bcrypt==4.0.1` trong requirements.txt (bcrypt 5.x phá vỡ passlib)
 
 Cần bổ sung tiếp:
-- Module Order/Checkout thật (trang giỏ hàng hiện có nút "Tiến hành thanh toán" nhưng chưa nối API — cần thiết kế luồng đặt hàng, chọn địa chỉ, xác nhận)
-- Installment (trả góp), Promotion/Discount, Category CRUD riêng
-- Trang danh sách khách hàng cho admin xem/quản lý (hiện admin mới quản lý được nhân viên, chưa có trang xem khách hàng)
-- Tích hợp nhà cung cấp SMS/Email thật cho OTP (hiện đang log ra console ở môi trường dev)
+- Tích hợp API thật với 1 đơn vị vận chuyển cụ thể (VD: GHN) — đã viết ghi chú từng bước trong `shipping_service.py` nhưng chưa test với tài khoản thật; hệ thống vẫn hoạt động đầy đủ ở chế độ thủ công
+- Nâng cấp chatbot rule-based hiện tại lên chatbot AI thật (gọi API dịch vụ AI) nếu cần hiểu ngôn ngữ tự nhiên đa dạng hơn
+- Tích hợp nhà cung cấp SMS thật (Twilio/ESMS/Speedsms...) — email đã làm thật, SMS vẫn đang log console
 - Cân nhắc dùng object storage (S3/MinIO) thay vì lưu ảnh trên đĩa cục bộ khi lên production
-- Cân nhắc chuyển permissions từ nhúng trong JWT sang tra cứu DB mỗi request nếu cần cập nhật quyền tức thời (không phải chờ đăng nhập lại)
+- Cân nhắc chuyển permissions từ nhúng trong JWT sang tra cứu DB mỗi request nếu cần cập nhật quyền tức thời
+- Trang admin tuỳ chỉnh giao diện (`/admin/settings`) mới áp dụng cho trang chủ — mở rộng thêm sang tuỳ chỉnh trang danh mục/trang sản phẩm nếu cần (hiện danh mục đã có banner riêng, nhưng nội dung khác như màu sắc/bố cục thì chưa)

@@ -58,7 +58,9 @@ async def list_products(
     keyword: str | None = Query(None, description="Từ khoá tìm kiếm tên sản phẩm"),
     brand: str | None = Query(None, description="Lọc theo tên hãng"),
     category: str | None = Query(None, description="Lọc theo tên danh mục"),
+    category_id: int | None = Query(None, description="Lọc theo ID danh mục (tự động gồm cả danh mục con)"),
     feature: str | None = Query(None, description="Lọc theo chức năng/công dụng (tìm trong tên + mô tả)"),
+    on_sale: bool | None = Query(None, description="True = chỉ lấy sản phẩm đang có giá khuyến mãi"),
     min_price: float | None = None,
     max_price: float | None = None,
     page: int = 1,
@@ -78,10 +80,18 @@ async def list_products(
         stmt = stmt.where(Brand.name.ilike(f"%{brand}%"))
     if category:
         stmt = stmt.where(Category.name.ilike(f"%{category}%"))
+    if category_id is not None:
+        # Trang danh mục cha (VD "Laptop") phải hiển thị luôn sản phẩm của danh mục con
+        # (VD "Laptop Gaming", "Ultrabook") — lấy toàn bộ id con (1 cấp) rồi lọc IN (...).
+        children_result = await db.execute(select(Category.id).where(Category.parent_id == category_id))
+        child_ids = [row[0] for row in children_result.all()]
+        stmt = stmt.where(Product.category_id.in_([category_id, *child_ids]))
     if feature:
         stmt = stmt.where(
             or_(Product.name.ilike(f"%{feature}%"), Product.description.ilike(f"%{feature}%"))
         )
+    if on_sale:
+        stmt = stmt.where(Product.discount_price.is_not(None))
     if min_price is not None:
         stmt = stmt.where(Product.price >= min_price)
     if max_price is not None:

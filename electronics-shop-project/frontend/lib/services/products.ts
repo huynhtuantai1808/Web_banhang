@@ -37,7 +37,9 @@ export interface ProductFilters {
   keyword?: string;
   brand?: string;
   category?: string;
+  category_id?: number;
   feature?: string;
+  on_sale?: boolean;
   min_price?: number;
   max_price?: number;
   page?: number;
@@ -130,7 +132,51 @@ export async function listBrands(): Promise<CatalogOption[]> {
 }
 
 /** Danh sách danh mục hiện có — dùng để gợi ý (datalist) khi nhập sản phẩm mới. */
-export async function listCategories(): Promise<CatalogOption[]> {
-  const { data } = await apiClient.get<CatalogOption[]>("/categories");
+export async function listCategories(): Promise<CategoryOption[]> {
+  const { data } = await apiClient.get<CategoryOption[]>("/categories");
+  return data;
+}
+
+// ---- CRUD hãng/danh mục (admin) ----
+export async function createBrand(name: string): Promise<CatalogOption> {
+  const { data } = await apiClient.post<CatalogOption>("/brands", { name });
+  return data;
+}
+
+export async function updateBrand(id: number, name: string): Promise<CatalogOption> {
+  const { data } = await apiClient.put<CatalogOption>(`/brands/${id}`, { name });
+  return data;
+}
+
+export async function deleteBrand(id: number): Promise<void> {
+  await apiClient.delete(`/brands/${id}`);
+}
+
+export interface CategoryOption extends CatalogOption {
+  slug: string;
+  parent_id?: number | null;
+  banner_image_url?: string | null;
+}
+
+export async function createCategory(name: string, parentId?: number): Promise<CategoryOption> {
+  const { data } = await apiClient.post<CategoryOption>("/categories", { name, parent_id: parentId });
+  return data;
+}
+
+export async function updateCategory(id: number, name: string, parentId?: number): Promise<CategoryOption> {
+  const { data } = await apiClient.put<CategoryOption>(`/categories/${id}`, { name, parent_id: parentId });
+  return data;
+}
+
+export async function deleteCategory(id: number): Promise<void> {
+  await apiClient.delete(`/categories/${id}`);
+}
+
+export async function uploadCategoryBanner(id: number, file: File): Promise<CategoryOption> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const { data } = await apiClient.post<CategoryOption>(`/categories/${id}/banner-image`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return data;
 }

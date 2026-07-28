@@ -7,6 +7,7 @@ export interface CartItemOut {
   product_price: number;
   product_discount_price?: number | null;
   product_image_url?: string | null;
+  is_installment_eligible: boolean;
   quantity: number;
 }
 
@@ -18,6 +19,13 @@ export interface CartOut {
 export async function getCart(): Promise<CartOut> {
   const { data } = await apiClient.get<CartOut>("/cart");
   return data;
+}
+
+/** Xem trước chiết khấu TỰ ĐỘNG (theo hãng/danh mục/số lượng) áp dụng cho giỏ hàng hiện tại —
+ * không cần khách nhập mã, khác với mã khuyến mãi. */
+export async function getAutoDiscountPreview(): Promise<number> {
+  const { data } = await apiClient.get<{ auto_discount_amount: number }>("/cart/auto-discount");
+  return data.auto_discount_amount;
 }
 
 export async function addToCart(productId: string, quantity = 1): Promise<CartOut> {

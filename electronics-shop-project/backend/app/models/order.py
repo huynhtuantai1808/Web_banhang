@@ -17,6 +17,9 @@ class Order(Base):
     discount_amount: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
     final_amount: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
     payment_method: Mapped[str] = mapped_column(String(20), default="full")  # full | installment
+    payment_gateway: Mapped[str] = mapped_column(String(20), default="cod")  # cod | vnpay
+    payment_status: Mapped[str] = mapped_column(String(20), default="pending")  # pending | paid | failed
+    gateway_transaction_id: Mapped[str | None] = mapped_column(String(100))
     status: Mapped[str] = mapped_column(String(20), default="pending")
     shipping_address: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

@@ -13,11 +13,18 @@ export const apiClient: AxiosInstance = axios.create({
 });
 
 // Tự động gắn đúng loại Bearer token theo nhóm route:
-// - /cart/*             → token khách hàng (customer_token)
-// - còn lại (mặc định)  → token nhân viên (employee_token), dùng cho các route quản trị
+// - /cart/*, /orders/*                        → token khách hàng (customer_token)
+// - /promotions/mine, /promotions/validate     → token khách hàng (customer_token)
+// - còn lại (mặc định, kể cả /promotions khác) → token nhân viên (employee_token)
+function isCustomerRoute(url: string): boolean {
+  if (url.startsWith("/cart") || url.startsWith("/orders")) return true;
+  if (url.startsWith("/promotions/mine") || url.startsWith("/promotions/validate")) return true;
+  return false;
+}
+
 apiClient.interceptors.request.use((requestConfig) => {
   const url = requestConfig.url || "";
-  const token = url.startsWith("/cart") ? getCustomerToken() : getEmployeeToken();
+  const token = isCustomerRoute(url) ? getCustomerToken() : getEmployeeToken();
 
   if (token) {
     requestConfig.headers = requestConfig.headers ?? {};

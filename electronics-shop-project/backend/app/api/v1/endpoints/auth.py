@@ -53,7 +53,7 @@ async def login_step1(payload: LoginRequest, db: AsyncSession = Depends(get_db))
         raise HTTPException(status_code=403, detail="Tài khoản đã bị khoá")
 
     otp_token, otp_code = await generate_otp(str(customer.id))
-    await send_otp_via_sms_or_email(customer.phone, otp_code)
+    await send_otp_via_sms_or_email(customer.phone, otp_code, email=customer.email)
 
     return LoginStepOneResponse(otp_token=otp_token)
 

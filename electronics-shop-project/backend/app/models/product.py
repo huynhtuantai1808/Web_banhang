@@ -18,6 +18,8 @@ class Category(Base):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("categories.id"))
+    # Ảnh banner riêng hiển thị khi khách click vào trang danh mục này (khác với banner trang chủ)
+    banner_image_url: Mapped[str | None] = mapped_column(Text)
 
 
 class Product(Base):

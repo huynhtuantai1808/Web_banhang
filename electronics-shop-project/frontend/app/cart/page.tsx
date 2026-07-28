@@ -1,31 +1,66 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Minus, Plus, Trash2, ArrowLeft } from "lucide-react";
-import { getCart, updateCartItem, removeCartItem, CartOut } from "@/lib/services/cart";
+import { Loader2, Minus, Plus, Trash2, ArrowLeft, CreditCard } from "lucide-react";
+import { getCart, updateCartItem, removeCartItem, CartOut, CartItemOut } from "@/lib/services/cart";
+import { getProduct } from "@/lib/services/products";
+import {
+  getGuestCart, updateGuestCartItemQuantity, removeGuestCartItem,
+} from "@/lib/guestCart";
 import { getMediaUrl } from "@/lib/media";
 import { ApiError } from "@/lib/apiClient";
 import { isCustomerLoggedIn } from "@/lib/auth-storage";
 import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 
 function formatVND(v: number) {
   return v.toLocaleString("vi-VN") + "₫";
 }
 
+/** Dựng lại thông tin hiển thị cho giỏ hàng khách vãng lai (chỉ có productId+quantity trong
+ * localStorage) bằng cách tra cứu chi tiết từng sản phẩm — để hiển thị giống hệt giỏ hàng của
+ * khách đã đăng nhập (ảnh, tên, giá). */
+async function hydrateGuestCart(): Promise<CartOut> {
+  const guestItems = getGuestCart();
+  const items: CartItemOut[] = [];
+  let total = 0;
+
+  for (const line of guestItems) {
+    try {
+      const product = await getProduct(line.productId);
+      const unitPrice = product.discount_price ?? product.price;
+      total += unitPrice * line.quantity;
+      items.push({
+        id: line.productId, // dùng productId làm id vì khách vãng lai không có CartItem thật trong DB
+        product_id: product.id,
+        product_name: product.name,
+        product_price: product.price,
+        product_discount_price: product.discount_price ?? null,
+        product_image_url: product.primary_image_url ?? null,
+        is_installment_eligible: product.is_installment_eligible,
+        quantity: line.quantity,
+      });
+    } catch {
+      // sản phẩm có thể đã bị xoá/ngừng bán — bỏ qua khỏi hiển thị
+    }
+  }
+
+  return { items, total_amount: total };
+}
+
 export default function CartPage() {
-  const router = useRouter();
   const [cart, setCart] = useState<CartOut | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const loggedIn = isCustomerLoggedIn();
 
   async function loadCart() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getCart();
+      const data = loggedIn ? await getCart() : await hydrateGuestCart();
       setCart(data);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Không tải được giỏ hàng");
@@ -35,10 +70,6 @@ export default function CartPage() {
   }
 
   useEffect(() => {
-    if (!isCustomerLoggedIn()) {
-      router.replace("/login");
-      return;
-    }
     loadCart();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -46,8 +77,12 @@ export default function CartPage() {
   async function handleQuantityChange(itemId: string, nextQty: number) {
     setUpdatingId(itemId);
     try {
-      const data = await updateCartItem(itemId, nextQty);
-      setCart(data);
+      if (loggedIn) {
+        setCart(await updateCartItem(itemId, nextQty));
+      } else {
+        updateGuestCartItemQuantity(itemId, nextQty); // itemId ở đây chính là productId
+        setCart(await hydrateGuestCart());
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Cập nhật thất bại");
     } finally {
@@ -58,8 +93,12 @@ export default function CartPage() {
   async function handleRemove(itemId: string) {
     setUpdatingId(itemId);
     try {
-      const data = await removeCartItem(itemId);
-      setCart(data);
+      if (loggedIn) {
+        setCart(await removeCartItem(itemId));
+      } else {
+        removeGuestCartItem(itemId);
+        setCart(await hydrateGuestCart());
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Xoá thất bại");
     } finally {
@@ -78,7 +117,14 @@ export default function CartPage() {
         <ArrowLeft size={16} /> Tiếp tục mua sắm
       </Link>
 
-      <h1 className="font-display text-2xl text-circuit-text mb-6">Giỏ hàng của bạn</h1>
+      <h1 className="font-display text-2xl text-circuit-text mb-2">Giỏ hàng của bạn</h1>
+      {!loggedIn && (
+        <p className="text-sm text-circuit-muted mb-6">
+          Bạn đang mua sắm không cần tài khoản — giỏ hàng được lưu tạm trên trình duyệt này.{" "}
+          <Link href="/login" className="text-circuit-copperLight hover:underline">Đăng nhập</Link> nếu muốn
+          đồng bộ giỏ hàng và tra cứu đơn hàng dễ dàng hơn.
+        </p>
+      )}
 
       {loading && (
         <div className="flex items-center justify-center py-20 text-circuit-muted">
@@ -165,14 +211,16 @@ export default function CartPage() {
             </span>
           </div>
 
-          <button className="w-full rounded-md bg-circuit-copper py-3 text-sm font-medium text-circuit-bg hover:bg-circuit-copperLight transition-colors">
-            Tiến hành thanh toán
-          </button>
-          <p className="text-center text-xs text-circuit-muted">
-            (Chức năng thanh toán/đặt hàng sẽ được nối API ở giai đoạn tiếp theo)
-          </p>
+          <Link
+            href="/checkout"
+            className="w-full flex items-center justify-center gap-2 rounded-md bg-circuit-copper py-3 text-sm font-medium text-circuit-bg hover:bg-circuit-copperLight transition-colors"
+          >
+            <CreditCard size={18} /> Tiến hành thanh toán
+          </Link>
         </div>
       )}
+
+      <SiteFooter />
     </main>
   );
 }

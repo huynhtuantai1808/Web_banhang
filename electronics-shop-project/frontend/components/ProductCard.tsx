@@ -53,7 +53,7 @@ export default function ProductCard({
       whileHover={{ y: -6 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
       className="relative rounded-lg bg-circuit-panel border border-circuit-line p-4 overflow-hidden"
-      style={{ borderColor: hover ? "#C87F45" : undefined, transition: "border-color 0.2s" }}
+      style={{ borderColor: hover ? "var(--accent-color)" : undefined, transition: "border-color 0.2s" }}
     >
       <Link href={`/products/${product.id}`} className="block relative z-10">
         <div className="aspect-square rounded-md bg-circuit-bg/60 mb-3 flex items-center justify-center overflow-hidden">
@@ -93,7 +93,10 @@ export default function ProductCard({
       <button
         onClick={handleAddToCart}
         disabled={adding}
-        className="relative z-10 mt-4 w-full flex items-center justify-center gap-2 rounded-md border border-circuit-copper/60 py-2 text-sm font-medium text-circuit-copperLight hover:bg-circuit-copper hover:text-circuit-bg transition-colors disabled:opacity-60"
+        style={{ borderColor: "var(--accent-color)", color: "var(--accent-color-light)" }}
+        className="relative z-10 mt-4 w-full flex items-center justify-center gap-2 rounded-md border py-2 text-sm font-medium hover:text-circuit-bg transition-colors disabled:opacity-60"
+        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--accent-color)")}
+        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
       >
         {adding ? (
           <Loader2 size={16} className="animate-spin" />

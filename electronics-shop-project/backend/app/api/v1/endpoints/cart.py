@@ -8,6 +8,7 @@ from app.models.cart import Cart, CartItem
 from app.models.product import Product, ProductImage
 from app.core.security import require_customer
 from app.schemas.cart import CartItemAdd, CartItemOut, CartOut
+from app.services.discount_rule_service import compute_auto_discount
 
 router = APIRouter(prefix="/cart", tags=["Cart (Giỏ hàng)"])
 
@@ -47,11 +48,31 @@ async def _build_cart_out(db: AsyncSession, cart_id: uuid.UUID) -> CartOut:
                 product_price=float(product.price),
                 product_discount_price=float(product.discount_price) if product.discount_price else None,
                 product_image_url=image_url,
+                is_installment_eligible=product.is_installment_eligible,
                 quantity=cart_item.quantity,
             )
         )
 
     return CartOut(items=items, total_amount=total)
+
+
+@router.get("/auto-discount")
+async def get_auto_discount_preview(
+    db: AsyncSession = Depends(get_db), customer_id: str = Depends(require_customer)
+):
+    """Xem trước số tiền được chiết khấu TỰ ĐỘNG (theo hãng/danh mục/số lượng, không cần nhập mã)
+    cho giỏ hàng hiện tại — dùng ở trang checkout để hiển thị ngay cả khi khách chưa nhập mã KM."""
+    cart_result = await db.execute(select(Cart).where(Cart.customer_id == uuid.UUID(customer_id)))
+    cart = cart_result.scalar_one_or_none()
+    if not cart:
+        return {"auto_discount_amount": 0}
+
+    items_result = await db.execute(
+        select(CartItem, Product).join(Product, CartItem.product_id == Product.id).where(CartItem.cart_id == cart.id)
+    )
+    cart_rows = items_result.all()
+    discount = await compute_auto_discount(db, cart_rows)
+    return {"auto_discount_amount": discount}
 
 
 @router.get("", response_model=CartOut)

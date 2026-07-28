@@ -6,6 +6,10 @@
   --font-display: "Space Grotesk", sans-serif;
   --font-body: "Inter", sans-serif;
   --font-mono: "IBM Plex Mono", monospace;
+  /* Màu chủ đạo mặc định — SiteSettingsProvider sẽ ghi đè giá trị này lúc runtime
+     theo cấu hình admin đã lưu (accent_color trong bảng site_settings). */
+  --accent-color: #c87f45;
+  --accent-color-light: #e3a66e;
 }
 
 body {

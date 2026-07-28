@@ -1,3 +1,4 @@
+import asyncio
 import random
 import uuid
 from app.core.redis_client import redis_client
@@ -50,10 +51,45 @@ async def verify_otp(otp_token: str, otp_code_input: str) -> str | None:
     return user_id
 
 
-async def send_otp_via_sms_or_email(target: str, otp_code: str) -> None:
-    """Điểm tích hợp với nhà cung cấp SMS/Email thực tế (Twilio, SES, ESMS...).
+async def send_otp_via_sms_or_email(phone: str, otp_code: str, email: str | None = None) -> None:
+    """Gửi mã OTP tới khách hàng.
 
-    Ở giai đoạn dev, chỉ log ra console. Khi có API key thật trong .env,
-    thay phần này bằng lệnh gọi API tương ứng.
+    - Nếu khách có email VÀ Backend đã cấu hình SMTP thật (`EMAIL_SMTP_HOST` trong `.env`):
+      gửi email THẬT chứa mã OTP (dùng smtplib qua `asyncio.to_thread` để không chặn event loop).
+    - Ngược lại (chưa cấu hình SMTP, hoặc không có email — trường hợp gửi qua SMS): in ra console.
+      Gửi SMS thật cần tích hợp thêm nhà cung cấp trả phí (Twilio, ESMS, Speedsms...) — chưa có
+      sẵn merchant account miễn phí nào để tích hợp mặc định, nên tạm giữ ở dạng log để bạn tự
+      cắm API của nhà cung cấp mình chọn vào nhánh `else` bên dưới.
     """
-    print(f"[DEV] Gửi OTP {otp_code} tới {target}")
+    if email and settings.EMAIL_SMTP_HOST:
+        try:
+            await asyncio.to_thread(_send_otp_email_sync, email, otp_code)
+            return
+        except Exception as e:  # noqa: BLE001 — không để lỗi gửi mail chặn luồng đăng nhập
+            print(f"[OTP] Gửi email thất bại ({e}), fallback log console. Mã OTP: {otp_code} (email: {email})")
+            return
+
+    print(f"[DEV] Gửi OTP {otp_code} tới {phone}" + (f" / {email}" if email else ""))
+
+
+def _send_otp_email_sync(to_email: str, otp_code: str) -> None:
+    """Gửi email OTP đồng bộ qua SMTP — chạy trong thread riêng (xem asyncio.to_thread ở trên)."""
+    import smtplib
+    from email.mime.text import MIMEText
+
+    message = MIMEText(
+        f"Mã xác thực (OTP) đăng nhập của bạn là: {otp_code}\n"
+        f"Mã có hiệu lực trong {settings.OTP_TTL_SECONDS // 60} phút. "
+        f"Không chia sẻ mã này với bất kỳ ai.",
+        "plain",
+        "utf-8",
+    )
+    message["Subject"] = "Mã xác thực đăng nhập"
+    message["From"] = settings.EMAIL_SMTP_USER or "no-reply@example.com"
+    message["To"] = to_email
+
+    with smtplib.SMTP(settings.EMAIL_SMTP_HOST, settings.EMAIL_SMTP_PORT, timeout=10) as server:
+        server.starttls()
+        if settings.EMAIL_SMTP_USER and settings.EMAIL_SMTP_PASSWORD:
+            server.login(settings.EMAIL_SMTP_USER, settings.EMAIL_SMTP_PASSWORD)
+        server.sendmail(message["From"], [to_email], message.as_string())

@@ -1,19 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import SearchBar from "@/components/SearchBar";
 import FilterTabs, { FilterState } from "@/components/FilterTabs";
 import ProductCard, { Product } from "@/components/ProductCard";
+import ProductRow from "@/components/ProductRow";
 import SiteHeader from "@/components/SiteHeader";
-import { listProducts, ProductOut, ProductFilters } from "@/lib/services/products";
+import SiteFooter from "@/components/SiteFooter";
+import CategoryMenu from "@/components/CategoryMenu";
+import { listProducts, listCategories, ProductOut, ProductFilters, CategoryOption } from "@/lib/services/products";
 import { addToCart } from "@/lib/services/cart";
+import { addGuestCartItem } from "@/lib/guestCart";
 import { getMediaUrl } from "@/lib/media";
 import { ApiError } from "@/lib/apiClient";
 import { isCustomerLoggedIn } from "@/lib/auth-storage";
-import { BRANDING } from "@/lib/branding";
+import { useSiteSettings } from "@/components/SiteSettingsProvider";
 
 // Khoảng giá hiển thị trên FilterTabs → khoảng min/max thực tế gửi xuống Backend (đơn vị: VNĐ)
 const PRICE_RANGES: Record<string, { min_price?: number; max_price?: number }> = {
@@ -41,7 +44,7 @@ function toDisplayProduct(p: ProductOut): Product {
 }
 
 export default function HomePage() {
-  const router = useRouter();
+  const { settings } = useSiteSettings();
 
   const [keyword, setKeyword] = useState("");
   const [filters, setFilters] = useState<FilterState>({});
@@ -49,6 +52,14 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cartMessage, setCartMessage] = useState<string | null>(null);
+
+  // Nhóm sản phẩm hiển thị ở trạng thái mặc định (chưa tìm kiếm/lọc gì) — theo khuyến mãi
+  // (đang giảm giá) và theo từng nhóm danh mục nổi bật.
+  const [onSaleProducts, setOnSaleProducts] = useState<Product[]>([]);
+  const [categoryGroups, setCategoryGroups] = useState<{ category: CategoryOption; products: Product[] }[]>([]);
+  const [groupsLoading, setGroupsLoading] = useState(true);
+
+  const isBrowsingDefault = !keyword && Object.values(filters).every((v) => !v);
 
   /** Ghép từ khoá tìm kiếm + toàn bộ lựa chọn ở FilterTabs (danh mục/hãng/giá/chức năng)
    * thành 1 lần gọi API duy nhất — đây là tính năng "lọc kết hợp nhiều điều kiện" được yêu cầu:
@@ -79,6 +90,35 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]); // đổi filter → tự động tải lại; đổi keyword thì chờ người dùng bấm Enter (xem SearchBar)
 
+  // Tải nhóm "Đang giảm giá" + nhóm theo 3 danh mục cha đầu tiên — chỉ 1 lần lúc vào trang.
+  useEffect(() => {
+    async function loadGroups() {
+      setGroupsLoading(true);
+      try {
+        const [onSaleData, allCategories] = await Promise.all([
+          listProducts({ on_sale: true, page_size: 8 }),
+          listCategories(),
+        ]);
+        setOnSaleProducts(onSaleData.map(toDisplayProduct));
+
+        const topCategories = allCategories.filter((c) => !c.parent_id).slice(0, 3);
+        const groups = await Promise.all(
+          topCategories.map(async (category) => {
+            const data = await listProducts({ category_id: category.id, page_size: 4 });
+            return { category, products: data.map(toDisplayProduct) };
+          })
+        );
+        setCategoryGroups(groups.filter((g) => g.products.length > 0));
+      } catch {
+        setOnSaleProducts([]);
+        setCategoryGroups([]);
+      } finally {
+        setGroupsLoading(false);
+      }
+    }
+    loadGroups();
+  }, []);
+
   function handleFilterChange(next: FilterState) {
     setFilters(next);
   }
@@ -90,7 +130,9 @@ export default function HomePage() {
 
   async function handleAddToCart(productId: string) {
     if (!isCustomerLoggedIn()) {
-      router.push("/login");
+      addGuestCartItem(productId, 1);
+      setCartMessage("Đã thêm vào giỏ hàng (mua không cần tài khoản).");
+      setTimeout(() => setCartMessage(null), 2500);
       return;
     }
     try {
@@ -112,17 +154,34 @@ export default function HomePage() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="mb-10 rounded-xl border border-circuit-line bg-circuit-panel px-8 py-14 relative overflow-hidden"
+        className="mb-8 rounded-xl border border-circuit-line bg-circuit-panel px-8 py-14 relative overflow-hidden"
+        style={
+          settings.banner_image_url
+            ? {
+                backgroundImage: `linear-gradient(rgba(11,18,32,0.82), rgba(11,18,32,0.92)), url(${getMediaUrl(
+                  settings.banner_image_url
+                )})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : undefined
+        }
       >
-        <p className="font-mono text-circuit-copperLight text-sm tracking-widest uppercase mb-3">
-          // {BRANDING.siteName} Store
+        <p
+          className="font-mono text-sm tracking-widest uppercase mb-3"
+          style={{ color: "var(--accent-color-light)" }}
+        >
+          // {settings.hero_subtitle}
         </p>
         <h1 className="font-display text-4xl md:text-5xl text-circuit-text max-w-2xl leading-tight">
-          {BRANDING.tagline}
+          {settings.hero_title}
         </h1>
-        <p className="text-circuit-muted mt-4 max-w-xl">{BRANDING.description}</p>
-        <div className="mt-6 max-w-md">
-          <SearchBar onSearch={handleSearch} />
+        <p className="text-circuit-muted mt-4 max-w-xl">{settings.hero_description}</p>
+        <div className="mt-6 flex flex-wrap gap-3 max-w-xl">
+          <div className="flex-1 min-w-[240px]">
+            <SearchBar onSearch={handleSearch} />
+          </div>
+          <CategoryMenu />
         </div>
       </motion.section>
 
@@ -132,12 +191,36 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* Nhóm sản phẩm mặc định (khuyến mãi + theo danh mục) — chỉ hiện khi chưa tìm/lọc gì */}
+      {isBrowsingDefault && !groupsLoading && (
+        <>
+          <ProductRow
+            title="🔥 Đang giảm giá"
+            products={onSaleProducts}
+            onAddToCart={handleAddToCart}
+          />
+          {categoryGroups.map(({ category, products: catProducts }) => (
+            <ProductRow
+              key={category.id}
+              title={category.name}
+              products={catProducts}
+              viewAllHref={`/category/${category.slug}`}
+              onAddToCart={handleAddToCart}
+            />
+          ))}
+        </>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         <aside className="md:col-span-1">
           <FilterTabs value={filters} onChange={handleFilterChange} />
         </aside>
 
         <section className="md:col-span-3">
+          {!isBrowsingDefault && (
+            <p className="text-sm text-circuit-muted mb-4">Kết quả lọc/tìm kiếm:</p>
+          )}
+
           {loading && (
             <div className="flex items-center justify-center py-20 text-circuit-muted">
               <Loader2 className="animate-spin mr-2" size={18} /> Đang tải sản phẩm từ máy chủ...
@@ -172,6 +255,8 @@ export default function HomePage() {
           )}
         </section>
       </div>
+
+      <SiteFooter />
     </main>
   );
 }

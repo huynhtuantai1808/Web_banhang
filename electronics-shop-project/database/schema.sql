@@ -51,7 +51,8 @@ CREATE TABLE categories (
     id          SERIAL PRIMARY KEY,
     name        VARCHAR(100) NOT NULL,             -- Điện thoại, Laptop, Máy tính bảng, PC Gaming
     slug        VARCHAR(100) UNIQUE NOT NULL,
-    parent_id   INT REFERENCES categories(id)
+    parent_id   INT REFERENCES categories(id),
+    banner_image_url TEXT   -- ảnh banner riêng hiển thị khi khách click vào trang danh mục này
 );
 
 -- ================= SẢN PHẨM =================
@@ -167,6 +168,9 @@ CREATE TABLE orders (
     discount_amount NUMERIC(14,2) DEFAULT 0,
     final_amount    NUMERIC(14,2) NOT NULL,
     payment_method  VARCHAR(20) DEFAULT 'full' CHECK (payment_method IN ('full','installment')),
+    payment_gateway VARCHAR(20) DEFAULT 'cod' CHECK (payment_gateway IN ('cod','vnpay')),
+    payment_status  VARCHAR(20) DEFAULT 'pending' CHECK (payment_status IN ('pending','paid','failed')),
+    gateway_transaction_id VARCHAR(100),
     status          VARCHAR(20) DEFAULT 'pending',  -- pending, confirmed, shipping, completed, cancelled
     shipping_address TEXT,
     created_at      TIMESTAMPTZ DEFAULT now(),
@@ -210,6 +214,45 @@ CREATE TABLE otp_logs (
     purpose     VARCHAR(30) NOT NULL,    -- login, register, reset_password
     is_success  BOOLEAN,
     created_at  TIMESTAMPTZ DEFAULT now()
+);
+
+-- ================= CÀI ĐẶT GIAO DIỆN STOREFRONT (tuỳ chỉnh bởi admin) =================
+-- Bảng dạng "singleton" — chỉ luôn có 1 dòng (id = 1) lưu cấu hình hiển thị trang khách hàng.
+CREATE TABLE site_settings (
+    id                  SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+    site_name           VARCHAR(100) NOT NULL DEFAULT 'TechTrace',
+    hero_title          VARCHAR(255) NOT NULL DEFAULT 'Công nghệ chính hãng, kết nối đúng nhu cầu của bạn.',
+    hero_subtitle       VARCHAR(100) NOT NULL DEFAULT 'TechTrace Store',
+    hero_description     TEXT NOT NULL DEFAULT 'Điện thoại, laptop, máy tính bảng, PC gaming — trả góp 0% lãi suất, bảo hành chính hãng, giao nhanh toàn quốc.',
+    banner_image_url    TEXT,
+    logo_image_url      TEXT,
+    accent_color        VARCHAR(7) NOT NULL DEFAULT '#C87F45',  -- mã màu HEX
+    updated_at          TIMESTAMPTZ DEFAULT now()
+);
+
+INSERT INTO site_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+
+-- ================= VẬN CHUYỂN / GIAO HÀNG =================
+CREATE TABLE shipments (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_id        UUID UNIQUE REFERENCES orders(id),
+    carrier         VARCHAR(50) NOT NULL,   -- VD: "Giao Hàng Nhanh", "Viettel Post", "Ninja Van", "Tự vận chuyển"
+    tracking_code   VARCHAR(100),
+    status          VARCHAR(30) DEFAULT 'pending',
+        -- pending, picked_up, in_transit, delivered, failed, returned
+    shipping_fee    NUMERIC(14,2) DEFAULT 0,
+    note            TEXT,
+    created_at      TIMESTAMPTZ DEFAULT now(),
+    updated_at      TIMESTAMPTZ DEFAULT now()
+);
+
+-- Lịch sử trạng thái giao hàng — hiển thị dạng timeline cho khách + admin theo dõi
+CREATE TABLE shipment_status_logs (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    shipment_id     UUID REFERENCES shipments(id) ON DELETE CASCADE,
+    status          VARCHAR(30) NOT NULL,
+    note            TEXT,
+    created_at      TIMESTAMPTZ DEFAULT now()
 );
 
 -- ================= INDEX BỔ SUNG =================

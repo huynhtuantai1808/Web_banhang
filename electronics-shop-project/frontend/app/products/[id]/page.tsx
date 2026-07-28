@@ -7,10 +7,12 @@ import { motion } from "framer-motion";
 import { ArrowLeft, ShoppingCart, Loader2, Check, CreditCard } from "lucide-react";
 import { getProduct, listProductImages, ProductOut, ProductImageOut } from "@/lib/services/products";
 import { addToCart } from "@/lib/services/cart";
+import { calculateInstallment } from "@/lib/services/installment";
 import { getMediaUrl } from "@/lib/media";
 import { ApiError } from "@/lib/apiClient";
 import { isCustomerLoggedIn } from "@/lib/auth-storage";
 import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 
 function formatVND(v: number) {
   return v.toLocaleString("vi-VN") + "₫";
@@ -28,6 +30,7 @@ export default function ProductDetailPage() {
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
+  const [installmentPreview, setInstallmentPreview] = useState<number | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -43,6 +46,13 @@ export default function ProductDetailPage() {
         const primary =
           imageData.find((img) => img.is_primary)?.url || productData.primary_image_url || imageData[0]?.url;
         setActiveImage(getMediaUrl(primary) || "");
+
+        if (productData.is_installment_eligible) {
+          const price = productData.discount_price || productData.price;
+          calculateInstallment(price, 12)
+            .then((res) => setInstallmentPreview(res.monthly_amount))
+            .catch(() => setInstallmentPreview(null));
+        }
       } catch (err) {
         setError(err instanceof ApiError ? err.message : "Không tải được thông tin sản phẩm");
       } finally {
@@ -151,7 +161,10 @@ export default function ProductDetailPage() {
 
             {product.is_installment_eligible && (
               <p className="mt-2 flex items-center gap-2 text-sm text-circuit-copperLight">
-                <CreditCard size={16} /> Hỗ trợ mua trả góp 0% lãi suất
+                <CreditCard size={16} />
+                {installmentPreview
+                  ? `Trả góp chỉ từ ${formatVND(installmentPreview)}/tháng (12 tháng, 0% lãi suất)`
+                  : "Hỗ trợ mua trả góp 0% lãi suất"}
               </p>
             )}
 
@@ -204,6 +217,8 @@ export default function ProductDetailPage() {
           </div>
         </motion.div>
       )}
+
+      <SiteFooter />
     </main>
   );
 }

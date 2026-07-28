@@ -14,6 +14,7 @@ class CartItemOut(BaseModel):
     product_price: float
     product_discount_price: float | None = None
     product_image_url: str | None = None
+    is_installment_eligible: bool = True
     quantity: int
 
     class Config:
