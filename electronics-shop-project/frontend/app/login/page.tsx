@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { LogIn } from "lucide-react";
+import { LogIn, Phone, Mail } from "lucide-react";
 import { loginStep1, verifyOtp } from "@/lib/services/auth";
 import { ApiError } from "@/lib/apiClient";
 
@@ -21,7 +21,9 @@ function LoginForm() {
   const justRegistered = searchParams.get("registered") === "1";
 
   const [step, setStep] = useState<1 | 2>(1);
+  const [loginBy, setLoginBy] = useState<"phone" | "email">("phone");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otpToken, setOtpToken] = useState("");
   const [otpCode, setOtpCode] = useState("");
@@ -33,7 +35,10 @@ function LoginForm() {
     setLoading(true);
     setError(null);
     try {
-      const res = await loginStep1(phone, password);
+      const credentials = loginBy === "phone"
+        ? { phone, password }
+        : { email, password };
+      const res = await loginStep1(credentials);
       setOtpToken(res.otp_token);
       setStep(2);
     } catch (err) {
@@ -59,7 +64,7 @@ function LoginForm() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-circuit-bg px-4">
-      <div className="w-full max-w-sm rounded-lg border border-circuit-line bg-circuit-panel p-8">
+      <div className="w-full max-w-sm rounded-lg border-2 border-circuit-copper/40 bg-circuit-panel p-8 shadow-lg shadow-circuit-copper/10">
         <p className="font-mono text-xs text-circuit-copperLight uppercase tracking-widest mb-1">
           TechTrace
         </p>
@@ -80,15 +85,55 @@ function LoginForm() {
 
         {step === 1 ? (
           <form onSubmit={handleStep1} className="space-y-4">
-            <Field label="Số điện thoại">
-              <input
-                required
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="input"
-                placeholder="09xxxxxxxx"
-              />
-            </Field>
+            {/* Toggle: Phone / Email */}
+            <div className="flex rounded-md border border-circuit-line overflow-hidden">
+              <button
+                type="button"
+                onClick={() => { setLoginBy("phone"); setEmail(""); }}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors ${
+                  loginBy === "phone"
+                    ? "bg-circuit-copper/15 text-circuit-copperLight border-b-2 border-circuit-copper"
+                    : "text-circuit-muted hover:text-circuit-text"
+                }`}
+              >
+                <Phone size={14} /> Số điện thoại
+              </button>
+              <button
+                type="button"
+                onClick={() => { setLoginBy("email"); setPhone(""); }}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors ${
+                  loginBy === "email"
+                    ? "bg-circuit-copper/15 text-circuit-copperLight border-b-2 border-circuit-copper"
+                    : "text-circuit-muted hover:text-circuit-text"
+                }`}
+              >
+                <Mail size={14} /> Email
+              </button>
+            </div>
+
+            {loginBy === "phone" ? (
+              <Field label="Số điện thoại">
+                <input
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="input"
+                  placeholder="09xxxxxxxx"
+                />
+              </Field>
+            ) : (
+              <Field label="Địa chỉ email">
+                <input
+                  required
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input"
+                  placeholder="your@email.com"
+                />
+              </Field>
+            )}
+
             <Field label="Mật khẩu">
               <input
                 required
@@ -109,7 +154,7 @@ function LoginForm() {
         ) : (
           <form onSubmit={handleStep2} className="space-y-4">
             <p className="text-sm text-circuit-muted">
-              Mã OTP đã được gửi tới số điện thoại của bạn.
+              Mã OTP đã được gửi tới {loginBy === "phone" ? "số điện thoại" : "email"} của bạn.
               <br />
               <span className="text-xs">
                 (Môi trường dev: mã OTP được in ra console log của backend)

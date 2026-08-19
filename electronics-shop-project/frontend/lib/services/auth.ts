@@ -25,8 +25,10 @@ export async function register(payload: RegisterPayload) {
   return data;
 }
 
-export async function loginStep1(phone: string, password: string): Promise<LoginStepOneResponse> {
-  const { data } = await apiClient.post<LoginStepOneResponse>("/auth/login", { phone, password });
+export async function loginStep1(
+  credentials: { phone: string; password: string } | { email: string; password: string }
+): Promise<LoginStepOneResponse> {
+  const { data } = await apiClient.post<LoginStepOneResponse>("/auth/login", credentials);
   return data;
 }
 

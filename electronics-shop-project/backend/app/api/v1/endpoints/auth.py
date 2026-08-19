@@ -42,17 +42,26 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
 
 @router.post("/login", response_model=LoginStepOneResponse)
 async def login_step1(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
-    """Bước 1: xác thực mật khẩu, sau đó gửi OTP."""
-    result = await db.execute(select(Customer).where(Customer.phone == payload.phone))
+    """Bước 1: xác thực mật khẩu bằng phone HOẶC email, sau đó gửi OTP."""
+    if not payload.phone and not payload.email:
+        raise HTTPException(status_code=422, detail="Cần cung cấp số điện thoại hoặc email")
+
+    # Tìm customer bằng phone hoặc email
+    if payload.phone:
+        result = await db.execute(select(Customer).where(Customer.phone == payload.phone))
+    else:
+        result = await db.execute(select(Customer).where(Customer.email == payload.email))
+
     customer = result.scalar_one_or_none()
 
     if not customer or not verify_password(payload.password, customer.password_hash):
-        raise HTTPException(status_code=401, detail="Số điện thoại hoặc mật khẩu không đúng")
+        raise HTTPException(status_code=401, detail="Thông tin đăng nhập không đúng")
 
     if not customer.is_active:
         raise HTTPException(status_code=403, detail="Tài khoản đã bị khoá")
 
     otp_token, otp_code = await generate_otp(str(customer.id))
+    # Ưu tiên gửi OTP qua email nếu có, nếu không thì qua SMS
     await send_otp_via_sms_or_email(customer.phone, otp_code, email=customer.email)
 
     return LoginStepOneResponse(otp_token=otp_token)

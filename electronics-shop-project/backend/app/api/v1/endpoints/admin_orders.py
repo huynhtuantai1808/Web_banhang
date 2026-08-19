@@ -155,10 +155,12 @@ async def get_order_invoice(
     ]
 
     promotion = None
+    promotion_code = None
     if order.promotion_id:
         promo = await db.get(Promotion, order.promotion_id)
         if promo:
             promotion = {"code": promo.code, "name": promo.name}
+            promotion_code = promo.code
 
     return {
         "order_code": order.order_code,
@@ -169,12 +171,13 @@ async def get_order_invoice(
         "payment_method": order.payment_method,
         "payment_gateway": order.payment_gateway,
         "payment_status": order.payment_status,
+        "status": order.status,
         "created_at": order.created_at.isoformat() if order.created_at else None,
         "items": items,
-        "total_amount": float(order.total_amount),
+        "subtotal": float(order.total_amount),
         "discount_amount": float(order.discount_amount),
         "final_amount": float(order.final_amount),
-        "promotion": promotion,
+        "promotion_code": promotion_code,
     }
 
 

@@ -178,10 +178,10 @@ export default function HomePage() {
         </h1>
         <p className="text-circuit-muted mt-4 max-w-xl">{settings.hero_description}</p>
         <div className="mt-6 flex flex-wrap gap-3 max-w-xl">
+          <CategoryMenu />
           <div className="flex-1 min-w-[240px]">
             <SearchBar onSearch={handleSearch} />
           </div>
-          <CategoryMenu />
         </div>
       </motion.section>
 

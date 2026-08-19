@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Loader2, ShoppingCart, Check } from "lucide-react";
+import { listProductImages } from "@/lib/services/products";
 
 export interface Product {
   id: string;
@@ -30,10 +31,33 @@ export default function ProductCard({
   const [hover, setHover] = useState(false);
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
+  const [images, setImages] = useState<string[]>([product.imageUrl]);
+  const [imgIdx, setImgIdx] = useState(0);
   const hasDiscount = !!product.discountPrice && product.discountPrice < product.price;
 
+  // Load additional product images
+  useEffect(() => {
+    listProductImages(product.id)
+      .then((imgs) => {
+        const urls = imgs.length > 0
+          ? imgs.map((img) => img.url)
+          : [product.imageUrl];
+        setImages(urls);
+      })
+      .catch(() => setImages([product.imageUrl]));
+  }, [product.id, product.imageUrl]);
+
+  // Auto-rotate images every 3 seconds when not hovering
+  useEffect(() => {
+    if (images.length <= 1 || hover) return;
+    const timer = setInterval(() => {
+      setImgIdx((i) => (i + 1) % images.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [images.length, hover]);
+
   async function handleAddToCart(e: React.MouseEvent) {
-    e.preventDefault(); // không cho nổi bọt lên <Link> bao ngoài (nếu có) và không điều hướng
+    e.preventDefault();
     e.stopPropagation();
     if (!onAddToCart || adding) return;
     setAdding(true);
@@ -57,10 +81,15 @@ export default function ProductCard({
       style={{ borderColor: hover ? "var(--accent-color)" : undefined, transition: "border-color 0.2s" }}
     >
       <Link href={`/products/${product.id}`} className="block relative z-10">
-        <div className="aspect-square rounded-md bg-circuit-bg/60 mb-3 flex items-center justify-center overflow-hidden">
+        {/* Image gallery */}
+        <div
+          className="aspect-square rounded-md bg-circuit-bg/60 mb-3 flex items-center justify-center overflow-hidden relative"
+          onMouseEnter={() => setHover(true)}
+          onMouseLeave={() => setHover(false)}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={product.imageUrl}
+            src={images[imgIdx]}
             alt={product.name}
             className="object-contain h-full w-full transition-transform duration-300"
             style={{ transform: hover ? "scale(1.06)" : "scale(1)" }}
@@ -69,6 +98,25 @@ export default function ProductCard({
                 "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='%23121B2E'/></svg>";
             }}
           />
+
+          {/* Navigation dots */}
+          {images.length > 1 && (
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+              {images.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setImgIdx(i);
+                  }}
+                  className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                    i === imgIdx ? "bg-circuit-copper" : "bg-circuit-line hover:bg-circuit-muted"
+                  }`}
+                  aria-label={`Ảnh ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         <p className="text-xs font-mono text-circuit-copperLight uppercase tracking-wide">

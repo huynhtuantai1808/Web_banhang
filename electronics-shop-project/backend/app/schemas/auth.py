@@ -10,7 +10,8 @@ class RegisterRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    phone: str
+    phone: str | None = None
+    email: str | None = None
     password: str
 
 

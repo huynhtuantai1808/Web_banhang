@@ -391,21 +391,25 @@ export default function CheckoutPage() {
           </div>
 
           {/* Hình thức thanh toán: trả toàn bộ hay trả góp (trả góp yêu cầu đăng nhập) */}
-          <div className="rounded-lg border-2 border-dashed border-circuit-copper/50 bg-circuit-panel/30 p-4">
-            <label className="block text-xs font-mono text-circuit-copperLight uppercase mb-3 tracking-widest">
-              ◆ Hình thức thanh toán
+          <div className="rounded-lg border-2 border-circuit-copper bg-circuit-panel shadow-lg shadow-circuit-copper/10 p-4">
+            <label className="block text-xs font-mono text-circuit-copperLight uppercase mb-3 tracking-widest flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-circuit-copper inline-block" />
+              Hình thức thanh toán
             </label>
             <div className="grid grid-cols-2 gap-3 mb-3">
               <button
                 type="button"
                 onClick={() => setPaymentMethod("full")}
-                className={`rounded-md border px-4 py-3 text-sm text-left transition-colors ${
+                className={`rounded-md border-2 px-4 py-3 text-sm text-left transition-all hover:scale-[1.02] ${
                   paymentMethod === "full"
-                    ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight"
-                    : "border-circuit-line text-circuit-muted hover:border-circuit-copper"
+                    ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight shadow-md shadow-circuit-copper/20"
+                    : "border-circuit-line text-circuit-muted hover:border-circuit-copper/60 hover:bg-circuit-panel/80"
                 }`}
               >
-                <p className="font-medium">Trả toàn bộ</p>
+                <p className="font-medium flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-circuit-copper inline-block" />
+                  Trả toàn bộ
+                </p>
                 <p className="text-xs mt-1 opacity-80">Thanh toán 1 lần</p>
               </button>
               <button
@@ -413,14 +417,14 @@ export default function CheckoutPage() {
                 onClick={() => allEligibleForInstallment && setPaymentMethod("installment")}
                 disabled={!allEligibleForInstallment}
                 title={!loggedIn ? "Cần đăng nhập để mua trả góp" : undefined}
-                className={`rounded-md border px-4 py-3 text-sm text-left transition-colors disabled:opacity-40 ${
+                className={`rounded-md border-2 px-4 py-3 text-sm text-left transition-all hover:scale-[1.02] disabled:opacity-40 disabled:hover:scale-100 ${
                   paymentMethod === "installment"
-                    ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight"
-                    : "border-circuit-line text-circuit-muted hover:border-circuit-copper"
+                    ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight shadow-md shadow-circuit-copper/20"
+                    : "border-circuit-line text-circuit-muted hover:border-circuit-copper/60 hover:bg-circuit-panel/80"
                 }`}
               >
                 <p className="font-medium flex items-center gap-1.5">
-                  <CalendarClock size={14} /> Trả góp 0% lãi suất
+                  <CalendarClock size={14} /> Trả góp 0%
                 </p>
                 <p className="text-xs mt-1 opacity-80">
                   {loggedIn ? "Chia nhỏ theo tháng" : "Cần đăng nhập để dùng"}
@@ -461,33 +465,45 @@ export default function CheckoutPage() {
 
           {/* Chọn cổng thanh toán — chỉ áp dụng khi trả toàn bộ */}
           {paymentMethod === "full" && (
-            <div className="rounded-lg border-2 border-dashed border-circuit-copper/50 bg-circuit-panel/30 p-4">
-              <label className="block text-xs font-mono text-circuit-copperLight uppercase mb-3 tracking-widest">
-                ◆ Cổng thanh toán
+            <div className="rounded-lg border-2 border-circuit-copper bg-circuit-panel shadow-lg shadow-circuit-copper/10 p-4">
+              <label className="block text-xs font-mono text-circuit-copperLight uppercase mb-3 tracking-widest flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-circuit-copper inline-block" />
+                Cổng thanh toán
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => setGateway("cod")}
-                  className={`rounded-md border px-4 py-3 text-sm text-left transition-colors ${
+                  className={`relative rounded-md border-2 px-4 py-3 text-sm text-left transition-all hover:scale-[1.02] ${
                     gateway === "cod"
-                      ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight"
-                      : "border-circuit-line text-circuit-muted hover:border-circuit-copper"
+                      ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight shadow-md shadow-circuit-copper/20"
+                      : "border-circuit-line text-circuit-muted hover:border-circuit-copper/60 hover:bg-circuit-panel/80"
                   }`}
                 >
-                  <p className="font-medium">Thanh toán khi nhận hàng</p>
+                  {gateway === "cod" && (
+                    <span className="absolute -top-2 left-3 px-2 py-0.5 text-[10px] font-mono bg-circuit-signal/20 text-circuit-signal rounded">
+                      Gợi ý
+                    </span>
+                  )}
+                  <p className="font-medium flex items-center gap-1.5">
+                    <Truck size={14} />
+                    Thanh toán khi nhận hàng
+                  </p>
                   <p className="text-xs mt-1 opacity-80">Tiền mặt (COD)</p>
                 </button>
                 <button
                   type="button"
                   onClick={() => setGateway("vnpay")}
-                  className={`rounded-md border px-4 py-3 text-sm text-left transition-colors ${
+                  className={`relative rounded-md border-2 px-4 py-3 text-sm text-left transition-all hover:scale-[1.02] ${
                     gateway === "vnpay"
-                      ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight"
-                      : "border-circuit-line text-circuit-muted hover:border-circuit-copper"
+                      ? "border-blue-400 bg-blue-400/10 text-blue-300 shadow-md shadow-blue-400/20"
+                      : "border-circuit-line text-circuit-muted hover:border-blue-400/60 hover:bg-circuit-panel/80"
                   }`}
                 >
-                  <p className="font-medium">VNPay</p>
+                  <p className="font-medium flex items-center gap-1.5">
+                    <CreditCard size={14} />
+                    VNPay
+                  </p>
                   <p className="text-xs mt-1 opacity-80">ATM / Thẻ quốc tế / QR</p>
                 </button>
               </div>
