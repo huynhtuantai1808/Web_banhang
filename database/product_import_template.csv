@@ -1,0 +1,4 @@
+product_code,name,description,brand,category,color,material,size_dimension,price,discount_price
+SP000200,Laptop Gaming Legion 5,"Laptop gaming hiệu năng cao",Lenovo,PC Gaming,Đen,Nhôm,35.9 x 26.2 x 2.4 cm,28990000,26990000
+SP000201,Samsung Galaxy Tab S9,"Máy tính bảng màn hình AMOLED",Samsung,Máy tính bảng,Xám,Kính cường lực,254.3 x 165.8 x 5.9 mm,18990000,
+SP000202,Dell XPS 13,"Laptop mỏng nhẹ cao cấp",Dell,Laptop,Bạc,Nhôm nguyên khối,29.6 x 19.9 x 1.4 cm,32990000,
