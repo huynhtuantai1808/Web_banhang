@@ -40,16 +40,17 @@ export default function AdminSettingsPage() {
   async function handleSave() {
     if (!settings) return;
     setSaving(true);
-    setBanner(null);
-    try {
-      const updated = await updateSiteSettings({
-        site_name: settings.site_name,
-        hero_title: settings.hero_title,
-        hero_subtitle: settings.hero_subtitle,
-        hero_description: settings.hero_description,
-        footer_intro: settings.footer_intro,
-        accent_color: settings.accent_color,
-      });
+setBanner(null);
+
+try {
+  const updated = await updateSiteSettings({
+    site_name: settings.site_name,
+    hero_title: settings.hero_title,
+    hero_subtitle: settings.hero_subtitle,
+    hero_description: settings.hero_description,
+    footer_intro: settings.footer_intro ?? undefined,
+    accent_color: settings.accent_color,
+  });
       setSettings(updated);
       setBanner({ type: "success", text: "Đã lưu cấu hình giao diện. Tải lại trang chủ để xem thay đổi." });
     } catch (err) {
