@@ -5,6 +5,7 @@ export interface SiteSettingsOut {
   hero_title: string;
   hero_subtitle: string;
   hero_description: string;
+  footer_intro?: string | null;
   banner_image_url?: string | null;
   logo_image_url?: string | null;
   accent_color: string;
@@ -15,6 +16,7 @@ export interface SiteSettingsUpdateInput {
   hero_title?: string;
   hero_subtitle?: string;
   hero_description?: string;
+  footer_intro?: string;
   accent_color?: string;
 }
 

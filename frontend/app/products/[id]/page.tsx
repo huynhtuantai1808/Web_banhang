@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Loader2, Check, CreditCard } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Loader2, Check, CreditCard, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { getProduct, listProductImages, ProductOut, ProductImageOut } from "@/lib/services/products";
 import { addToCart } from "@/lib/services/cart";
 import { calculateInstallment } from "@/lib/services/installment";
@@ -24,13 +24,39 @@ export default function ProductDetailPage() {
 
   const [product, setProduct] = useState<ProductOut | null>(null);
   const [images, setImages] = useState<ProductImageOut[]>([]);
-  const [activeImage, setActiveImage] = useState<string>("");
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [autoRotating, setAutoRotating] = useState(false);
+  const autoRotateRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
   const [installmentPreview, setInstallmentPreview] = useState<number | null>(null);
+
+  const allImages = images.length > 0 ? images : (product?.primary_image_url ? [{ id: "0", product_id: product.id, url: product.primary_image_url, is_primary: true }] : []);
+
+  // Auto-rotate: change image every 4s when >1 image
+  function startAutoRotate() {
+    if (allImages.length <= 1) return;
+    if (autoRotateRef.current) return;
+    setAutoRotating(true);
+    autoRotateRef.current = setInterval(() => {
+      setActiveImageIndex((prev) => (prev + 1) % allImages.length);
+    }, 4000);
+  }
+
+  function stopAutoRotate() {
+    if (autoRotateRef.current) {
+      clearInterval(autoRotateRef.current);
+      autoRotateRef.current = null;
+    }
+    setAutoRotating(false);
+  }
+
+  useEffect(() => {
+    return () => stopAutoRotate();
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -39,14 +65,16 @@ export default function ProductDetailPage() {
       try {
         const [productData, imageData] = await Promise.all([
           getProduct(params.id),
-          listProductImages(params.id).catch(() => []), // không chặn trang nếu lỗi lấy ảnh phụ
+          listProductImages(params.id).catch(() => []),
         ]);
         setProduct(productData);
         setImages(imageData);
-        const primary =
-          imageData.find((img) => img.is_primary)?.url || productData.primary_image_url || imageData[0]?.url;
-        setActiveImage(getMediaUrl(primary) || "");
-
+        setActiveImageIndex(0);
+        stopAutoRotate();
+        // Auto-start rotate after 2s
+        if (imageData.length > 1 || productData.primary_image_url) {
+          setTimeout(() => startAutoRotate(), 2000);
+        }
         if (productData.is_installment_eligible) {
           const price = productData.discount_price || productData.price;
           calculateInstallment(price, 12)
@@ -61,6 +89,16 @@ export default function ProductDetailPage() {
     }
     if (params.id) load();
   }, [params.id]);
+
+  function goToPrev() {
+    stopAutoRotate();
+    setActiveImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+  }
+
+  function goToNext() {
+    stopAutoRotate();
+    setActiveImageIndex((prev) => (prev + 1) % allImages.length);
+  }
 
   async function handleAddToCart() {
     if (!isCustomerLoggedIn()) {
@@ -80,6 +118,10 @@ export default function ProductDetailPage() {
       setAdding(false);
     }
   }
+
+  const activeImageUrl = allImages[activeImageIndex]
+    ? getMediaUrl(allImages[activeImageIndex].url)
+    : "";
 
   return (
     <main className="max-w-5xl mx-auto px-6 py-10">
@@ -111,26 +153,81 @@ export default function ProductDetailPage() {
           transition={{ duration: 0.4 }}
           className="grid grid-cols-1 md:grid-cols-2 gap-10"
         >
-          {/* Ảnh sản phẩm */}
+          {/* Ảnh sản phẩm — carousel */}
           <div>
-            <div className="aspect-square rounded-lg bg-circuit-panel border border-circuit-line flex items-center justify-center overflow-hidden mb-3">
+            {/* Ảnh chính + mũi tên */}
+            <div
+              className="relative aspect-square rounded-lg bg-circuit-panel border border-circuit-line flex items-center justify-center overflow-hidden mb-3 group"
+              onMouseEnter={stopAutoRotate}
+              onMouseLeave={() => allImages.length > 1 && startAutoRotate()}
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={activeImage || "/placeholder-product.png"}
+                src={activeImageUrl || "/placeholder-product.png"}
                 alt={product.name}
-                className="object-contain h-full w-full"
+                className="object-contain h-full w-full transition-opacity duration-300"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = "none";
                 }}
               />
+
+              {/* Prev button */}
+              {allImages.length > 1 && (
+                <button
+                  onClick={goToPrev}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-circuit-panel/80 border border-circuit-line flex items-center justify-center text-circuit-copperLight hover:bg-circuit-copper hover:text-circuit-bg transition-all opacity-0 group-hover:opacity-100 shadow-md"
+                  aria-label="Ảnh trước"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+              )}
+
+              {/* Next button */}
+              {allImages.length > 1 && (
+                <button
+                  onClick={goToNext}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-circuit-panel/80 border border-circuit-line flex items-center justify-center text-circuit-copperLight hover:bg-circuit-copper hover:text-circuit-bg transition-all opacity-0 group-hover:opacity-100 shadow-md"
+                  aria-label="Ảnh sau"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              )}
+
+              {/* Auto-rotate indicator */}
+              {allImages.length > 1 && (
+                <button
+                  onClick={autoRotating ? stopAutoRotate : startAutoRotate}
+                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-circuit-panel/70 border border-circuit-line flex items-center justify-center text-circuit-muted hover:text-circuit-copperLight transition-colors text-xs"
+                  title={autoRotating ? "Dừng xoay" : "Tự động xoay"}
+                  aria-label="Bật/tắt xoay ảnh"
+                >
+                  <RotateCcw size={13} className={autoRotating ? "animate-spin" : ""} />
+                </button>
+              )}
+
+              {/* Image counter */}
+              {allImages.length > 1 && (
+                <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-full bg-circuit-panel/70 border border-circuit-line text-[10px] text-circuit-muted font-mono">
+                  {activeImageIndex + 1} / {allImages.length}
+                </div>
+              )}
             </div>
-            {images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto">
-                {images.map((img) => (
+
+            {/* Thumbnails */}
+            {allImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {allImages.map((img, idx) => (
                   <button
                     key={img.id}
-                    onClick={() => setActiveImage(getMediaUrl(img.url))}
-                    className="w-16 h-16 shrink-0 rounded-md border border-circuit-line overflow-hidden hover:border-circuit-copper"
+                    onClick={() => {
+                      stopAutoRotate();
+                      setActiveImageIndex(idx);
+                    }}
+                    className={`w-16 h-16 shrink-0 rounded-md border overflow-hidden transition-all ${
+                      idx === activeImageIndex
+                        ? "border-2 border-circuit-copper shadow-md"
+                        : "border-circuit-line hover:border-circuit-copper/50"
+                    }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={getMediaUrl(img.url)} alt="" className="object-cover w-full h-full" />

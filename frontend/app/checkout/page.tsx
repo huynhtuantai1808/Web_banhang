@@ -391,9 +391,9 @@ export default function CheckoutPage() {
           </div>
 
           {/* Hình thức thanh toán: trả toàn bộ hay trả góp (trả góp yêu cầu đăng nhập) */}
-          <div>
-            <label className="block text-xs font-mono text-circuit-muted uppercase mb-2">
-              Hình thức thanh toán
+          <div className="rounded-lg border-2 border-dashed border-circuit-copper/50 bg-circuit-panel/30 p-4">
+            <label className="block text-xs font-mono text-circuit-copperLight uppercase mb-3 tracking-widest">
+              ◆ Hình thức thanh toán
             </label>
             <div className="grid grid-cols-2 gap-3 mb-3">
               <button
@@ -461,9 +461,9 @@ export default function CheckoutPage() {
 
           {/* Chọn cổng thanh toán — chỉ áp dụng khi trả toàn bộ */}
           {paymentMethod === "full" && (
-            <div>
-              <label className="block text-xs font-mono text-circuit-muted uppercase mb-2">
-                <CreditCard size={14} className="inline mr-1" /> Cổng thanh toán
+            <div className="rounded-lg border-2 border-dashed border-circuit-copper/50 bg-circuit-panel/30 p-4">
+              <label className="block text-xs font-mono text-circuit-copperLight uppercase mb-3 tracking-widest">
+                ◆ Cổng thanh toán
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <button

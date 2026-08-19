@@ -47,6 +47,7 @@ export default function AdminSettingsPage() {
         hero_title: settings.hero_title,
         hero_subtitle: settings.hero_subtitle,
         hero_description: settings.hero_description,
+        footer_intro: settings.footer_intro,
         accent_color: settings.accent_color,
       });
       setSettings(updated);
@@ -156,6 +157,15 @@ export default function AdminSettingsPage() {
             value={settings.hero_description}
             onChange={(e) => update("hero_description", e.target.value)}
             className="input min-h-[80px]"
+          />
+        </Field>
+
+        <Field label="Phần giới thiệu footer (hiển thị ở cuối trang)">
+          <textarea
+            value={settings.footer_intro || ""}
+            onChange={(e) => update("footer_intro", e.target.value)}
+            className="input min-h-[80px]"
+            placeholder="VD: TechTrace là cửa hàng công nghệ hàng đầu..."
           />
         </Field>
 

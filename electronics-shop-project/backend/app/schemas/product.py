@@ -1,0 +1,50 @@
+import uuid
+from pydantic import BaseModel
+
+
+class ProductCreate(BaseModel):
+    product_code: str
+    name: str
+    description: str | None = None
+    brand: str | None = None       # tên hãng, VD: "Apple" — tự tạo mới nếu chưa tồn tại
+    category: str | None = None    # tên danh mục, VD: "Laptop" — tự tạo mới nếu chưa tồn tại
+    color: str | None = None
+    material: str | None = None
+    size_dimension: str | None = None
+    specification: dict | None = None
+    price: float
+    discount_price: float | None = None
+    is_installment_eligible: bool = True
+
+
+class ProductOut(BaseModel):
+    id: uuid.UUID
+    product_code: str
+    name: str
+    description: str | None = None
+    brand: str | None = None
+    category: str | None = None
+    color: str | None = None
+    material: str | None = None
+    size_dimension: str | None = None
+    specification: dict | None = None
+    price: float
+    discount_price: float | None = None
+    is_installment_eligible: bool
+    status: str
+    primary_image_url: str | None = None
+    primary_image_url: str | None = None   # ảnh đại diện — path tương đối, FE tự ghép domain BE
+
+    class Config:
+        from_attributes = True
+
+
+class ProductFilter(BaseModel):
+    keyword: str | None = None
+    brand: str | None = None
+    category: str | None = None
+    feature: str | None = None
+    min_price: float | None = None
+    max_price: float | None = None
+    page: int = 1
+    page_size: int = 20

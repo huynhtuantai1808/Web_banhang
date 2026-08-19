@@ -1,7 +1,8 @@
 import uuid
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func, and_, extract
 
 from app.db.session import get_db
 from app.models.order import Order, OrderItem
@@ -11,6 +12,7 @@ from app.models.promotion import Promotion
 from app.models.installment import InstallmentPlan
 from app.core.security import require_employee, require_permission
 from app.schemas.order import OrderItemOut
+from app.services.email_service import send_order_email
 
 router = APIRouter(prefix="/admin/orders", tags=["Orders Management (Admin)"])
 
@@ -122,3 +124,90 @@ async def update_order_status(
     order.status = new_status
     await db.commit()
     return await _build_admin_order_out(db, order)
+
+
+@router.get("/{order_id}/invoice")
+async def get_order_invoice(
+    order_id: uuid.UUID, db: AsyncSession = Depends(get_db), _employee_id: str = Depends(require_employee)
+):
+    """Lấy dữ liệu hóa đơn đầy đủ của một đơn hàng — để frontend tạo PDF."""
+    order = await db.get(Order, order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Không tìm thấy đơn hàng")
+
+    customer = await db.get(Customer, order.customer_id)
+
+    items_result = await db.execute(
+        select(OrderItem, Product.name, Product.product_code)
+        .join(Product, OrderItem.product_id == Product.id)
+        .where(OrderItem.order_id == order.id)
+    )
+
+    items = [
+        {
+            "product_name": name,
+            "product_code": code,
+            "unit_price": float(item.unit_price),
+            "quantity": item.quantity,
+            "subtotal": float(item.unit_price) * item.quantity,
+        }
+        for item, name, code in items_result.all()
+    ]
+
+    promotion = None
+    if order.promotion_id:
+        promo = await db.get(Promotion, order.promotion_id)
+        if promo:
+            promotion = {"code": promo.code, "name": promo.name}
+
+    return {
+        "order_code": order.order_code,
+        "customer_name": customer.full_name if customer else "—",
+        "customer_phone": customer.phone if customer else "—",
+        "customer_email": customer.email if customer else None,
+        "shipping_address": order.shipping_address,
+        "payment_method": order.payment_method,
+        "payment_gateway": order.payment_gateway,
+        "payment_status": order.payment_status,
+        "created_at": order.created_at.isoformat() if order.created_at else None,
+        "items": items,
+        "total_amount": float(order.total_amount),
+        "discount_amount": float(order.discount_amount),
+        "final_amount": float(order.final_amount),
+        "promotion": promotion,
+    }
+
+
+@router.post("/{order_id}/send-email")
+async def send_order_email_endpoint(
+    order_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _employee_id: str = Depends(require_employee),
+):
+    """Gửi email hóa đơn đơn hàng cho khách."""
+    order = await db.get(Order, order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Không tìm thấy đơn hàng")
+
+    customer = await db.get(Customer, order.customer_id)
+    if not customer or not customer.email:
+        raise HTTPException(status_code=400, detail="Khách hàng không có email — không thể gửi mail")
+
+    try:
+        await send_order_email(
+            to_email=customer.email,
+            order_code=order.order_code,
+            customer_name=customer.full_name,
+            final_amount=float(order.final_amount),
+            items=[
+                {"product_name": str(row[1]), "quantity": row[0].quantity, "unit_price": float(row[0].unit_price)}
+                for row in (await db.execute(
+                    select(OrderItem, Product.name).join(Product, OrderItem.product_id == Product.id)
+                    .where(OrderItem.order_id == order.id)
+                )).all()
+            ],
+            shipping_address=order.shipping_address,
+        )
+        return {"message": f"Đã gửi email hóa đơn tới {customer.email}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gửi email thất bại: {str(e)}")

@@ -83,6 +83,7 @@ export default function CartPage() {
         updateGuestCartItemQuantity(itemId, nextQty); // itemId ở đây chính là productId
         setCart(await hydrateGuestCart());
       }
+      window.dispatchEvent(new Event("cart-updated"));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Cập nhật thất bại");
     } finally {
@@ -99,6 +100,7 @@ export default function CartPage() {
         removeGuestCartItem(itemId);
         setCart(await hydrateGuestCart());
       }
+      window.dispatchEvent(new Event("cart-updated"));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Xoá thất bại");
     } finally {

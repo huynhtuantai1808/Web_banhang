@@ -162,6 +162,12 @@ Người dùng yêu cầu bổ sung nhiều tính năng cho dự án e-commerce 
 
 ---
 
+## Các quyết định đã xác nhận
+
+- **Báo cáo doanh thu:** Tự động gửi email theo lịch (tuần/tháng) + nút gửi thủ công trong admin
+- **Hóa đơn:** Xuất file PDF thật (dùng thư viện `jsPDF` phía frontend)
+- **OTP đăng nhập:** Gửi qua Email hoặc SMS tuỳ theo thông tin khách cung cấp (nếu có email → gửi email, nếu chỉ có SĐT → log console/dev mode)
+
 ## Tóm tắt files cần thay đổi
 
 | File | Feature |

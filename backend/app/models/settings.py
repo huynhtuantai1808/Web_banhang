@@ -17,6 +17,7 @@ class SiteSettings(Base):
         Text,
         default="Điện thoại, laptop, máy tính bảng, PC gaming — trả góp 0% lãi suất, bảo hành chính hãng, giao nhanh toàn quốc.",
     )
+    footer_intro: Mapped[str | None] = mapped_column(Text, default=None)
     banner_image_url: Mapped[str | None] = mapped_column(Text)
     logo_image_url: Mapped[str | None] = mapped_column(Text)
     accent_color: Mapped[str] = mapped_column(String(7), default="#C87F45")
