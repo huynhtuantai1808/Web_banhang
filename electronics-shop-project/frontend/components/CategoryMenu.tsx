@@ -92,7 +92,7 @@ export default function CategoryMenu() {
                   <Link
                     href={`/category/${cat.slug}`}
                     onClick={() => setOpen(false)}
-                    className="flex items-center gap-2 flex-1"
+                    className="flex items-center gap-2 flex-1 text-left"
                   >
                     <Icon size={16} /> {cat.name}
                   </Link>

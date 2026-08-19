@@ -2,14 +2,20 @@ import Link from "next/link";
 import { Phone, MessageCircle, Facebook, MapPin, Clock } from "lucide-react";
 import { BRANDING } from "@/lib/branding";
 import Logo from "@/components/Logo";
+import { useSiteSettings } from "@/components/SiteSettingsProvider";
 
 export default function SiteFooter() {
+  const { settings } = useSiteSettings();
+  const footerIntro = settings.footer_intro || BRANDING.description;
+
   return (
     <footer className="border-t border-circuit-line bg-circuit-panel/60 mt-16">
       <div className="max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-4 gap-8">
         <div>
           <Logo />
-          <p className="text-sm text-circuit-muted mt-3 leading-relaxed">{BRANDING.description}</p>
+          {footerIntro && (
+            <p className="text-sm text-circuit-muted mt-3 leading-relaxed">{footerIntro}</p>
+          )}
         </div>
 
         <div>

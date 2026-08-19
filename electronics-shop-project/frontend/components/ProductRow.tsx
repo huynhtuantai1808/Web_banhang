@@ -1,8 +1,9 @@
 "use client";
 
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProductCard, { Product } from "@/components/ProductCard";
 
 export default function ProductRow({
@@ -16,6 +17,56 @@ export default function ProductRow({
   viewAllHref?: string;
   onAddToCart?: (productId: string) => Promise<void> | void;
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const hasMany = products.length > 4;
+
+  function updateScrollState() {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
+  }
+
+  useEffect(() => {
+    updateScrollState();
+    const el = scrollRef.current;
+    el?.addEventListener("scroll", updateScrollState, { passive: true });
+    window.addEventListener("resize", updateScrollState);
+    return () => {
+      el?.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [products.length]);
+
+  // Auto-scroll every 5s when there are many products
+  useEffect(() => {
+    if (!hasMany) return;
+    const interval = setInterval(() => {
+      const el = scrollRef.current;
+      if (!el) return;
+      const atEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 4;
+      if (atEnd) {
+        el.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        const firstCard = el.querySelector<HTMLElement>("[data-product-card]");
+        const cardWidth = firstCard?.offsetWidth ?? 240;
+        el.scrollBy({ left: cardWidth + 20, behavior: "smooth" });
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [hasMany]);
+
+  function scrollBy(dir: number) {
+    const el = scrollRef.current;
+    if (!el) return;
+    const firstCard = el.querySelector<HTMLElement>("[data-product-card]");
+    const cardWidth = firstCard?.offsetWidth ?? 240;
+    el.scrollBy({ left: dir * (cardWidth + 20), behavior: "smooth" });
+  }
+
   if (products.length === 0) return null;
 
   return (
@@ -31,17 +82,65 @@ export default function ProductRow({
           </Link>
         )}
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-        {products.map((product, i) => (
-          <motion.div
-            key={product.id}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: i * 0.05 }}
+
+      <div className="relative">
+        {/* Left arrow */}
+        {hasMany && (
+          <button
+            onClick={() => scrollBy(-1)}
+            className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 ${
+              canScrollLeft
+                ? "bg-circuit-panel/95 border border-circuit-line text-circuit-copperLight hover:bg-circuit-copper hover:text-circuit-bg cursor-pointer"
+                : "bg-circuit-panel/40 border border-circuit-line/40 text-circuit-muted/30 cursor-not-allowed"
+            }`}
+            aria-label="Cuộn sang trái"
           >
-            <ProductCard product={product} onAddToCart={onAddToCart} />
-          </motion.div>
-        ))}
+            <ChevronLeft size={20} />
+          </button>
+        )}
+
+        {/* Right arrow */}
+        {hasMany && (
+          <button
+            onClick={() => scrollBy(1)}
+            className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 ${
+              canScrollRight
+                ? "bg-circuit-panel/95 border border-circuit-line text-circuit-copperLight hover:bg-circuit-copper hover:text-circuit-bg cursor-pointer"
+                : "bg-circuit-panel/40 border border-circuit-line/40 text-circuit-muted/30 cursor-not-allowed"
+            }`}
+            aria-label="Cuộn sang phải"
+          >
+            <ChevronRight size={20} />
+          </button>
+        )}
+
+        {/* Gradient overlays */}
+        {hasMany && canScrollRight && (
+          <div className="absolute right-8 top-0 bottom-2 w-12 bg-gradient-to-l from-circuit-bg to-transparent pointer-events-none z-[5]" />
+        )}
+        {hasMany && canScrollLeft && (
+          <div className="absolute left-8 top-0 bottom-2 w-12 bg-gradient-to-r from-circuit-bg to-transparent pointer-events-none z-[5]" />
+        )}
+
+        {/* Products scroll container */}
+        <div
+          ref={scrollRef}
+          className="flex gap-5 overflow-x-auto pb-2"
+          style={{ scrollbarWidth: "thin", scrollbarColor: "var(--accent-color) #1e2c47" }}
+        >
+          {products.map((product, i) => (
+            <motion.div
+              key={product.id}
+              data-product-card
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: i * 0.05 }}
+              className="shrink-0"
+            >
+              <ProductCard product={product} onAddToCart={onAddToCart} />
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );

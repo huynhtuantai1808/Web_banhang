@@ -40,6 +40,7 @@ export default function ProductCard({
     try {
       await onAddToCart(product.id);
       setAdded(true);
+      window.dispatchEvent(new Event("cart-updated"));
       setTimeout(() => setAdded(false), 1500);
     } finally {
       setAdding(false);
