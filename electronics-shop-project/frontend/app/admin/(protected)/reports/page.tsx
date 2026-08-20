@@ -25,11 +25,6 @@ export default function AdminReportsPage() {
   const [emailMessage, setEmailMessage] = useState<string | null>(null);
   const [emailInput, setEmailInput] = useState("");
 
-const fetchReport = useCallback(async () => {
-  setLoading(true);
-  setError(null);
-
-  try {
 type ReportPeriod = "daily" | "weekly" | "monthly";
 
 const fetchReport = useCallback(async () => {
