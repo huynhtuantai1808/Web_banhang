@@ -369,6 +369,7 @@ export default function ProductDetailPage() {
                 <Heart size={18} fill={isWishlisted ? "currentColor" : "none"} />
               </button>
             </div>
+          </div>
         </motion.div>
       )}
 
