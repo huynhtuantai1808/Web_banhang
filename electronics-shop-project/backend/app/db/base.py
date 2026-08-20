@@ -6,4 +6,4 @@ class Base(DeclarativeBase):
 
 
 # Import tất cả model tại đây để Alembic autogenerate nhận diện đầy đủ
-from app.models import customer, employee, product, promotion, order, cart, installment, settings, shipment  # noqa
+from app.models import customer, employee, product, promotion, order, cart, installment, settings, shipment, wishlist  # noqa

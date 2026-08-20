@@ -4,10 +4,13 @@ import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Loader2, Check, CreditCard, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Loader2, Check, CreditCard, ChevronLeft, ChevronRight, RotateCcw, ZoomIn, X, Heart } from "lucide-react";
 import { getProduct, listProductImages, ProductOut, ProductImageOut } from "@/lib/services/products";
 import { addToCart } from "@/lib/services/cart";
 import { addGuestCartItem } from "@/lib/guestCart";
+import { isInGuestWishlist, toggleGuestWishlist } from "@/lib/wishlist";
+import { isCustomerLoggedIn } from "@/lib/auth-storage";
+import { addToWishlist, removeFromWishlist } from "@/lib/services/wishlist";
 import { calculateInstallment } from "@/lib/services/installment";
 import { getMediaUrl } from "@/lib/media";
 import { ApiError } from "@/lib/apiClient";
@@ -33,6 +36,10 @@ export default function ProductDetailPage() {
   const [added, setAdded] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
   const [installmentPreview, setInstallmentPreview] = useState<number | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [togglingWishlist, setTogglingWishlist] = useState(false);
 
   const allImages = images.length > 0 ? images : (product?.primary_image_url ? [{ id: "0", product_id: product.id, url: product.primary_image_url, is_primary: true }] : []);
 
@@ -81,6 +88,9 @@ export default function ProductDetailPage() {
             .then((res) => setInstallmentPreview(res.monthly_amount))
             .catch(() => setInstallmentPreview(null));
         }
+        if (!isCustomerLoggedIn()) {
+          setIsWishlisted(isInGuestWishlist(productData.id));
+        }
       } catch (err) {
         setError(err instanceof ApiError ? err.message : "Không tải được thông tin sản phẩm");
       } finally {
@@ -98,6 +108,30 @@ export default function ProductDetailPage() {
   function goToNext() {
     stopAutoRotate();
     setActiveImageIndex((prev) => (prev + 1) % allImages.length);
+  }
+
+  async function handleWishlistToggle() {
+    if (!product || togglingWishlist) return;
+    setTogglingWishlist(true);
+    try {
+      if (isCustomerLoggedIn()) {
+        if (isWishlisted) {
+          await removeFromWishlist(product.id);
+          setIsWishlisted(false);
+        } else {
+          await addToWishlist(product.id);
+          setIsWishlisted(true);
+        }
+      } else {
+        toggleGuestWishlist(product.id);
+        setIsWishlisted(!isInGuestWishlist(product.id));
+      }
+      window.dispatchEvent(new Event("wishlist-updated"));
+    } catch {
+      // silently ignore
+    } finally {
+      setTogglingWishlist(false);
+    }
   }
 
   async function handleAddToCart() {
@@ -194,11 +228,19 @@ export default function ProductDetailPage() {
                 </button>
               )}
 
-              {/* Auto-rotate indicator */}
+              {/* Auto-rotate + zoom buttons */}
+              <button
+                onClick={() => { setLightboxIndex(activeImageIndex); setLightboxOpen(true); }}
+                className="absolute top-2 right-2 w-7 h-7 rounded-full bg-circuit-panel/70 border border-circuit-line flex items-center justify-center text-circuit-muted hover:text-circuit-copperLight transition-colors text-xs z-10"
+                title="Phóng to"
+                aria-label="Phóng to ảnh"
+              >
+                <ZoomIn size={13} />
+              </button>
               {allImages.length > 1 && (
                 <button
                   onClick={autoRotating ? stopAutoRotate : startAutoRotate}
-                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-circuit-panel/70 border border-circuit-line flex items-center justify-center text-circuit-muted hover:text-circuit-copperLight transition-colors text-xs"
+                  className="absolute top-2 right-11 w-7 h-7 rounded-full bg-circuit-panel/70 border border-circuit-line flex items-center justify-center text-circuit-muted hover:text-circuit-copperLight transition-colors text-xs z-10"
                   title={autoRotating ? "Dừng xoay" : "Tự động xoay"}
                   aria-label="Bật/tắt xoay ảnh"
                 >
@@ -298,25 +340,111 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            <button
-              onClick={handleAddToCart}
-              disabled={adding}
-              className="mt-6 w-full flex items-center justify-center gap-2 rounded-md bg-circuit-copper py-3 text-sm font-medium text-circuit-bg hover:bg-circuit-copperLight transition-colors disabled:opacity-60"
-            >
-              {adding ? (
-                <Loader2 size={18} className="animate-spin" />
-              ) : added ? (
-                <Check size={18} />
-              ) : (
-                <ShoppingCart size={18} />
-              )}
-              {added ? "Đã thêm vào giỏ hàng" : "Thêm vào giỏ hàng"}
-            </button>
-          </div>
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={handleAddToCart}
+                disabled={adding}
+                className="flex-1 flex items-center justify-center gap-2 rounded-md bg-circuit-copper py-3 text-sm font-medium text-circuit-bg hover:bg-circuit-copperLight transition-colors disabled:opacity-60"
+              >
+                {adding ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : added ? (
+                  <Check size={18} />
+                ) : (
+                  <ShoppingCart size={18} />
+                )}
+                {added ? "Đã thêm vào giỏ hàng" : "Thêm vào giỏ hàng"}
+              </button>
+
+              <button
+                onClick={handleWishlistToggle}
+                disabled={togglingWishlist}
+                className={`w-12 h-12 rounded-md border flex items-center justify-center transition-colors ${
+                  isWishlisted
+                    ? "bg-red-500 border-red-500 text-white"
+                    : "border-circuit-copper text-circuit-copperLight hover:bg-red-500/10 hover:border-red-400 hover:text-red-400"
+                } disabled:opacity-50`}
+                title={isWishlisted ? "Bỏ khỏi yêu thích" : "Thêm vào yêu thích"}
+              >
+                <Heart size={18} fill={isWishlisted ? "currentColor" : "none"} />
+              </button>
+            </div>
         </motion.div>
       )}
 
       <SiteFooter />
+
+      {/* Lightbox — only when product is loaded */}
+      {lightboxOpen && product && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center"
+          onClick={() => setLightboxOpen(false)}
+        >
+          <button
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+            onClick={() => setLightboxOpen(false)}
+            aria-label="Đóng"
+          >
+            <X size={20} />
+          </button>
+
+          {/* Main image */}
+          <div
+            className="relative max-w-4xl max-h-[80vh] w-full px-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={getMediaUrl(allImages[lightboxIndex]?.url) || "/placeholder-product.png"}
+              alt={product.name}
+              className="max-h-[80vh] w-full object-contain rounded-lg"
+            />
+
+            {/* Prev */}
+            {allImages.length > 1 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => (i - 1 + allImages.length) % allImages.length); }}
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+              >
+                <ChevronLeft size={22} />
+              </button>
+            )}
+            {/* Next */}
+            {allImages.length > 1 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => (i + 1) % allImages.length); }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+              >
+                <ChevronRight size={22} />
+              </button>
+            )}
+          </div>
+
+          {/* Thumbnails */}
+          {allImages.length > 1 && (
+            <div className="flex gap-2 mt-4 px-4 overflow-x-auto max-w-full pb-2">
+              {allImages.map((img, idx) => (
+                <button
+                  key={img.id}
+                  onClick={(e) => { e.stopPropagation(); setLightboxIndex(idx); }}
+                  className={`w-16 h-16 shrink-0 rounded-md border overflow-hidden transition-all ${
+                    idx === lightboxIndex
+                      ? "border-2 border-circuit-copper"
+                      : "border-white/20 hover:border-white/50"
+                  }`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={getMediaUrl(img.url)} alt="" className="object-cover w-full h-full" />
+                </button>
+              ))}
+            </div>
+          )}
+
+          <p className="text-white/50 text-xs font-mono mt-2">
+            {lightboxIndex + 1} / {allImages.length}
+          </p>
+        </div>
+      )}
     </main>
   );
 }

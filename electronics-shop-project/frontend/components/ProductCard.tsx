@@ -3,8 +3,11 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Loader2, ShoppingCart, Check } from "lucide-react";
+import { Loader2, ShoppingCart, Check, Heart } from "lucide-react";
 import { listProductImages } from "@/lib/services/products";
+import { toggleGuestWishlist, isInGuestWishlist } from "@/lib/wishlist";
+import { isCustomerLoggedIn } from "@/lib/auth-storage";
+import { addToWishlist, removeFromWishlist } from "@/lib/services/wishlist";
 
 
 
@@ -36,7 +39,16 @@ export default function ProductCard({
   const [added, setAdded] = useState(false);
   const [images, setImages] = useState<string[]>([product.imageUrl]);
   const [imgIdx, setImgIdx] = useState(0);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [togglingWishlist, setTogglingWishlist] = useState(false);
   const hasDiscount = !!product.discountPrice && product.discountPrice < product.price;
+
+  // Check initial wishlist state
+  useEffect(() => {
+    if (!isCustomerLoggedIn()) {
+      setIsWishlisted(isInGuestWishlist(product.id));
+    }
+  }, [product.id]);
 
   // Load additional product images — use prop if available (preloaded by parent), otherwise fetch
   useEffect(() => {
@@ -78,6 +90,32 @@ export default function ProductCard({
     }
   }
 
+  async function handleWishlistToggle(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (togglingWishlist) return;
+    setTogglingWishlist(true);
+    try {
+      if (isCustomerLoggedIn()) {
+        if (isWishlisted) {
+          await removeFromWishlist(product.id);
+          setIsWishlisted(false);
+        } else {
+          await addToWishlist(product.id);
+          setIsWishlisted(true);
+        }
+      } else {
+        toggleGuestWishlist(product.id);
+        setIsWishlisted(isInGuestWishlist(product.id));
+      }
+      window.dispatchEvent(new Event("wishlist-updated"));
+    } catch {
+      // silently ignore errors on toggle
+    } finally {
+      setTogglingWishlist(false);
+    }
+  }
+
   return (
     <motion.div
       onHoverStart={() => setHover(true)}
@@ -106,6 +144,19 @@ export default function ProductCard({
             }}
           />
 
+          {/* Wishlist button */}
+          <button
+            onClick={handleWishlistToggle}
+            className={`absolute top-2 right-2 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+              isWishlisted
+                ? "bg-red-500 text-white"
+                : "bg-circuit-panel/80 border border-circuit-line text-circuit-muted hover:text-red-400 hover:border-red-400/60"
+            }`}
+            title={isWishlisted ? "Bỏ khỏi yêu thích" : "Thêm vào yêu thích"}
+          >
+            <Heart size={14} fill={isWishlisted ? "currentColor" : "none"} />
+          </button>
+
           {/* Navigation dots */}
           {images.length > 1 && (
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
@@ -126,7 +177,7 @@ export default function ProductCard({
           )}
         </div>
 
-        <p className="text-xs font-mono text-circuit-copperLight uppercase tracking-wide">
+        <p className="text-xs font-mono text-circuit-copperLight uppercase tracking-wide mt-3">
           {product.brand}
         </p>
         <h3 className="font-display text-circuit-text text-base leading-snug mt-1 line-clamp-2">
@@ -134,7 +185,7 @@ export default function ProductCard({
         </h3>
         <p className="text-xs text-circuit-muted font-mono mt-1">{product.specHighlight}</p>
 
-        <div className="mt-3 flex items-baseline gap-2">
+        <div className="flex items-baseline gap-2">
           <span className="font-display text-lg text-circuit-signal">
             {formatVND(hasDiscount ? product.discountPrice! : product.price)}
           </span>

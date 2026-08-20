@@ -2,24 +2,29 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { LogIn, UserPlus, LogOut, ShoppingCart, Package, Phone } from "lucide-react";
+import { LogIn, UserPlus, LogOut, ShoppingCart, Package, Phone, Heart } from "lucide-react";
 import { isCustomerLoggedIn } from "@/lib/auth-storage";
 import { customerLogout } from "@/lib/services/auth";
-import { getGuestCart } from "@/lib/guestCart";
+import { getGuestCart, getGuestCartCount } from "@/lib/guestCart";
+import { getCart } from "@/lib/services/cart";
+import { getWishlistCount } from "@/lib/services/wishlist";
+import { getGuestWishlistCount } from "@/lib/wishlist";
 import Logo from "@/components/Logo";
 
 function useCartCount() {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    function loadCount() {
+    async function loadCount() {
       if (isCustomerLoggedIn()) {
-        // Logged-in: count from localStorage cart (simplified — real impl would call API)
-        const raw = localStorage.getItem("cart_count");
-        setCount(raw ? parseInt(raw, 10) : 0);
+        try {
+          const cart = await getCart();
+          setCount(cart.items.reduce((sum, item) => sum + item.quantity, 0));
+        } catch {
+          setCount(0);
+        }
       } else {
-        const guest = getGuestCart();
-        setCount(guest.reduce((sum, item) => sum + item.quantity, 0));
+        setCount(getGuestCartCount());
       }
     }
     loadCount();
@@ -30,9 +35,30 @@ function useCartCount() {
   return count;
 }
 
+function useWishlistCount() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    async function loadCount() {
+      if (isCustomerLoggedIn()) {
+        const c = await getWishlistCount().catch(() => 0);
+        setCount(c);
+      } else {
+        setCount(getGuestWishlistCount());
+      }
+    }
+    loadCount();
+    window.addEventListener("wishlist-updated", loadCount);
+    return () => window.removeEventListener("wishlist-updated", loadCount);
+  }, []);
+
+  return count;
+}
+
 export default function SiteHeader() {
   const [loggedIn, setLoggedIn] = useState(false);
   const cartCount = useCartCount();
+  const wishlistCount = useWishlistCount();
 
   useEffect(() => {
     setLoggedIn(isCustomerLoggedIn());
@@ -70,6 +96,20 @@ export default function SiteHeader() {
           {cartCount > 0 && (
             <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none shadow-md">
               {cartCount > 9 ? "9+" : cartCount}
+            </span>
+          )}
+        </Link>
+
+        <Link
+          href="/wishlist"
+          className="relative flex items-center gap-2 px-4 py-2 rounded-md border border-circuit-line text-circuit-copperLight hover:border-circuit-copper hover:bg-circuit-copper/10 transition-all duration-200"
+          title="Yêu thích"
+        >
+          <Heart size={18} />
+          <span className="hidden sm:inline text-sm font-medium">Yêu thích</span>
+          {wishlistCount > 0 && (
+            <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none shadow-md">
+              {wishlistCount > 9 ? "9+" : wishlistCount}
             </span>
           )}
         </Link>
