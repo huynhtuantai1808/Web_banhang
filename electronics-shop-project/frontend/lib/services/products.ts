@@ -22,8 +22,10 @@ export interface ProductInput {
   product_code: string;
   name: string;
   description?: string;
-  brand?: string;
-  category?: string;
+  brand?: string;         // dùng khi brand_id không được cung cấp
+  brand_id?: number;       // ưu tiên hơn brand
+  category?: string;      // dùng khi category_id không được cung cấp
+  category_id?: number;    // ưu tiên hơn category
   color?: string;
   material?: string;
   size_dimension?: string;
@@ -155,16 +157,17 @@ export async function deleteBrand(id: number): Promise<void> {
 export interface CategoryOption extends CatalogOption {
   slug: string;
   parent_id?: number | null;
+  description?: string | null;
   banner_image_url?: string | null;
 }
 
-export async function createCategory(name: string, parentId?: number): Promise<CategoryOption> {
-  const { data } = await apiClient.post<CategoryOption>("/categories", { name, parent_id: parentId });
+export async function createCategory(name: string, parentId?: number, description?: string): Promise<CategoryOption> {
+  const { data } = await apiClient.post<CategoryOption>("/categories", { name, parent_id: parentId, description });
   return data;
 }
 
-export async function updateCategory(id: number, name: string, parentId?: number): Promise<CategoryOption> {
-  const { data } = await apiClient.put<CategoryOption>(`/categories/${id}`, { name, parent_id: parentId });
+export async function updateCategory(id: number, name: string, parentId?: number, description?: string): Promise<CategoryOption> {
+  const { data } = await apiClient.put<CategoryOption>(`/categories/${id}`, { name, parent_id: parentId, description });
   return data;
 }
 

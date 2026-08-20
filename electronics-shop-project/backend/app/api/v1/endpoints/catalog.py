@@ -19,6 +19,7 @@ class BrandInput(BaseModel):
 class CategoryInput(BaseModel):
     name: str
     parent_id: int | None = None
+    description: str | None = None
 
 
 def _slugify(name: str) -> str:
@@ -28,6 +29,7 @@ def _slugify(name: str) -> str:
 def _category_out(c: Category) -> dict:
     return {
         "id": c.id, "name": c.name, "slug": c.slug, "parent_id": c.parent_id,
+        "description": c.description,
         "banner_image_url": c.banner_image_url,
     }
 
@@ -111,7 +113,7 @@ async def create_category(
         raise HTTPException(status_code=400, detail=f"Danh mục '{payload.name}' đã tồn tại")
     if payload.parent_id is not None and not await db.get(Category, payload.parent_id):
         raise HTTPException(status_code=400, detail="Danh mục cha không tồn tại")
-    category = Category(name=payload.name, slug=_slugify(payload.name), parent_id=payload.parent_id)
+    category = Category(name=payload.name, slug=_slugify(payload.name), parent_id=payload.parent_id, description=payload.description)
     db.add(category)
     await db.commit()
     await db.refresh(category)
@@ -133,6 +135,7 @@ async def update_category(
     category.name = payload.name
     category.slug = _slugify(payload.name)
     category.parent_id = payload.parent_id
+    category.description = payload.description
     await db.commit()
     await db.refresh(category)
     return _category_out(category)

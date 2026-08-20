@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X, Loader2 } from "lucide-react";
-import { createProduct, updateProduct, ProductOut, ProductInput } from "@/lib/services/products";
+import { createProduct, updateProduct, ProductOut, ProductInput, listBrands, listCategories, CatalogOption, CategoryOption } from "@/lib/services/products";
 import { ApiError } from "@/lib/apiClient";
 
 const EMPTY_FORM: ProductInput = {
@@ -10,7 +10,9 @@ const EMPTY_FORM: ProductInput = {
   name: "",
   description: "",
   brand: "",
+  brand_id: undefined,
   category: "",
+  category_id: undefined,
   color: "",
   material: "",
   size_dimension: "",
@@ -28,13 +30,29 @@ export default function ProductFormModal({
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
-  editingProduct?: ProductOut | null; // truyền vào khi sửa, để trống khi thêm mới
+  editingProduct?: ProductOut | null;
 }) {
   const [form, setForm] = useState<ProductInput>(EMPTY_FORM);
+  const [brands, setBrands] = useState<CatalogOption[]>([]);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [saving, setSaving] = useState(false);
+  const [loadingOptions, setLoadingOptions] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isEditing = !!editingProduct;
+
+  // Load brand & category lists when modal opens
+  useEffect(() => {
+    if (!open) return;
+    setLoadingOptions(true);
+    Promise.all([listBrands(), listCategories()])
+      .then(([b, c]) => {
+        setBrands(b);
+        setCategories(c);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingOptions(false));
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -44,7 +62,9 @@ export default function ProductFormModal({
         name: editingProduct.name,
         description: editingProduct.description ?? "",
         brand: editingProduct.brand ?? "",
+        brand_id: undefined,
         category: editingProduct.category ?? "",
+        category_id: undefined,
         color: editingProduct.color ?? "",
         material: editingProduct.material ?? "",
         size_dimension: editingProduct.size_dimension ?? "",
@@ -60,6 +80,18 @@ export default function ProductFormModal({
 
   function update<K extends keyof ProductInput>(key: K, value: ProductInput[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  // When user picks a brand from dropdown, store its ID and name
+  function selectBrand(id: number) {
+    const found = brands.find((b) => b.id === id);
+    setForm((prev) => ({ ...prev, brand_id: id, brand: found?.name ?? "" }));
+  }
+
+  // When user picks a category from dropdown, store its ID and name
+  function selectCategory(id: number) {
+    const found = categories.find((c) => c.id === id);
+    setForm((prev) => ({ ...prev, category_id: id, category: found?.name ?? "" }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -140,21 +172,43 @@ export default function ProductFormModal({
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Hãng">
-              <input
-                value={form.brand}
-                onChange={(e) => update("brand", e.target.value)}
-                className="input"
-                placeholder="Apple, Samsung, Dell..."
-              />
+            <Field label="Hãng *">
+              {loadingOptions ? (
+                <div className="input flex items-center gap-2 text-circuit-muted text-sm">
+                  <Loader2 size={14} className="animate-spin" /> Đang tải...
+                </div>
+              ) : (
+                <select
+                  value={form.brand_id ?? ""}
+                  onChange={(e) => selectBrand(Number(e.target.value))}
+                  className="input"
+                >
+                  <option value="">— Chọn hãng —</option>
+                  {brands.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+              )}
             </Field>
-            <Field label="Danh mục">
-              <input
-                value={form.category}
-                onChange={(e) => update("category", e.target.value)}
-                className="input"
-                placeholder="Điện thoại, Laptop, PC Gaming..."
-              />
+            <Field label="Danh mục *">
+              {loadingOptions ? (
+                <div className="input flex items-center gap-2 text-circuit-muted text-sm">
+                  <Loader2 size={14} className="animate-spin" /> Đang tải...
+                </div>
+              ) : (
+                <select
+                  value={form.category_id ?? ""}
+                  onChange={(e) => selectCategory(Number(e.target.value))}
+                  className="input"
+                >
+                  <option value="">— Chọn danh mục —</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.parent_id ? `    ${c.name}` : c.name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </Field>
           </div>
 

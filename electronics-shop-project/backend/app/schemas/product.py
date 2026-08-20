@@ -6,8 +6,10 @@ class ProductCreate(BaseModel):
     product_code: str
     name: str
     description: str | None = None
-    brand: str | None = None       # tên hãng, VD: "Apple" — tự tạo mới nếu chưa tồn tại
-    category: str | None = None    # tên danh mục, VD: "Laptop" — tự tạo mới nếu chưa tồn tại
+    brand: str | None = None       # tên hãng — dùng khi brand_id không được cung cấp
+    brand_id: int | None = None    # ID hãng — ưu tiên hơn brand
+    category: str | None = None    # tên danh mục — dùng khi category_id không được cung cấp
+    category_id: int | None = None # ID danh mục — ưu tiên hơn category
     color: str | None = None
     material: str | None = None
     size_dimension: str | None = None

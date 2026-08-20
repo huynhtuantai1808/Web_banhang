@@ -124,8 +124,9 @@ async def create_product(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail=f"Mã sản phẩm '{payload.product_code}' đã tồn tại")
 
-    brand_id = await get_or_create_brand(db, payload.brand)
-    category_id = await get_or_create_category(db, payload.category)
+    # Ưu tiên brand_id / category_id (chọn từ dropdown). Nếu không có thì dùng tên (nhập tay).
+    brand_id = payload.brand_id if payload.brand_id else await get_or_create_brand(db, payload.brand)
+    category_id = payload.category_id if payload.category_id else await get_or_create_category(db, payload.category)
 
     product = Product(
         id=uuid.uuid4(),
@@ -163,8 +164,9 @@ async def update_product(
     if not product:
         raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm")
 
-    brand_id = await get_or_create_brand(db, payload.brand)
-    category_id = await get_or_create_category(db, payload.category)
+    # Ưu tiên brand_id / category_id (chọn từ dropdown). Nếu không có thì dùng tên (nhập tay).
+    brand_id = payload.brand_id if payload.brand_id else await get_or_create_brand(db, payload.brand)
+    category_id = payload.category_id if payload.category_id else await get_or_create_category(db, payload.category)
 
     product.product_code = payload.product_code
     product.name = payload.name
