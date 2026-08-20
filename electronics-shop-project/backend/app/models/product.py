@@ -29,7 +29,9 @@ class Product(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     product_code: Mapped[str] = mapped_column(String(30), unique=True, nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    description: Mapped[str | None] = mapped_column(Text)
+    description: Mapped[str | None] = mapped_column(Text)          # mô tả ngắn (plain text)
+    long_description: Mapped[str | None] = mapped_column(Text)    # mô tả dài (rich HTML)
+    video_url: Mapped[str | None] = mapped_column(String(500))     # link YouTube/video embed
     brand_id: Mapped[int | None] = mapped_column(ForeignKey("brands.id"))
     category_id: Mapped[int | None] = mapped_column(ForeignKey("categories.id"))
     color: Mapped[str | None] = mapped_column(String(50))

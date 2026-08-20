@@ -5,8 +5,10 @@ export interface ProductOut {
   product_code: string;
   name: string;
   description?: string | null;
-  brand?: string | null;       // tên hãng (BE tự tạo mới nếu chưa tồn tại khi ghi)
-  category?: string | null;    // tên danh mục (BE tự tạo mới nếu chưa tồn tại khi ghi)
+  long_description?: string | null;
+  video_url?: string | null;
+  brand?: string | null;
+  category?: string | null;
   color?: string | null;
   material?: string | null;
   size_dimension?: string | null;
@@ -16,16 +18,20 @@ export interface ProductOut {
   is_installment_eligible: boolean;
   status: string;
   primary_image_url?: string | null;
+  average_rating?: number | null;
+  review_count?: number | null;
 }
 
 export interface ProductInput {
   product_code: string;
   name: string;
   description?: string;
-  brand?: string;         // dùng khi brand_id không được cung cấp
-  brand_id?: number;       // ưu tiên hơn brand
-  category?: string;      // dùng khi category_id không được cung cấp
-  category_id?: number;    // ưu tiên hơn category
+  long_description?: string;
+  video_url?: string;
+  brand?: string;
+  brand_id?: number;
+  category?: string;
+  category_id?: number;
   color?: string;
   material?: string;
   size_dimension?: string;
@@ -59,6 +65,21 @@ export interface ImportResult {
   message: string;
   success_count: number;
   failed_rows: { row: number; error: string }[];
+}
+
+export interface ReviewOut {
+  id: number;
+  product_id: string;
+  customer_id: string;
+  customer_name: string | null;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+}
+
+export interface ReviewCreate {
+  rating: number;
+  comment?: string;
 }
 
 export interface CatalogOption {
@@ -125,6 +146,27 @@ export async function listProductImages(productId: string): Promise<ProductImage
 
 export async function deleteProductImage(imageId: string): Promise<void> {
   await apiClient.delete(`/products/images/${imageId}`);
+}
+
+// ---- Reviews ----
+export async function getProductReviews(productId: string, page = 1): Promise<ReviewOut[]> {
+  const { data } = await apiClient.get<ReviewOut[]>(`/products/${productId}/reviews`, {
+    params: { page, page_size: 10 },
+  });
+  return data;
+}
+
+export async function submitReview(productId: string, payload: ReviewCreate): Promise<ReviewOut> {
+  const { data } = await apiClient.post<ReviewOut>(`/products/${productId}/reviews`, payload);
+  return data;
+}
+
+// ---- Related products ----
+export async function getRelatedProducts(productId: string, limit = 8): Promise<ProductOut[]> {
+  const { data } = await apiClient.get<ProductOut[]>(`/products/${productId}/related`, {
+    params: { limit },
+  });
+  return data;
 }
 
 /** Danh sách hãng hiện có — dùng để gợi ý (datalist) khi nhập sản phẩm mới. */

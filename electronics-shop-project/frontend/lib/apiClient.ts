@@ -18,7 +18,9 @@ export const apiClient: AxiosInstance = axios.create({
 // - còn lại (mặc định, kể cả /promotions khác) → token nhân viên (employee_token)
 function isCustomerRoute(url: string): boolean {
   if (url.startsWith("/cart") || url.startsWith("/orders")) return true;
+  if (url.startsWith("/wishlist")) return true;
   if (url.startsWith("/promotions/mine") || url.startsWith("/promotions/validate")) return true;
+  if (/\/products\/[^/]+\/reviews?/.test(url)) return true;
   return false;
 }
 

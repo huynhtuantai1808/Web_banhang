@@ -17,6 +17,7 @@ import { getMediaUrl } from "@/lib/media";
 import { ApiError } from "@/lib/apiClient";
 import { isCustomerLoggedIn } from "@/lib/auth-storage";
 import { useSiteSettings } from "@/components/SiteSettingsProvider";
+import RecentlyViewed from "@/components/RecentlyViewed";
 
 // Khoảng giá hiển thị trên FilterTabs → khoảng min/max thực tế gửi xuống Backend (đơn vị: VNĐ)
 const PRICE_RANGES: Record<string, { min_price?: number; max_price?: number }> = {
@@ -184,7 +185,7 @@ export default function HomePage() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="mb-8 rounded-xl border border-circuit-line bg-circuit-panel px-8 py-14 relative overflow-hidden"
+        className="mb-6 rounded-xl border border-circuit-line bg-circuit-panel px-8 py-14 relative overflow-hidden"
         style={
           settings.banner_image_url
             ? {
@@ -224,6 +225,8 @@ export default function HomePage() {
       {/* Nhóm sản phẩm mặc định (khuyến mãi + theo danh mục) — chỉ hiện khi chưa tìm/lọc gì */}
       {isBrowsingDefault && !groupsLoading && (
         <>
+          <RecentlyViewed />
+
           <ProductRow
             title="🔥 Đang giảm giá"
             products={onSaleProducts}

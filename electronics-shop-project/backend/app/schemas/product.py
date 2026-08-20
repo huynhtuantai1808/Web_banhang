@@ -6,10 +6,12 @@ class ProductCreate(BaseModel):
     product_code: str
     name: str
     description: str | None = None
-    brand: str | None = None       # tên hãng — dùng khi brand_id không được cung cấp
-    brand_id: int | None = None    # ID hãng — ưu tiên hơn brand
-    category: str | None = None    # tên danh mục — dùng khi category_id không được cung cấp
-    category_id: int | None = None # ID danh mục — ưu tiên hơn category
+    long_description: str | None = None
+    video_url: str | None = None
+    brand: str | None = None
+    brand_id: int | None = None
+    category: str | None = None
+    category_id: int | None = None
     color: str | None = None
     material: str | None = None
     size_dimension: str | None = None
@@ -24,6 +26,8 @@ class ProductOut(BaseModel):
     product_code: str
     name: str
     description: str | None = None
+    long_description: str | None = None
+    video_url: str | None = None
     brand: str | None = None
     category: str | None = None
     color: str | None = None
@@ -35,7 +39,26 @@ class ProductOut(BaseModel):
     is_installment_eligible: bool
     status: str
     primary_image_url: str | None = None
-    primary_image_url: str | None = None   # ảnh đại diện — path tương đối, FE tự ghép domain BE
+    average_rating: float | None = None
+    review_count: int | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class ReviewCreate(BaseModel):
+    rating: int
+    comment: str | None = None
+
+
+class ReviewOut(BaseModel):
+    id: int
+    product_id: uuid.UUID
+    customer_id: uuid.UUID
+    customer_name: str | None = None
+    rating: int
+    comment: str | None = None
+    created_at: str
 
     class Config:
         from_attributes = True
