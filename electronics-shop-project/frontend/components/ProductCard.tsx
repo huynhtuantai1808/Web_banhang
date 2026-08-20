@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Loader2, ShoppingCart, Check } from "lucide-react";
+import { listProductImages } from "@/services/product";
+
 
 export interface Product {
   id: string;
