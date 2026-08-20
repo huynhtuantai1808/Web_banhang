@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowLeft, ShoppingCart, Loader2, Check, CreditCard, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { getProduct, listProductImages, ProductOut, ProductImageOut } from "@/lib/services/products";
 import { addToCart } from "@/lib/services/cart";
+import { addGuestCartItem } from "@/lib/guestCart";
 import { calculateInstallment } from "@/lib/services/installment";
 import { getMediaUrl } from "@/lib/media";
 import { ApiError } from "@/lib/apiClient";
@@ -20,7 +21,6 @@ function formatVND(v: number) {
 
 export default function ProductDetailPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
 
   const [product, setProduct] = useState<ProductOut | null>(null);
   const [images, setImages] = useState<ProductImageOut[]>([]);
@@ -101,16 +101,17 @@ export default function ProductDetailPage() {
   }
 
   async function handleAddToCart() {
-    if (!isCustomerLoggedIn()) {
-      router.push("/login");
-      return;
-    }
     if (!product) return;
     setAdding(true);
     setCartError(null);
     try {
-      await addToCart(product.id, 1);
+      if (isCustomerLoggedIn()) {
+        await addToCart(product.id, 1);
+      } else {
+        addGuestCartItem(product.id, 1);
+      }
       setAdded(true);
+      window.dispatchEvent(new Event("cart-updated"));
       setTimeout(() => setAdded(false), 2000);
     } catch (err) {
       setCartError(err instanceof ApiError ? err.message : "Thêm vào giỏ hàng thất bại");
