@@ -30,8 +30,18 @@ const fetchReport = useCallback(async () => {
   setError(null);
 
   try {
-    const filters: RevenueFilters = {
-      period,
+type ReportPeriod = "daily" | "weekly" | "monthly";
+
+const fetchReport = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+
+  try {
+    const filters: {
+      period?: ReportPeriod;
+      date?: string;
+    } = {
+      period: period as ReportPeriod,
       ...(customDate ? { date: customDate } : {}),
     };
 
@@ -47,6 +57,7 @@ const fetchReport = useCallback(async () => {
     setLoading(false);
   }
 }, [period, customDate]);
+
 
 
   useEffect(() => {
