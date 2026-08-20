@@ -1,10 +1,5 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useParams } from "next/navigation";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Loader2, Check, CreditCard, ChevronLeft, ChevronRight, RotateCcw, ZoomIn, X, Heart } from "lucide-react";
 import { getProduct, listProductImages, ProductOut, ProductImageOut } from "@/lib/services/products";
 import { addToCart } from "@/lib/services/cart";
 import { addGuestCartItem } from "@/lib/guestCart";
@@ -14,9 +9,9 @@ import { addToWishlist, removeFromWishlist } from "@/lib/services/wishlist";
 import { calculateInstallment } from "@/lib/services/installment";
 import { getMediaUrl } from "@/lib/media";
 import { ApiError } from "@/lib/apiClient";
-import { isCustomerLoggedIn } from "@/lib/auth-storage";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+
 
 function formatVND(v: number) {
   return v.toLocaleString("vi-VN") + "₫";
