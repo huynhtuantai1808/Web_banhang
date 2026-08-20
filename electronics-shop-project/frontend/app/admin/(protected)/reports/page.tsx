@@ -25,20 +25,29 @@ export default function AdminReportsPage() {
   const [emailMessage, setEmailMessage] = useState<string | null>(null);
   const [emailInput, setEmailInput] = useState("");
 
-  const fetchReport = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const filters: { period?: string; date?: string } = { period: period as "daily" | "weekly" | "monthly" };
-      if (customDate) filters.date = customDate;
-      const data = await getRevenueReport(filters);
-      setReport(data);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Không tải được báo cáo");
-    } finally {
-      setLoading(false);
-    }
-  }, [period, customDate]);
+const fetchReport = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+
+  try {
+    const filters: RevenueFilters = {
+      period,
+      ...(customDate ? { date: customDate } : {}),
+    };
+
+    const data = await getRevenueReport(filters);
+    setReport(data);
+  } catch (err) {
+    setError(
+      err instanceof ApiError
+        ? err.message
+        : "Không tải được báo cáo"
+    );
+  } finally {
+    setLoading(false);
+  }
+}, [period, customDate]);
+
 
   useEffect(() => {
     fetchReport();
