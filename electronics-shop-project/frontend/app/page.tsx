@@ -10,7 +10,7 @@ import ProductRow from "@/components/ProductRow";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import CategoryMenu from "@/components/CategoryMenu";
-import { listProducts, listCategories, ProductOut, ProductFilters, CategoryOption } from "@/lib/services/products";
+import { listProducts, listCategories, ProductOut, ProductFilters, CategoryOption, listProductImages } from "@/lib/services/products";
 import { addToCart } from "@/lib/services/cart";
 import { addGuestCartItem } from "@/lib/guestCart";
 import { getMediaUrl } from "@/lib/media";
@@ -27,7 +27,7 @@ const PRICE_RANGES: Record<string, { min_price?: number; max_price?: number }> =
 };
 
 /** Chuyển đổi dữ liệu thô từ Backend sang shape mà <ProductCard> cần hiển thị. */
-function toDisplayProduct(p: ProductOut): Product {
+function toDisplayProduct(p: ProductOut, images?: string[]): Product {
   const spec = p.specification
     ? Object.entries(p.specification).map(([k, v]) => `${k}: ${v}`).join(" / ")
     : [p.color, p.size_dimension].filter(Boolean).join(" / ");
@@ -39,8 +39,28 @@ function toDisplayProduct(p: ProductOut): Product {
     price: p.price,
     discountPrice: p.discount_price ?? undefined,
     imageUrl: getMediaUrl(p.primary_image_url) || "/placeholder-product.png",
+    images,
     specHighlight: spec || "—",
   };
+}
+
+/** Preload all product images in batches (avoid flooding API). */
+async function preloadProductImages(productIds: string[]): Promise<Record<string, string[]>> {
+  const map: Record<string, string[]> = {};
+  const BATCH = 20;
+  for (let i = 0; i < productIds.length; i += BATCH) {
+    const batch = productIds.slice(i, i + BATCH);
+    const results = await Promise.all(batch.map(async (id) => {
+      try {
+        const imgs = await listProductImages(id);
+        return { id, urls: imgs.map((img) => img.url) };
+      } catch {
+        return { id, urls: [] as string[] };
+      }
+    }));
+    results.forEach(({ id, urls }) => { map[id] = urls; });
+  }
+  return map;
 }
 
 export default function HomePage() {
@@ -73,7 +93,8 @@ export default function HomePage() {
       if (range) Object.assign(params, range);
 
       const data = await listProducts(params);
-      setProducts(data.map(toDisplayProduct));
+      const imageMap = await preloadProductImages(data.map((p) => p.id));
+      setProducts(data.map((p) => toDisplayProduct(p, imageMap[p.id])));
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -84,6 +105,11 @@ export default function HomePage() {
       setLoading(false);
     }
   }, []);
+
+  const handleSearch = useCallback((kw: string) => {
+    setKeyword(kw);
+    loadProducts(kw, filters);
+  }, [loadProducts, filters]);
 
   useEffect(() => {
     loadProducts(keyword, filters);
@@ -99,16 +125,25 @@ export default function HomePage() {
           listProducts({ on_sale: true, page_size: 8 }),
           listCategories(),
         ]);
-        setOnSaleProducts(onSaleData.map(toDisplayProduct));
 
+        const allIds = onSaleData.map((p) => p.id);
         const topCategories = allCategories.filter((c) => !c.parent_id).slice(0, 3);
-        const groups = await Promise.all(
+        const catGroupsData = await Promise.all(
           topCategories.map(async (category) => {
             const data = await listProducts({ category_id: category.id, page_size: 4 });
-            return { category, products: data.map(toDisplayProduct) };
+            return { category, products: data };
           })
         );
-        setCategoryGroups(groups.filter((g) => g.products.length > 0));
+        catGroupsData.forEach((g) => g.products.forEach((p) => allIds.push(p.id)));
+
+        // Batch preload all images at once
+        const imageMap = await preloadProductImages(allIds);
+        setOnSaleProducts(onSaleData.map((p) => toDisplayProduct(p, imageMap[p.id])));
+        setCategoryGroups(
+          catGroupsData
+            .filter((g) => g.products.length > 0)
+            .map((g) => ({ category: g.category, products: g.products.map((p) => toDisplayProduct(p, imageMap[p.id])) }))
+        );
       } catch {
         setOnSaleProducts([]);
         setCategoryGroups([]);
@@ -121,11 +156,6 @@ export default function HomePage() {
 
   function handleFilterChange(next: FilterState) {
     setFilters(next);
-  }
-
-  function handleSearch(kw: string) {
-    setKeyword(kw);
-    loadProducts(kw, filters);
   }
 
   async function handleAddToCart(productId: string) {

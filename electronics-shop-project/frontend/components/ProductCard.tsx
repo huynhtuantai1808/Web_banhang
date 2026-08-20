@@ -1,10 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Loader2, ShoppingCart, Check } from "lucide-react";
-import { listProductImages } from "@/lib/services/products";
 
 export interface Product {
   id: string;
@@ -13,6 +12,7 @@ export interface Product {
   price: number;
   discountPrice?: number;
   imageUrl: string;
+  images?: string[]; // thêm images để ProductCard không phải gọi API riêng
   specHighlight: string; // vd: "16GB RAM / 512GB SSD"
 }
 
@@ -35,8 +35,12 @@ export default function ProductCard({
   const [imgIdx, setImgIdx] = useState(0);
   const hasDiscount = !!product.discountPrice && product.discountPrice < product.price;
 
-  // Load additional product images
+  // Load additional product images — use prop if available (preloaded by parent), otherwise fetch
   useEffect(() => {
+    if (product.images && product.images.length > 0) {
+      setImages(product.images);
+      return;
+    }
     listProductImages(product.id)
       .then((imgs) => {
         const urls = imgs.length > 0
@@ -45,7 +49,7 @@ export default function ProductCard({
         setImages(urls);
       })
       .catch(() => setImages([product.imageUrl]));
-  }, [product.id, product.imageUrl]);
+  }, [product.id, product.imageUrl, product.images]);
 
   // Auto-rotate images every 3 seconds when not hovering
   useEffect(() => {
