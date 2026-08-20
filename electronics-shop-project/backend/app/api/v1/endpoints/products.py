@@ -22,16 +22,29 @@ async def _row_to_out(
     brand_name: str | None,
     category_name: str | None,
     primary_image_url: str | None = None,
+    ratings_cache: dict[uuid.UUID, tuple[float, int]] | None = None,
 ) -> ProductOut:
-    """Ghép entity Product (lưu brand_id/category_id) với tên hãng/danh mục + ảnh đại diện + rating."""
-    # Compute average rating
-    rating_result = await db.execute(
-        select(
-            func.coalesce(func.avg(ProductReview.rating), 0).cast(float),
-            func.count(ProductReview.id),
-        ).where(ProductReview.product_id == product.id)
-    )
-    avg_rating, review_count = rating_result.one()
+    """Ghép entity Product (lưu brand_id/category_id) với tên hãng/danh mục + ảnh đại diện + rating.
+
+    ratings_cache: dict mapping product_id → (avg_rating, review_count). Pass None to skip rating.
+    """
+    avg_rating: float | None = None
+    review_count = 0
+    if ratings_cache is not None:
+        if product.id in ratings_cache:
+            avg_rating, review_count = ratings_cache[product.id]
+    else:
+        # Fallback: single query (only used for single-product endpoints)
+        rating_result = await db.execute(
+            select(
+                func.avg(ProductReview.rating),
+                func.count(ProductReview.id),
+            ).where(ProductReview.product_id == product.id)
+        )
+        row = rating_result.one()
+        avg_rating = float(row[0]) if row[0] is not None else None
+        review_count = int(row[1]) if row[1] else 0
+
     return ProductOut(
         id=product.id,
         product_code=product.product_code,
@@ -50,8 +63,8 @@ async def _row_to_out(
         is_installment_eligible=product.is_installment_eligible,
         status=product.status,
         primary_image_url=primary_image_url,
-        average_rating=round(float(avg_rating), 1) if avg_rating else None,
-        review_count=int(review_count) if review_count else 0,
+        average_rating=round(avg_rating, 1) if avg_rating else None,
+        review_count=review_count,
     )
 
 
@@ -115,7 +128,26 @@ async def list_products(
     stmt = stmt.offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(stmt)
     rows = result.all()
-    return [await _row_to_out(db, p, b, c, img) for p, b, c, img in rows]
+    if not rows:
+        return []
+
+    # Pre-load ratings for all products in one query
+    product_ids = [p.id for p, *_ in rows]
+    ratings_result = await db.execute(
+        select(
+            ProductReview.product_id,
+            func.avg(ProductReview.rating),
+            func.count(ProductReview.id),
+        )
+        .where(ProductReview.product_id.in_(product_ids))
+        .group_by(ProductReview.product_id)
+    )
+    ratings_cache = {
+        pid: (float(avg), int(cnt))
+        for pid, avg, cnt in ratings_result.all()
+    }
+
+    return [await _row_to_out(db, p, b, c, img, ratings_cache) for p, b, c, img in rows]
 
 
 @router.get("/{product_id}", response_model=ProductOut)
@@ -339,4 +371,23 @@ async def get_related_products(
     )
     result = await db.execute(stmt)
     rows = result.all()
-    return [await _row_to_out(db, p, b, c, img) for p, b, c, img in rows]
+    if not rows:
+        return []
+
+    # Pre-load ratings
+    product_ids = [p.id for p, *_ in rows]
+    ratings_result = await db.execute(
+        select(
+            ProductReview.product_id,
+            func.avg(ProductReview.rating),
+            func.count(ProductReview.id),
+        )
+        .where(ProductReview.product_id.in_(product_ids))
+        .group_by(ProductReview.product_id)
+    )
+    ratings_cache = {
+        pid: (float(avg), int(cnt))
+        for pid, avg, cnt in ratings_result.all()
+    }
+
+    return [await _row_to_out(db, p, b, c, img, ratings_cache) for p, b, c, img in rows]
