@@ -1,14 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, Loader2 } from "lucide-react";
-import { createProduct, updateProduct, ProductOut, ProductInput, listBrands, listCategories, CatalogOption, CategoryOption } from "@/lib/services/products";
+import { X, Loader2, Star } from "lucide-react";
+import {
+  createProduct, updateProduct, ProductOut, ProductInput,
+  listBrands, listCategories, getProductReviews,
+  CatalogOption, CategoryOption, ReviewOut,
+} from "@/lib/services/products";
 import { ApiError } from "@/lib/apiClient";
 
 const EMPTY_FORM: ProductInput = {
   product_code: "",
   name: "",
   description: "",
+  long_description: "",
+  video_url: "",
   brand: "",
   brand_id: undefined,
   category: "",
@@ -16,6 +22,7 @@ const EMPTY_FORM: ProductInput = {
   color: "",
   material: "",
   size_dimension: "",
+  specification: undefined,
   price: 0,
   discount_price: undefined,
   is_installment_eligible: true,
@@ -38,6 +45,9 @@ export default function ProductFormModal({
   const [saving, setSaving] = useState(false);
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"info" | "reviews">("info");
+  const [reviews, setReviews] = useState<ReviewOut[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
   const isEditing = !!editingProduct;
 
@@ -56,11 +66,14 @@ export default function ProductFormModal({
 
   useEffect(() => {
     if (!open) return;
+    setActiveTab("info");
     if (editingProduct) {
       setForm({
         product_code: editingProduct.product_code,
         name: editingProduct.name,
         description: editingProduct.description ?? "",
+        long_description: editingProduct.long_description ?? "",
+        video_url: editingProduct.video_url ?? "",
         brand: editingProduct.brand ?? "",
         brand_id: undefined,
         category: editingProduct.category ?? "",
@@ -68,12 +81,20 @@ export default function ProductFormModal({
         color: editingProduct.color ?? "",
         material: editingProduct.material ?? "",
         size_dimension: editingProduct.size_dimension ?? "",
+        specification: editingProduct.specification ?? undefined,
         price: editingProduct.price,
         discount_price: editingProduct.discount_price ?? undefined,
         is_installment_eligible: editingProduct.is_installment_eligible,
       });
+      // Load reviews
+      setLoadingReviews(true);
+      getProductReviews(editingProduct.id)
+        .then(setReviews)
+        .catch(() => setReviews([]))
+        .finally(() => setLoadingReviews(false));
     } else {
       setForm(EMPTY_FORM);
+      setReviews([]);
     }
     setError(null);
   }, [open, editingProduct]);
@@ -133,13 +154,42 @@ export default function ProductFormModal({
           </button>
         </div>
 
+        {/* Tab bar — chỉ khi đang edit */}
+        {isEditing && (
+          <div className="flex border-b border-circuit-line mb-5 -mt-1">
+            <button
+              onClick={() => setActiveTab("info")}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "info"
+                  ? "border-circuit-copper text-circuit-copperLight"
+                  : "border-transparent text-circuit-muted hover:text-circuit-text"
+              }`}
+            >
+              Thông tin sản phẩm
+            </button>
+            <button
+              onClick={() => setActiveTab("reviews")}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "reviews"
+                  ? "border-circuit-copper text-circuit-copperLight"
+                  : "border-transparent text-circuit-muted hover:text-circuit-text"
+              }`}
+            >
+              Đánh giá ({reviews.length})
+            </button>
+          </div>
+        )}
+
         {error && (
           <div className="mb-4 rounded-md border border-red-400/40 bg-red-400/10 px-3 py-2 text-sm text-red-300">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* ── Tab: Thông tin ── */}
+        {activeTab === "info" && (
+          <form onSubmit={handleSubmit} className="space-y-4">
+)
           <div className="grid grid-cols-2 gap-3">
             <Field label="Mã sản phẩm *">
               <input
@@ -169,6 +219,46 @@ export default function ProductFormModal({
               className="input min-h-[70px]"
               placeholder="Mô tả ngắn về sản phẩm..."
             />
+          </Field>
+
+          <Field label="Mô tả chi tiết (HTML)">
+            <textarea
+              value={form.long_description}
+              onChange={(e) => update("long_description", e.target.value)}
+              className="input min-h-[120px] font-mono text-xs"
+              placeholder="Nội dung HTML: &lt;b&gt;, &lt;ul&gt;, &lt;table&gt;, ảnh..."
+            />
+            <p className="text-xs text-circuit-muted mt-1">
+              Hỗ trợ HTML: bold, italic, list, table, hình ảnh. Không dùng JavaScript.
+            </p>
+          </Field>
+
+          <Field label="Link video giới thiệu">
+            <input
+              value={form.video_url}
+              onChange={(e) => update("video_url", e.target.value)}
+              className="input"
+              placeholder="https://www.youtube.com/watch?v=..."
+            />
+            <p className="text-xs text-circuit-muted mt-1">
+              Dán link YouTube — video sẽ được nhúng tự động.
+            </p>
+          </Field>
+
+          <Field label="Thông số kỹ thuật (JSON)">
+            <textarea
+              value={form.specification ? JSON.stringify(form.specification, null, 2) : ""}
+              onChange={(e) => {
+                try {
+                  update("specification", e.target.value ? JSON.parse(e.target.value) : undefined);
+                } catch { /* ignore invalid JSON while typing */ }
+              }}
+              className="input min-h-[80px] font-mono text-xs"
+              placeholder='{"CPU": "Intel i5-1235U", "RAM": "8GB", "Ổ cứng": "512GB SSD"}'
+            />
+            <p className="text-xs text-circuit-muted mt-1">
+              Nhập JSON object key-value. Để trống nếu không cần.
+            </p>
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
@@ -280,6 +370,52 @@ export default function ProductFormModal({
             {isEditing ? "Lưu thay đổi" : "Nhập sản phẩm"}
           </button>
         </form>
+        )}
+
+        {/* ── Tab: Đánh giá ── */}
+        {activeTab === "reviews" && (
+          <div>
+            {loadingReviews ? (
+              <div className="flex items-center justify-center py-10 text-circuit-muted">
+                <Loader2 size={16} className="animate-spin mr-2" /> Đang tải đánh giá...
+              </div>
+            ) : reviews.length === 0 ? (
+              <p className="text-sm text-circuit-muted py-6 text-center">Chưa có đánh giá nào cho sản phẩm này.</p>
+            ) : (
+              <div className="space-y-3">
+                {reviews.map((r) => (
+                  <div key={r.id} className="border border-circuit-line rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-circuit-copper/20 flex items-center justify-center text-xs font-bold text-circuit-copper">
+                          {r.customer_name?.[0]?.toUpperCase() || "?"}
+                        </div>
+                        <span className="text-sm font-medium text-circuit-text">{r.customer_name || "Khách hàng"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-0.5">
+                          {[1,2,3,4,5].map((s) => (
+                            <Star
+                              key={s}
+                              size={12}
+                              className={s <= r.rating ? "text-yellow-400 fill-yellow-400" : "text-circuit-line"}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs text-circuit-muted">
+                          {new Date(r.created_at).toLocaleDateString("vi-VN")}
+                        </span>
+                      </div>
+                    </div>
+                    {r.comment && (
+                      <p className="text-sm text-circuit-text leading-relaxed">{r.comment}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <style jsx global>{`
