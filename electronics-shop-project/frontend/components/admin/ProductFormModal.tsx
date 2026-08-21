@@ -8,6 +8,7 @@ import {
   CatalogOption, CategoryOption, ReviewOut,
 } from "@/lib/services/products";
 import { ApiError } from "@/lib/apiClient";
+import RichTextEditor from "./RichTextEditor";
 
 const EMPTY_FORM: ProductInput = {
   product_code: "",
@@ -221,16 +222,12 @@ export default function ProductFormModal({
             />
           </Field>
 
-          <Field label="Mô tả chi tiết (HTML)">
-            <textarea
+          <Field label="Mô tả chi tiết (WYSIWYG)">
+            {/* @ts-ignore */}
+            <RichTextEditor
               value={form.long_description}
-              onChange={(e) => update("long_description", e.target.value)}
-              className="input min-h-[120px] font-mono text-xs"
-              placeholder="Nội dung HTML: &lt;b&gt;, &lt;ul&gt;, &lt;table&gt;, ảnh..."
+              onChange={(html: string) => update("long_description", html)}
             />
-            <p className="text-xs text-circuit-muted mt-1">
-              Hỗ trợ HTML: bold, italic, list, table, hình ảnh. Không dùng JavaScript.
-            </p>
           </Field>
 
           <Field label="Link video giới thiệu">
@@ -242,22 +239,6 @@ export default function ProductFormModal({
             />
             <p className="text-xs text-circuit-muted mt-1">
               Dán link YouTube — video sẽ được nhúng tự động.
-            </p>
-          </Field>
-
-          <Field label="Thông số kỹ thuật (JSON)">
-            <textarea
-              value={form.specification ? JSON.stringify(form.specification, null, 2) : ""}
-              onChange={(e) => {
-                try {
-                  update("specification", e.target.value ? JSON.parse(e.target.value) : undefined);
-                } catch { /* ignore invalid JSON while typing */ }
-              }}
-              className="input min-h-[80px] font-mono text-xs"
-              placeholder='{"CPU": "Intel i5-1235U", "RAM": "8GB", "Ổ cứng": "512GB SSD"}'
-            />
-            <p className="text-xs text-circuit-muted mt-1">
-              Nhập JSON object key-value. Để trống nếu không cần.
             </p>
           </Field>
 
@@ -294,7 +275,7 @@ export default function ProductFormModal({
                   <option value="">— Chọn danh mục —</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.parent_id ? `    ${c.name}` : c.name}
+                      {c.parent_id ? `    ${c.name}` : c.name}
                     </option>
                   ))}
                 </select>

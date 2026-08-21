@@ -36,3 +36,41 @@ body {
   background: #C87F45;
   color: #0B1220;
 }
+
+/* ── ReactQuill dark theme ── */
+.ql-toolbar.ql-snow {
+  border-color: #1E2C47 !important;
+  background: #0D1526;
+  border-radius: 6px 6px 0 0;
+}
+.ql-container.ql-snow {
+  border-color: #1E2C47 !important;
+  background: #0b1220;
+  border-radius: 0 0 6px 6px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: #e7ecf5;
+}
+.ql-editor {
+  color: #e7ecf5;
+  min-height: 160px;
+  max-height: 280px;
+  overflow-y: auto;
+  line-height: 1.7;
+}
+.ql-editor.ql-blank::before {
+  color: #5a6d8a;
+  font-style: normal;
+}
+.ql-toolbar .ql-stroke { stroke: #5a6d8a; }
+.ql-toolbar .ql-fill { fill: #5a6d8a; }
+.ql-toolbar button:hover .ql-stroke,
+.ql-toolbar button.ql-active .ql-stroke { stroke: #c87f45; }
+.ql-toolbar button:hover .ql-fill,
+.ql-toolbar button.ql-active .ql-fill { fill: #c87f45; }
+.ql-toolbar .ql-picker { color: #5a6d8a; }
+.ql-toolbar .ql-picker-options {
+  background: #1E2C47;
+  border-color: #2a3a5a;
+  color: #e7ecf5;
+}

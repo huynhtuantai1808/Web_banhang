@@ -456,10 +456,10 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      {/* ── SECTION 2: Tab Mô tả / Thông số (7+3 layout) ── */}
-      <div className="grid grid-cols-1 md:grid-cols-10 gap-6 mb-10">
-        {/* 70% — Mô tả chi tiết */}
-        <div className="md:col-span-7 space-y-4">
+      {/* ── SECTION 2: Tab Mô tả / Thông số (full width) ── */}
+      <div className="mb-10">
+        {/* Mô tả chi tiết */}
+        <div className="space-y-4">
           {/* Tab bar */}
           <div className="flex border-b border-circuit-line">
             <button
@@ -550,38 +550,6 @@ export default function ProductDetailPage() {
           )}
         </div>
 
-        {/* 30% — Sidebar: specs summary */}
-        <div className="md:col-span-3 space-y-4">
-          <div className="rounded-lg border border-circuit-line bg-circuit-panel p-4">
-            <h4 className="font-display text-sm text-circuit-copperLight uppercase tracking-wide mb-3">
-              Thông số nổi bật
-            </h4>
-            {product.specification && Object.keys(product.specification).length > 0 ? (
-              <dl className="space-y-2">
-                {Object.entries(product.specification).slice(0, 6).map(([k, v]) => (
-                  <div key={k} className="flex justify-between items-start gap-2">
-                    <dt className="text-xs text-circuit-muted font-mono shrink-0">{k}</dt>
-                    <dd className="text-xs text-circuit-text font-medium text-right">{String(v)}</dd>
-                  </div>
-                ))}
-              </dl>
-            ) : (
-              <p className="text-xs text-circuit-muted">Chưa có thông số.</p>
-            )}
-          </div>
-
-          {/* Prominent add-to-cart in sidebar (mobile only, hidden on md+) */}
-          <div className="md:hidden">
-            <button
-              onClick={handleAddToCart}
-              disabled={adding}
-              className="w-full flex items-center justify-center gap-2 rounded-lg bg-circuit-copper py-3 text-sm font-semibold text-circuit-bg hover:bg-circuit-copperLight transition-colors disabled:opacity-60"
-            >
-              {adding ? <Loader2 size={16} className="animate-spin" /> : <ShoppingCart size={16} />}
-              {added ? "Đã thêm!" : "Thêm vào giỏ"}
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* ── SECTION 3: Đánh giá sản phẩm ── */}
