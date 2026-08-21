@@ -225,7 +225,7 @@ export default function ProductFormModal({
           <Field label="Mô tả chi tiết (WYSIWYG)">
             {/* @ts-ignore */}
             <RichTextEditor
-              value={form.long_description}
+              value={form.long_description ?? ""}
               onChange={(html: string) => update("long_description", html)}
             />
           </Field>
