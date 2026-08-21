@@ -148,6 +148,10 @@ export async function deleteProductImage(imageId: string): Promise<void> {
   await apiClient.delete(`/products/images/${imageId}`);
 }
 
+export async function setPrimaryImage(imageId: string): Promise<void> {
+  await apiClient.put(`/products/images/${imageId}/primary`);
+}
+
 // ---- Reviews ----
 export async function getProductReviews(productId: string, page = 1): Promise<ReviewOut[]> {
   const { data } = await apiClient.get<ReviewOut[]>(`/products/${productId}/reviews`, {
