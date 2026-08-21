@@ -2,13 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Plus, Package, Search, PencilLine, Trash2, Upload, ImagePlus, Loader2, RefreshCw,
+  Plus, Package, Search, PencilLine, Trash2, Upload, Loader2, RefreshCw, Camera,
 } from "lucide-react";
 import {
-  listProducts, importProductsFile, uploadProductImage, deleteProduct, ProductOut,
+  listProducts, importProductsFile, deleteProduct, ProductOut,
 } from "@/lib/services/products";
 import { ApiError } from "@/lib/apiClient";
+import { getMediaUrl } from "@/lib/media";
 import ProductFormModal from "@/components/admin/ProductFormModal";
+import ImageManagerModal from "@/components/admin/ImageManagerModal";
 
 function formatVND(v: number) {
   return v.toLocaleString("vi-VN") + "₫";
@@ -21,10 +23,10 @@ export default function AdminProductsPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [uploadingImageFor, setUploadingImageFor] = useState<string | null>(null);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductOut | null>(null);
+  const [imageManagerFor, setImageManagerFor] = useState<ProductOut | null>(null);
 
   const importInputRef = useRef<HTMLInputElement>(null);
 
@@ -75,23 +77,6 @@ export default function AdminProductsPage() {
     } finally {
       setImporting(false);
       if (importInputRef.current) importInputRef.current.value = "";
-    }
-  }
-
-  async function handleUploadImage(productId: string, e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploadingImageFor(productId);
-    setBanner(null);
-    try {
-      await uploadProductImage(productId, file, true);
-      setBanner({ type: "success", text: `Đã tải ảnh cho sản phẩm ${productId} thành công.` });
-    } catch (err) {
-      setBanner({ type: "error", text: err instanceof ApiError ? err.message : "Tải ảnh thất bại" });
-    } finally {
-      setUploadingImageFor(null);
-      e.target.value = "";
     }
   }
 
@@ -181,6 +166,7 @@ export default function AdminProductsPage() {
         <table className="w-full text-sm">
           <thead className="bg-circuit-panel text-circuit-muted font-mono text-xs uppercase">
             <tr>
+              <th className="text-left px-4 py-3">Ảnh</th>
               <th className="text-left px-4 py-3">Mã SP</th>
               <th className="text-left px-4 py-3">Tên sản phẩm</th>
               <th className="text-left px-4 py-3">Hãng</th>
@@ -207,6 +193,24 @@ export default function AdminProductsPage() {
             ) : (
               products.map((p) => (
                 <tr key={p.id} className="border-t border-circuit-line hover:bg-circuit-panel/60">
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => setImageManagerFor(p)}
+                      className="relative w-12 h-12 rounded-lg border border-circuit-line overflow-hidden bg-circuit-bg hover:border-circuit-copper transition-colors group"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={getMediaUrl(p.primary_image_url) || "/placeholder-product.png"}
+                        alt={p.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.png"; }}
+                      />
+                      {/* Camera overlay */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center">
+                        <Camera size={14} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    </button>
+                  </td>
                   <td className="px-4 py-3 font-mono text-circuit-copperLight">{p.product_code}</td>
                   <td className="px-4 py-3">{p.name}</td>
                   <td className="px-4 py-3 text-circuit-muted">{p.brand || "—"}</td>
@@ -227,29 +231,25 @@ export default function AdminProductsPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex justify-end gap-2">
-                      <label className="p-1.5 rounded hover:bg-circuit-line text-circuit-muted hover:text-circuit-copperLight cursor-pointer">
-                        {uploadingImageFor === p.id ? (
-                          <Loader2 size={16} className="animate-spin" />
-                        ) : (
-                          <ImagePlus size={16} />
-                        )}
-                        <input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp,image/gif"
-                          className="hidden"
-                          onChange={(e) => handleUploadImage(p.id, e)}
-                        />
-                      </label>
+                    <div className="flex justify-end gap-1.5">
+                      <button
+                        onClick={() => setImageManagerFor(p)}
+                        title="Quản lý ảnh"
+                        className="p-2 rounded-lg hover:bg-circuit-line text-circuit-muted hover:text-circuit-copperLight transition-colors"
+                      >
+                        <Camera size={16} />
+                      </button>
                       <button
                         onClick={() => openEditModal(p)}
-                        className="p-1.5 rounded hover:bg-circuit-line text-circuit-muted hover:text-circuit-copperLight"
+                        title="Sửa sản phẩm"
+                        className="p-2 rounded-lg hover:bg-circuit-line text-circuit-muted hover:text-circuit-copperLight transition-colors"
                       >
                         <PencilLine size={16} />
                       </button>
                       <button
                         onClick={() => handleDelete(p.id)}
-                        className="p-1.5 rounded hover:bg-circuit-line text-circuit-muted hover:text-red-400"
+                        title="Ngừng bán"
+                        className="p-2 rounded-lg hover:bg-circuit-line text-circuit-muted hover:text-red-400 transition-colors"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -267,6 +267,13 @@ export default function AdminProductsPage() {
         onClose={() => setModalOpen(false)}
         onSaved={() => fetchProducts(keyword)}
         editingProduct={editingProduct}
+      />
+
+      <ImageManagerModal
+        open={!!imageManagerFor}
+        onClose={() => setImageManagerFor(null)}
+        productId={imageManagerFor?.id ?? ""}
+        productName={imageManagerFor?.name ?? ""}
       />
     </main>
   );
