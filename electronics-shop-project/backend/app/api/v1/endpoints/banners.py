@@ -32,7 +32,7 @@ class BannerUpdate(BaseModel):
     title: str | None = None
     subtitle: str | None = None
     description: str | None = None
-    image_url: str | None = None
+    image_url: str | None = None  # gửi null để giữ nguyên, gửi "" để xóa ảnh
     link_url: str | None = None
     cta_label: str | None = None
     valid_from: datetime | None = None
@@ -47,7 +47,7 @@ class BannerOut(BaseModel):
     title: str
     subtitle: str | None
     description: str | None
-    image_url: str
+    image_url: str | None  # nullable
     link_url: str | None
     cta_label: str | None
     valid_from: datetime | None
@@ -142,6 +142,23 @@ async def update_banner(
         raise HTTPException(status_code=404, detail="Không tìm thấy banner")
 
     update_data = payload.model_dump(exclude_unset=True)
+
+    # Xử lý xóa / thay ảnh
+    if "image_url" in update_data:
+        new_url = update_data["image_url"]
+        if new_url is None or new_url == "":
+            # Xóa ảnh: xóa file cũ trên disk, gỡ khỏi DB
+            if banner.image_url:
+                await delete_uploaded_file(banner.image_url)
+            banner.image_url = None
+            del update_data["image_url"]
+        elif new_url != banner.image_url:
+            # Thay ảnh mới: xóa file cũ
+            if banner.image_url:
+                await delete_uploaded_file(banner.image_url)
+            banner.image_url = new_url
+            del update_data["image_url"]
+
     for key, value in update_data.items():
         setattr(banner, key, value)
 
@@ -159,16 +176,8 @@ async def delete_banner(
     banner = await db.get(Banner, banner_id)
     if not banner:
         raise HTTPException(status_code=404, detail="Không tìm thấy banner")
+    # Xóa file ảnh trên disk trước khi xóa row
+    if banner.image_url:
+        await delete_uploaded_file(banner.image_url)
     await db.delete(banner)
     await db.commit()
-
-
-@router.delete("/images/{image_url:path}", status_code=200)
-async def delete_banner_image(
-    image_url: str,
-    db: AsyncSession = Depends(get_db),
-    _admin_id: str = Depends(require_admin),
-):
-    """Xoá file ảnh banner đã upload (theo đường dẫn tương đối trong DB)."""
-    await delete_uploaded_file(image_url)
-    return {"message": "Đã xoá ảnh"}

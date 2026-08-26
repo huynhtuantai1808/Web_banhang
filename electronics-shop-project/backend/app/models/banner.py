@@ -15,7 +15,7 @@ class Banner(Base):
     title: Mapped[str] = mapped_column(String(150), nullable=False)
     subtitle: Mapped[str | None] = mapped_column(String(250))
     description: Mapped[str | None] = mapped_column(Text)
-    image_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     link_url: Mapped[str | None] = mapped_column(String(500))
     cta_label: Mapped[str | None] = mapped_column(String(60))
     valid_from: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

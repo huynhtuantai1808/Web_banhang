@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import {
   Banner, listAllBanners, createBanner, updateBanner, deleteBanner,
-  uploadBannerImage, deleteBannerImage,
+  uploadBannerImage,
 } from "@/lib/services/banners";
 import { ApiError } from "@/lib/apiClient";
 import { getMediaUrl } from "@/lib/media";
@@ -101,12 +101,18 @@ export default function AdminBannersPage() {
   }
 
   async function handleDeleteImage() {
+    if (!editingBanner) {
+      // Banner mới — chưa lưu → chỉ xóa khỏi form
+      setForm({ ...form, image_url: "", imageFile: null });
+      return;
+    }
     if (!form.image_url) return;
     if (!confirm("Xoá ảnh banner này?")) return;
     setDeletingImage(true);
     try {
-      await deleteBannerImage(form.image_url);
+      await updateBanner(editingBanner.id, { image_url: null });
       setForm({ ...form, image_url: "", imageFile: null });
+      await fetchBanners();
     } catch {
       // ignore
     } finally {

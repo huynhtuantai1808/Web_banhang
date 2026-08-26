@@ -5,7 +5,7 @@ export interface Banner {
   title: string;
   subtitle: string | null;
   description: string | null;
-  image_url: string;
+  image_url: string | null;
   link_url: string | null;
   cta_label: string | null;
   valid_from: string | null;
@@ -17,7 +17,7 @@ export interface Banner {
 
 export interface BannerInput {
   title: string;
-  image_url: string;
+  image_url: string | null;
   subtitle?: string;
   description?: string;
   link_url?: string;
@@ -33,12 +33,6 @@ export async function uploadBannerImage(file: File): Promise<string> {
   fd.append("file", file);
   const { data } = await apiClient.post<{ image_url: string }>("/banners/upload-image", fd);
   return data.image_url;
-}
-
-/** Xoá file ảnh banner đã upload (theo đường dẫn URL). */
-export async function deleteBannerImage(imageUrl: string): Promise<void> {
-  const path = encodeURIComponent(imageUrl);
-  await apiClient.delete(`/banners/images/${path}`);
 }
 
 /** Danh sách banner công khai — dùng cho trang chủ (chỉ lấy banner đang active). */
