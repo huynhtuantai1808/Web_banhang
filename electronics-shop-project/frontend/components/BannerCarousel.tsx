@@ -70,7 +70,11 @@ export default function BannerCarousel({ position = "hero", className = "" }: Ba
             </div>
           </div>
         )}
-        <Wrapper {...(wrapperProps as React.AnchorHTMLAttributes<HTMLAnchorElement>)} className="absolute inset-0 block" />
+        <Wrapper
+          {...wrapperProps}
+          href={wrapperProps.href ?? "#"}
+          className="absolute inset-0 block"
+        />
       </div>
 
       {banners.length > 1 && (
