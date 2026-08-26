@@ -24,6 +24,7 @@ export interface BannerInput {
   cta_label?: string;
   position?: string;
   display_order?: number;
+  is_active?: boolean;
 }
 
 /** Upload ảnh banner, trả về URL. */
