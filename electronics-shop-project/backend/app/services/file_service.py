@@ -50,6 +50,7 @@ async def save_banner_image(file: UploadFile) -> str:
         raise HTTPException(status_code=400, detail=f"Ảnh banner vượt quá {MAX_BANNER_SIZE_MB}MB")
 
     BANNER_ROOT.mkdir(parents=True, exist_ok=True)
+    BANNER_ROOT.joinpath(".gitkeep").touch()
 
     ext = os.path.splitext(file.filename or "")[1] or ".jpg"
     filename = f"{uuid.uuid4()}{ext}"

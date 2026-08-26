@@ -2,10 +2,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.utils import get_openapi
+import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 from app.core.config import settings
 from app.core.openapi_tags import TAGS_METADATA
 from app.api.v1.router import api_router
+
+# Mount static files PHƯỚC router để đảm bảo /uploads/* được resolve đúng
+UPLOADS_DIR = os.path.abspath(os.environ.get("UPLOADS_DIR", "uploads"))
+os.makedirs(UPLOADS_DIR, exist_ok=True)
+logger.info(f"[STARTUP] Serving uploads from: {UPLOADS_DIR}  (exists={os.path.isdir(UPLOADS_DIR)})")
+app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR, html=False), name="uploads")
 
 app = FastAPI(
     title="Electronics Shop API",
@@ -30,9 +40,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Phục vụ file ảnh sản phẩm đã upload tại http://.../uploads/products/<file>
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.include_router(api_router)
 
