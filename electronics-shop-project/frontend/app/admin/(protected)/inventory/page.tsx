@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { PackageSearch, Loader2, Download, TrendingUp, AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import { PackageSearch, Loader2, Download, TrendingUp, AlertCircle, CheckCircle, XCircle, Search } from "lucide-react";
 import { listInventory, exportInventoryToCSV, InventoryItem, InventoryFilters } from "@/lib/services/inventory";
 import { listBrands, listCategories } from "@/lib/services/products";
 import { ApiError } from "@/lib/apiClient";
@@ -27,6 +27,8 @@ export default function AdminInventoryPage() {
   const [categoryId, setCategoryId] = useState<number | undefined>();
   const [brandId, setBrandId] = useState<number | undefined>();
   const [stockStatus, setStockStatus] = useState<string>("");
+  const [searchInput, setSearchInput] = useState("");
+  const [keyword, setKeyword] = useState("");
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -35,6 +37,7 @@ export default function AdminInventoryPage() {
       const filters: InventoryFilters = {};
       if (categoryId) filters.category_id = categoryId;
       if (brandId) filters.brand_id = brandId;
+      if (keyword) filters.keyword = keyword;
       if (stockStatus) filters.stock_status = stockStatus as "in_stock" | "out_of_stock" | "low_stock";
 
       const [invData, brandData, catData] = await Promise.all([
@@ -50,7 +53,7 @@ export default function AdminInventoryPage() {
     } finally {
       setLoading(false);
     }
-  }, [categoryId, brandId, stockStatus]);
+  }, [categoryId, brandId, stockStatus, keyword]);
 
   useEffect(() => {
     fetchData();
@@ -109,6 +112,29 @@ export default function AdminInventoryPage() {
           <option value="">Tất cả hãng</option>
           {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
+
+        {/* Search */}
+        <div className="flex items-center gap-2 rounded-md border border-circuit-line bg-circuit-panel px-3 py-2">
+          <Search size={14} className="text-circuit-muted" />
+          <input
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") setKeyword(searchInput);
+            }}
+            placeholder="Tìm theo mã SP hoặc tên..."
+            className="bg-transparent outline-none text-sm text-circuit-text placeholder:text-circuit-muted w-56"
+          />
+          {searchInput && (
+            <button
+              onClick={() => { setSearchInput(""); setKeyword(""); }}
+              className="text-circuit-muted hover:text-circuit-text text-xs"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
         <button
           onClick={handleExport}
           disabled={items.length === 0}

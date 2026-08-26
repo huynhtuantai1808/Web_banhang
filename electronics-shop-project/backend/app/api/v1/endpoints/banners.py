@@ -1,0 +1,161 @@
+import uuid
+from datetime import datetime
+from typing import Annotated
+from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, update
+
+from app.db.session import get_db
+from app.models.banner import Banner
+from app.core.security import require_admin, require_employee
+from app.services.file_service import save_banner_image
+
+router = APIRouter(prefix="/banners", tags=["Banners (Quảng cáo)"])
+
+
+class BannerOut(BaseModel):
+    id: str
+    title: str
+    subtitle: str | None
+    description: str | None
+    image_url: str
+    link_url: str | None
+    cta_label: str | None
+    valid_from: datetime | None
+    valid_to: datetime | None
+    position: str
+    display_order: int
+    is_active: bool
+
+
+class BannerUpdate(BaseModel):
+    title: str | None = None
+    subtitle: str | None = None
+    description: str | None = None
+    link_url: str | None = None
+    cta_label: str | None = None
+    valid_from: datetime | None = None
+    valid_to: datetime | None = None
+    position: str | None = None
+    display_order: int | None = None
+    is_active: bool | None = None
+
+
+def _to_out(b: Banner) -> BannerOut:
+    return BannerOut(
+        id=str(b.id),
+        title=b.title,
+        subtitle=b.subtitle,
+        description=b.description,
+        image_url=b.image_url,
+        link_url=b.link_url,
+        cta_label=b.cta_label,
+        valid_from=b.valid_from,
+        valid_to=b.valid_to,
+        position=b.position,
+        display_order=b.display_order,
+        is_active=b.is_active,
+    )
+
+
+@router.get("", response_model=list[BannerOut])
+async def list_banners(
+    position: Annotated[str | None, Query(description="hero | promo | sidebar")] = None,
+    active_only: Annotated[bool, Query()] = False,
+    db: AsyncSession = Depends(get_db),
+):
+    """Liệt kê banner. Mặc định bao gồm cả banner đang ẩn để admin xem; client dùng active_only=true."""
+    query = select(Banner)
+    if position:
+        query = query.where(Banner.position == position)
+    if active_only:
+        query = query.where(Banner.is_active == True)  # noqa: E712
+    query = query.order_by(Banner.display_order, Banner.created_at)
+    result = await db.execute(query)
+    return [_to_out(b) for b in result.scalars().all()]
+
+
+@router.post("", response_model=BannerOut, status_code=201)
+async def create_banner(
+    title: Annotated[str, Form()],
+    image: Annotated[UploadFile, File(description="Ảnh banner")],
+    subtitle: Annotated[str | None, Form()] = None,
+    description: Annotated[str | None, Form()] = None,
+    link_url: Annotated[str | None, Form()] = None,
+    cta_label: Annotated[str | None, Form()] = None,
+    position: Annotated[str, Form()] = "hero",
+    display_order: Annotated[int, Form()] = 0,
+    db: AsyncSession = Depends(get_db),
+    _admin_id: str = Depends(require_admin),
+):
+    """Tạo banner mới (multipart vì có upload ảnh)."""
+    image_url = await save_banner_image(image)
+
+    banner = Banner(
+        id=uuid.uuid4(),
+        title=title,
+        subtitle=subtitle,
+        description=description,
+        image_url=image_url,
+        link_url=link_url,
+        cta_label=cta_label,
+        position=position,
+        display_order=display_order,
+        is_active=True,
+    )
+    db.add(banner)
+    await db.commit()
+    await db.refresh(banner)
+    return _to_out(banner)
+
+
+@router.put("/{banner_id}", response_model=BannerOut)
+async def update_banner(
+    banner_id: uuid.UUID,
+    payload: BannerUpdate,
+    db: AsyncSession = Depends(get_db),
+    _admin_id: str = Depends(require_admin),
+):
+    banner = await db.get(Banner, banner_id)
+    if not banner:
+        raise HTTPException(status_code=404, detail="Không tìm thấy banner")
+
+    update_data = payload.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(banner, key, value)
+
+    await db.commit()
+    await db.refresh(banner)
+    return _to_out(banner)
+
+
+@router.put("/{banner_id}/image", response_model=BannerOut)
+async def replace_banner_image(
+    banner_id: uuid.UUID,
+    image: Annotated[UploadFile, File(description="Ảnh banner mới")],
+    db: AsyncSession = Depends(get_db),
+    _admin_id: str = Depends(require_admin),
+):
+    """Thay ảnh banner (giữ nguyên các trường khác)."""
+    banner = await db.get(Banner, banner_id)
+    if not banner:
+        raise HTTPException(status_code=404, detail="Không tìm thấy banner")
+
+    banner.image_url = await save_banner_image(image)
+    await db.commit()
+    await db.refresh(banner)
+    return _to_out(banner)
+
+
+@router.delete("/{banner_id}", status_code=204)
+async def delete_banner(
+    banner_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _admin_id: str = Depends(require_admin),
+):
+    banner = await db.get(Banner, banner_id)
+    if not banner:
+        raise HTTPException(status_code=404, detail="Không tìm thấy banner")
+    await db.delete(banner)
+    await db.commit()

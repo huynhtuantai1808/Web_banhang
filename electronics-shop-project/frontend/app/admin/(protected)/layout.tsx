@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, LogOut, Users, Package, Palette, Tag, UserCircle, ClipboardList, LayoutGrid, CalendarClock, FileText, PackageSearch, BarChart3, Settings } from "lucide-react";
+import { LayoutDashboard, LogOut, Users, Package, Palette, Tag, UserCircle, ClipboardList, LayoutGrid, CalendarClock, FileText, PackageSearch, BarChart3, Settings, Megaphone } from "lucide-react";
 import { isEmployeeLoggedIn } from "@/lib/auth-storage";
 import { employeeLogout, isCurrentEmployeeAdmin } from "@/lib/services/employees";
 import Logo from "@/components/Logo";
@@ -49,6 +49,7 @@ export default function AdminProtectedLayout({ children }: { children: React.Rea
     { href: "/admin/inventory", label: "Tồn kho", icon: PackageSearch, adminOnly: true },
     { href: "/admin/categories", label: "Phân loại", icon: LayoutGrid, adminOnly: false },
     { href: "/admin/promotions", label: "Khuyến mãi", icon: Tag, adminOnly: true },
+    { href: "/admin/banners", label: "Quảng cáo", icon: Megaphone, adminOnly: true },
     { href: "/admin/installments", label: "Trả góp", icon: CalendarClock, adminOnly: false },
     { href: "/admin/customers", label: "Khách hàng", icon: UserCircle, adminOnly: true },
     { href: "/admin/users", label: "Nhân viên", icon: Users, adminOnly: true },

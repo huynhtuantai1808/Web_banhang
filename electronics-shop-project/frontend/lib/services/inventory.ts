@@ -16,6 +16,7 @@ export interface InventoryItem {
 export interface InventoryFilters {
   category_id?: number;
   brand_id?: number;
+  keyword?: string;
   stock_status?: "in_stock" | "out_of_stock" | "low_stock";
 }
 

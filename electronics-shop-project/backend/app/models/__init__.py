@@ -1,0 +1,1 @@
+from app.models.banner import Banner  # noqa: F401

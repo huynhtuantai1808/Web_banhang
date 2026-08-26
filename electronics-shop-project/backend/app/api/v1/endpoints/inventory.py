@@ -37,6 +37,7 @@ class InventoryItem(BaseModel):
 async def list_inventory(
     category_id: Annotated[int | None, Query(description="Lọc theo danh mục")] = None,
     brand_id: Annotated[int | None, Query(description="Lọc theo hãng")] = None,
+    keyword: Annotated[str | None, Query(description="Tìm theo mã SP hoặc tên")] = None,
     stock_status: Annotated[str | None, Query(description="in_stock | out_of_stock | low_stock")] = None,
     db: AsyncSession = Depends(get_db),
     _employee_id: str = Depends(require_employee),
@@ -100,6 +101,12 @@ async def list_inventory(
 
     if brand_id is not None:
         query = query.where(Product.brand_id == brand_id)
+
+    if keyword:
+        kw = f"%{keyword}%"
+        query = query.where(
+            (Product.name.ilike(kw)) | (Product.product_code.ilike(kw))
+        )
 
     result = await db.execute(query)
     rows = result.all()

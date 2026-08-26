@@ -18,6 +18,7 @@ import { ApiError } from "@/lib/apiClient";
 import { isCustomerLoggedIn } from "@/lib/auth-storage";
 import { useSiteSettings } from "@/components/SiteSettingsProvider";
 import RecentlyViewed from "@/components/RecentlyViewed";
+import BannerCarousel from "@/components/BannerCarousel";
 
 // Khoảng giá hiển thị trên FilterTabs → khoảng min/max thực tế gửi xuống Backend (đơn vị: VNĐ)
 const PRICE_RANGES: Record<string, { min_price?: number; max_price?: number }> = {
@@ -225,6 +226,9 @@ export default function HomePage() {
       {/* Nhóm sản phẩm mặc định (khuyến mãi + theo danh mục) — chỉ hiện khi chưa tìm/lọc gì */}
       {isBrowsingDefault && !groupsLoading && (
         <>
+          <BannerCarousel position="hero" className="mb-8" />
+          <BannerCarousel position="promo" className="mb-8" />
+
           <RecentlyViewed />
 
           <ProductRow
