@@ -26,7 +26,7 @@ interface FormState {
   position: string;
   display_order: number;
   is_active: boolean;
-  image_url: string;
+  image_url: string | null;
   imageFile: File | null;
 }
 
