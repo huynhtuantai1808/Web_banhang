@@ -30,9 +30,15 @@ export interface BannerInput {
 /** Upload ảnh banner, trả về URL. */
 export async function uploadBannerImage(file: File): Promise<string> {
   const fd = new FormData();
-  fd.append("image", file);
+  fd.append("file", file);
   const { data } = await apiClient.post<{ image_url: string }>("/banners/upload-image", fd);
   return data.image_url;
+}
+
+/** Xoá file ảnh banner đã upload (theo đường dẫn URL). */
+export async function deleteBannerImage(imageUrl: string): Promise<void> {
+  const path = encodeURIComponent(imageUrl);
+  await apiClient.delete(`/banners/images/${path}`);
 }
 
 /** Danh sách banner công khai — dùng cho trang chủ (chỉ lấy banner đang active). */

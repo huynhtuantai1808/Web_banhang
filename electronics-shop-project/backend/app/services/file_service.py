@@ -7,7 +7,7 @@ UPLOAD_ROOT = Path("uploads/products")
 BANNER_ROOT = Path("uploads/banners")
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 MAX_FILE_SIZE_MB = 5
-MAX_BANNER_SIZE_MB = 10  # Banner thường lớn hơn
+MAX_BANNER_SIZE_MB = 100  # Banner quảng cáo có thể rất lớn (tối đa 100MB)
 
 
 async def save_product_image(product_id: str, file: UploadFile) -> str:
@@ -59,3 +59,13 @@ async def save_banner_image(file: UploadFile) -> str:
         f.write(contents)
 
     return f"/uploads/banners/{filename}"
+
+
+async def delete_uploaded_file(image_url: str) -> None:
+    """Xoá file ảnh đã lưu trên disk theo đường dẫn tương đối (ví dụ '/uploads/banners/abc.jpg')."""
+    if not image_url or not image_url.startswith("/uploads/"):
+        return
+    relative_path = image_url.lstrip("/")
+    file_path = Path(relative_path)
+    if file_path.is_file():
+        file_path.unlink()

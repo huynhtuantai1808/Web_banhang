@@ -5,7 +5,8 @@ import {
   Plus, Megaphone, Loader2, Trash2, Eye, EyeOff, Pencil, X, ImagePlus, ArrowUp, ArrowDown,
 } from "lucide-react";
 import {
-  Banner, listAllBanners, createBanner, updateBanner, deleteBanner, uploadBannerImage,
+  Banner, listAllBanners, createBanner, updateBanner, deleteBanner,
+  uploadBannerImage, deleteBannerImage,
 } from "@/lib/services/banners";
 import { ApiError } from "@/lib/apiClient";
 import { getMediaUrl } from "@/lib/media";
@@ -51,6 +52,7 @@ export default function AdminBannersPage() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [deletingImage, setDeletingImage] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bannerMsg, setBannerMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -96,6 +98,20 @@ export default function AdminBannersPage() {
     });
     setModalOpen(true);
     setError(null);
+  }
+
+  async function handleDeleteImage() {
+    if (!form.image_url) return;
+    if (!confirm("Xoá ảnh banner này?")) return;
+    setDeletingImage(true);
+    try {
+      await deleteBannerImage(form.image_url);
+      setForm({ ...form, image_url: "", imageFile: null });
+    } catch {
+      // ignore
+    } finally {
+      setDeletingImage(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -406,11 +422,19 @@ export default function AdminBannersPage() {
                         alt="preview"
                         className="w-full h-full object-cover"
                       />
-                      {form.imageFile && (
+                      {deletingImage && (
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                           <Loader2 size={12} className="animate-spin text-white" />
                         </div>
                       )}
+                      <button
+                        type="button"
+                        onClick={handleDeleteImage}
+                        className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center text-xs hover:bg-red-600"
+                        title="Xoá ảnh"
+                      >
+                        ×
+                      </button>
                     </div>
                   )}
                   {form.imageFile && !form.image_url && (
@@ -459,7 +483,7 @@ export default function AdminBannersPage() {
                 disabled={saving}
                 className="w-full rounded-md bg-circuit-copper py-2.5 text-sm font-medium text-circuit-bg hover:bg-circuit-copperLight transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {(saving || uploadingImage) && <Loader2 size={16} className="animate-spin" />}
+                {(saving || uploadingImage || deletingImage) && <Loader2 size={16} className="animate-spin" />}
                 {uploadingImage ? "Đang tải ảnh..." : saving ? "Đang lưu..." : (editingBanner ? "Lưu thay đổi" : "Tạo banner")}
               </button>
             </form>

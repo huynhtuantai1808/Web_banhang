@@ -1,18 +1,21 @@
 import uuid
 from datetime import datetime
 from typing import Annotated
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import select
+from fastapi.responses import JSONResponse
 
 from app.db.session import get_db
 from app.models.banner import Banner
-from app.core.security import require_admin, require_employee
-from app.services.file_service import save_banner_image
+from app.core.security import require_admin
+from app.services.file_service import save_banner_image, delete_uploaded_file
 
 router = APIRouter(prefix="/banners", tags=["Banners (Quảng cáo)"])
 
+
+# ── Schemas ───────────────────────────────────────────────────────────
 
 class BannerCreate(BaseModel):
     title: str
@@ -54,7 +57,9 @@ class BannerOut(BaseModel):
     is_active: bool
 
 
-def _to_out(b: Banner) -> BannerOut:
+# ── Helpers ───────────────────────────────────────────────────────────
+
+def _banner_out(b: Banner) -> BannerOut:
     return BannerOut(
         id=str(b.id),
         title=b.title,
@@ -71,13 +76,15 @@ def _to_out(b: Banner) -> BannerOut:
     )
 
 
+# ── Routes — static paths FIRST, then dynamic ────────────────────────
+
 @router.get("", response_model=list[BannerOut])
 async def list_banners(
     position: Annotated[str | None, Query(description="hero | promo | sidebar")] = None,
     active_only: Annotated[bool, Query()] = False,
     db: AsyncSession = Depends(get_db),
 ):
-    """Liệt kê banner. Mặc định bao gồm cả banner đang ẩn để admin xem; client dùng active_only=true."""
+    """Liệt kê banner. Client dùng active_only=true."""
     query = select(Banner)
     if position:
         query = query.where(Banner.position == position)
@@ -85,7 +92,17 @@ async def list_banners(
         query = query.where(Banner.is_active == True)  # noqa: E712
     query = query.order_by(Banner.display_order, Banner.created_at)
     result = await db.execute(query)
-    return [_to_out(b) for b in result.scalars().all()]
+    return [_banner_out(b) for b in result.scalars().all()]
+
+
+@router.post("/upload-image")
+async def upload_banner_image(
+    file: UploadFile = File(..., description="Ảnh banner (JPEG/PNG/WEBP/GIF, tối đa 100MB)"),
+    _admin_id: str = Depends(require_admin),
+):
+    """Upload ảnh banner — trả về URL ảnh đã lưu."""
+    image_url = await save_banner_image(file)
+    return JSONResponse(content={"image_url": image_url})
 
 
 @router.post("", response_model=BannerOut, status_code=201)
@@ -94,7 +111,7 @@ async def create_banner(
     db: AsyncSession = Depends(get_db),
     _admin_id: str = Depends(require_admin),
 ):
-    """Tạo banner mới."""
+    """Tạo banner mới (image_url đã được upload trước qua /upload-image)."""
     banner = Banner(
         id=uuid.uuid4(),
         title=payload.title,
@@ -110,17 +127,7 @@ async def create_banner(
     db.add(banner)
     await db.commit()
     await db.refresh(banner)
-    return _to_out(banner)
-
-
-@router.post("/upload-image")
-async def upload_banner_image(
-    file: UploadFile = File(..., description="Ảnh banner (JPEG/PNG/WEBP/GIF, tối đa 10MB)"),
-    _admin_id: str = Depends(require_admin),
-):
-    """Upload ảnh banner — trả về URL ảnh đã lưu. Dùng trước khi tạo/sửa banner."""
-    image_url = await save_banner_image(file)
-    return {"image_url": image_url}
+    return _banner_out(banner)
 
 
 @router.put("/{banner_id}", response_model=BannerOut)
@@ -140,7 +147,7 @@ async def update_banner(
 
     await db.commit()
     await db.refresh(banner)
-    return _to_out(banner)
+    return _banner_out(banner)
 
 
 @router.delete("/{banner_id}", status_code=204)
@@ -154,3 +161,14 @@ async def delete_banner(
         raise HTTPException(status_code=404, detail="Không tìm thấy banner")
     await db.delete(banner)
     await db.commit()
+
+
+@router.delete("/images/{image_url:path}", status_code=200)
+async def delete_banner_image(
+    image_url: str,
+    db: AsyncSession = Depends(get_db),
+    _admin_id: str = Depends(require_admin),
+):
+    """Xoá file ảnh banner đã upload (theo đường dẫn tương đối trong DB)."""
+    await delete_uploaded_file(image_url)
+    return {"message": "Đã xoá ảnh"}
