@@ -3,19 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.utils import get_openapi
 import os
-import logging
-
-logger = logging.getLogger(__name__)
 
 from app.core.config import settings
 from app.core.openapi_tags import TAGS_METADATA
 from app.api.v1.router import api_router
-
-# Mount static files PHƯỚC router để đảm bảo /uploads/* được resolve đúng
-UPLOADS_DIR = os.path.abspath(os.environ.get("UPLOADS_DIR", "uploads"))
-os.makedirs(UPLOADS_DIR, exist_ok=True)
-logger.info(f"[STARTUP] Serving uploads from: {UPLOADS_DIR}  (exists={os.path.isdir(UPLOADS_DIR)})")
-app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR, html=False), name="uploads")
 
 app = FastAPI(
     title="Electronics Shop API",
@@ -29,7 +20,7 @@ app = FastAPI(
     license_info={"name": "Proprietary"},
     openapi_tags=TAGS_METADATA,
     docs_url="/docs",       # Swagger UI
-    redoc_url="/redoc",     # ReDoc (tài liệu dạng đọc)
+    redoc_url="/redoc",     # ReDoc
     openapi_url="/openapi.json",
 )
 
@@ -40,6 +31,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static files sau khi app đã được tạo
+_UPLOADS_DIR = os.environ.get("UPLOADS_DIR", os.path.join(os.path.dirname(__file__), "..", "uploads"))
+_UPLOADS_DIR = os.path.abspath(_UPLOADS_DIR)
+os.makedirs(_UPLOADS_DIR, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=_UPLOADS_DIR, html=False), name="uploads")
 
 app.include_router(api_router)
 
@@ -63,7 +60,6 @@ def custom_openapi():
             "bearerFormat": "JWT",
         }
     }
-    # Áp dụng yêu cầu xác thực mặc định cho toàn bộ API trừ auth/health/docs
     for path, methods in schema["paths"].items():
         is_public_auth = path.startswith("/api/v1/auth") or path == "/api/v1/employees/login"
         is_public_catalog = path in ("/api/v1/brands", "/api/v1/categories", "/health", "/api/v1/installment-calculator")
@@ -76,8 +72,6 @@ def custom_openapi():
         if is_public_auth or is_public_catalog or is_public_payment_callback or is_public_webhook or is_public_guest_order:
             continue
         for method, operation in methods.items():
-            # Cho phép đọc sản phẩm / cấu hình giao diện công khai (khách chưa đăng nhập vẫn xem được),
-            # chỉ yêu cầu Bearer cho các thao tác ghi (POST/PUT/DELETE) hoặc route nhân viên.
             if path.startswith("/api/v1/products") and method.lower() == "get":
                 continue
             if path.startswith("/api/v1/categories") and method.lower() == "get":
