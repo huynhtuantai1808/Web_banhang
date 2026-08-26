@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Annotated
 from pydantic import BaseModel, Field
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
@@ -12,6 +12,31 @@ from app.core.security import require_admin, require_employee
 from app.services.file_service import save_banner_image
 
 router = APIRouter(prefix="/banners", tags=["Banners (Quảng cáo)"])
+
+
+class BannerCreate(BaseModel):
+    title: str
+    image_url: str
+    subtitle: str | None = None
+    description: str | None = None
+    link_url: str | None = None
+    cta_label: str | None = None
+    position: str = "hero"
+    display_order: int = 0
+
+
+class BannerUpdate(BaseModel):
+    title: str | None = None
+    subtitle: str | None = None
+    description: str | None = None
+    image_url: str | None = None
+    link_url: str | None = None
+    cta_label: str | None = None
+    valid_from: datetime | None = None
+    valid_to: datetime | None = None
+    position: str | None = None
+    display_order: int | None = None
+    is_active: bool | None = None
 
 
 class BannerOut(BaseModel):
@@ -27,19 +52,6 @@ class BannerOut(BaseModel):
     position: str
     display_order: int
     is_active: bool
-
-
-class BannerUpdate(BaseModel):
-    title: str | None = None
-    subtitle: str | None = None
-    description: str | None = None
-    link_url: str | None = None
-    cta_label: str | None = None
-    valid_from: datetime | None = None
-    valid_to: datetime | None = None
-    position: str | None = None
-    display_order: int | None = None
-    is_active: bool | None = None
 
 
 def _to_out(b: Banner) -> BannerOut:
@@ -78,36 +90,37 @@ async def list_banners(
 
 @router.post("", response_model=BannerOut, status_code=201)
 async def create_banner(
-    title: Annotated[str, Form()],
-    image: Annotated[UploadFile, File(description="Ảnh banner")],
-    subtitle: Annotated[str | None, Form()] = None,
-    description: Annotated[str | None, Form()] = None,
-    link_url: Annotated[str | None, Form()] = None,
-    cta_label: Annotated[str | None, Form()] = None,
-    position: Annotated[str, Form()] = "hero",
-    display_order: Annotated[int, Form()] = 0,
+    payload: BannerCreate,
     db: AsyncSession = Depends(get_db),
     _admin_id: str = Depends(require_admin),
 ):
-    """Tạo banner mới (multipart vì có upload ảnh)."""
-    image_url = await save_banner_image(image)
-
+    """Tạo banner mới."""
     banner = Banner(
         id=uuid.uuid4(),
-        title=title,
-        subtitle=subtitle,
-        description=description,
-        image_url=image_url,
-        link_url=link_url,
-        cta_label=cta_label,
-        position=position,
-        display_order=display_order,
+        title=payload.title,
+        subtitle=payload.subtitle,
+        description=payload.description,
+        image_url=payload.image_url,
+        link_url=payload.link_url,
+        cta_label=payload.cta_label,
+        position=payload.position,
+        display_order=payload.display_order,
         is_active=True,
     )
     db.add(banner)
     await db.commit()
     await db.refresh(banner)
     return _to_out(banner)
+
+
+@router.post("/upload-image")
+async def upload_banner_image(
+    file: UploadFile = File(..., description="Ảnh banner (JPEG/PNG/WEBP/GIF, tối đa 10MB)"),
+    _admin_id: str = Depends(require_admin),
+):
+    """Upload ảnh banner — trả về URL ảnh đã lưu. Dùng trước khi tạo/sửa banner."""
+    image_url = await save_banner_image(file)
+    return {"image_url": image_url}
 
 
 @router.put("/{banner_id}", response_model=BannerOut)
@@ -125,24 +138,6 @@ async def update_banner(
     for key, value in update_data.items():
         setattr(banner, key, value)
 
-    await db.commit()
-    await db.refresh(banner)
-    return _to_out(banner)
-
-
-@router.put("/{banner_id}/image", response_model=BannerOut)
-async def replace_banner_image(
-    banner_id: uuid.UUID,
-    image: Annotated[UploadFile, File(description="Ảnh banner mới")],
-    db: AsyncSession = Depends(get_db),
-    _admin_id: str = Depends(require_admin),
-):
-    """Thay ảnh banner (giữ nguyên các trường khác)."""
-    banner = await db.get(Banner, banner_id)
-    if not banner:
-        raise HTTPException(status_code=404, detail="Không tìm thấy banner")
-
-    banner.image_url = await save_banner_image(image)
     await db.commit()
     await db.refresh(banner)
     return _to_out(banner)

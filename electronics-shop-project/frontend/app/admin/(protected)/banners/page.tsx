@@ -5,7 +5,7 @@ import {
   Plus, Megaphone, Loader2, Trash2, Eye, EyeOff, Pencil, X, ImagePlus, ArrowUp, ArrowDown,
 } from "lucide-react";
 import {
-  Banner, listAllBanners, createBanner, updateBanner, deleteBanner, replaceBannerImage,
+  Banner, listAllBanners, createBanner, updateBanner, deleteBanner, uploadBannerImage,
 } from "@/lib/services/banners";
 import { ApiError } from "@/lib/apiClient";
 import { getMediaUrl } from "@/lib/media";
@@ -25,7 +25,8 @@ interface FormState {
   position: string;
   display_order: number;
   is_active: boolean;
-  file: File | null;
+  image_url: string;
+  imageFile: File | null;
 }
 
 const EMPTY_FORM: FormState = {
@@ -37,7 +38,8 @@ const EMPTY_FORM: FormState = {
   position: "hero",
   display_order: 0,
   is_active: true,
-  file: null,
+  image_url: "",
+  imageFile: null,
 };
 
 export default function AdminBannersPage() {
@@ -48,8 +50,9 @@ export default function AdminBannersPage() {
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [bannerMsg, setBannerMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchBanners = async () => {
@@ -88,7 +91,8 @@ export default function AdminBannersPage() {
       position: b.position,
       display_order: b.display_order,
       is_active: b.is_active,
-      file: null,
+      image_url: b.image_url,
+      imageFile: null,
     });
     setModalOpen(true);
     setError(null);
@@ -100,7 +104,7 @@ export default function AdminBannersPage() {
       setError("Vui lòng nhập tiêu đề banner");
       return;
     }
-    if (!editingBanner && !form.file) {
+    if (!editingBanner && !form.image_url && !form.imageFile) {
       setError("Vui lòng chọn ảnh banner");
       return;
     }
@@ -108,39 +112,47 @@ export default function AdminBannersPage() {
     setSaving(true);
     setError(null);
     try {
+      let finalImageUrl = form.image_url;
+
+      // Nếu có file mới → upload trước
+      if (form.imageFile) {
+        setUploadingImage(true);
+        finalImageUrl = await uploadBannerImage(form.imageFile);
+        setUploadingImage(false);
+      }
+
       if (editingBanner) {
         await updateBanner(editingBanner.id, {
           title: form.title,
-          subtitle: form.subtitle || null,
-          description: form.description || null,
-          link_url: form.link_url || null,
-          cta_label: form.cta_label || null,
+          subtitle: form.subtitle || undefined,
+          description: form.description || undefined,
+          link_url: form.link_url || undefined,
+          cta_label: form.cta_label || undefined,
           position: form.position,
           display_order: form.display_order,
           is_active: form.is_active,
+          image_url: finalImageUrl || undefined,
         });
-        if (form.file) {
-          await replaceBannerImage(editingBanner.id, form.file);
-        }
       } else {
-        const fd = new FormData();
-        fd.append("title", form.title);
-        fd.append("subtitle", form.subtitle);
-        fd.append("description", form.description);
-        fd.append("link_url", form.link_url);
-        fd.append("cta_label", form.cta_label);
-        fd.append("position", form.position);
-        fd.append("display_order", String(form.display_order));
-        if (form.file) fd.append("image", form.file);
-        await createBanner(fd);
+        await createBanner({
+          title: form.title,
+          subtitle: form.subtitle || undefined,
+          description: form.description || undefined,
+          link_url: form.link_url || undefined,
+          cta_label: form.cta_label || undefined,
+          position: form.position,
+          display_order: form.display_order,
+          image_url: finalImageUrl,
+        });
       }
       setModalOpen(false);
-      setBanner({ type: "success", text: editingBanner ? "Đã cập nhật banner" : "Đã tạo banner mới" });
+      setBannerMsg({ type: "success", text: editingBanner ? "Đã cập nhật banner" : "Đã tạo banner mới" });
       await fetchBanners();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Lưu banner thất bại");
     } finally {
       setSaving(false);
+      setUploadingImage(false);
     }
   }
 
@@ -148,10 +160,10 @@ export default function AdminBannersPage() {
     if (!confirm("Xoá banner này?")) return;
     try {
       await deleteBanner(id);
-      setBanner({ type: "success", text: "Đã xoá banner" });
+      setBannerMsg({ type: "success", text: "Đã xoá banner" });
       await fetchBanners();
     } catch (err) {
-      setBanner({ type: "error", text: err instanceof ApiError ? err.message : "Xoá thất bại" });
+      setBannerMsg({ type: "error", text: err instanceof ApiError ? err.message : "Xoá thất bại" });
     }
   }
 
@@ -160,7 +172,7 @@ export default function AdminBannersPage() {
       await updateBanner(b.id, { is_active: !b.is_active });
       await fetchBanners();
     } catch (err) {
-      setBanner({ type: "error", text: err instanceof ApiError ? err.message : "Cập nhật thất bại" });
+      setBannerMsg({ type: "error", text: err instanceof ApiError ? err.message : "Cập nhật thất bại" });
     }
   }
 
@@ -170,13 +182,12 @@ export default function AdminBannersPage() {
       : filtered.filter((x) => x.display_order > b.display_order).sort((a, x) => a.display_order - x.display_order)[0];
     if (!target) return;
     try {
-      // swap display_order
       const tmp = b.display_order;
       await updateBanner(b.id, { display_order: target.display_order });
       await updateBanner(target.id, { display_order: tmp });
       await fetchBanners();
     } catch (err) {
-      setBanner({ type: "error", text: err instanceof ApiError ? err.message : "Đổi thứ tự thất bại" });
+      setBannerMsg({ type: "error", text: err instanceof ApiError ? err.message : "Đổi thứ tự thất bại" });
     }
   }
 
@@ -197,13 +208,13 @@ export default function AdminBannersPage() {
         </button>
       </header>
 
-      {banner && (
+      {bannerMsg && (
         <div className={`mb-6 rounded-md border px-4 py-3 text-sm ${
-          banner.type === "success"
+          bannerMsg.type === "success"
             ? "border-circuit-line bg-circuit-panel text-circuit-signal"
             : "border-red-400/40 bg-red-400/10 text-red-300"
         }`}>
-          {banner.text}
+          {bannerMsg.text}
         </div>
       )}
 
@@ -384,23 +395,56 @@ export default function AdminBannersPage() {
                 </Field>
               </div>
 
-              <Field label={editingBanner ? "Ảnh (bỏ trống nếu giữ nguyên)" : "Ảnh banner *"}>
-                <label className="flex items-center gap-2 rounded-md border border-dashed border-circuit-line bg-circuit-bg px-4 py-3 cursor-pointer hover:border-circuit-copper transition-colors">
-                  <ImagePlus size={16} className="text-circuit-muted" />
-                  <span className="text-sm text-circuit-muted">
-                    {form.file ? form.file.name : "Chọn ảnh từ máy..."}
-                  </span>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => setForm({ ...form, file: e.target.files?.[0] ?? null })}
-                  />
-                </label>
-                {!editingBanner && !form.file && (
-                  <p className="text-xs text-circuit-muted mt-1">PNG, JPG, WEBP, GIF · Tối đa 10MB</p>
-                )}
+              {/* Upload ảnh */}
+              <Field label={editingBanner ? "Ảnh banner (bỏ trống nếu giữ nguyên)" : "Ảnh banner *"}>
+                <div className="flex items-center gap-3">
+                  {form.image_url && (
+                    <div className="relative w-16 h-16 rounded overflow-hidden border border-circuit-line shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={getMediaUrl(form.image_url)}
+                        alt="preview"
+                        className="w-full h-full object-cover"
+                      />
+                      {form.imageFile && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <Loader2 size={12} className="animate-spin text-white" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {form.imageFile && !form.image_url && (
+                    <div className="relative w-16 h-16 rounded overflow-hidden border border-circuit-line shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={URL.createObjectURL(form.imageFile)}
+                        alt="preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <label className="flex items-center gap-2 rounded-md border border-dashed border-circuit-line bg-circuit-bg px-4 py-2.5 cursor-pointer hover:border-circuit-copper transition-colors flex-1">
+                    <ImagePlus size={16} className="text-circuit-muted shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm text-circuit-muted block truncate">
+                        {form.imageFile ? form.imageFile.name : "Chọn ảnh..."}
+                      </span>
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] ?? null;
+                        setForm({ ...form, imageFile: file, image_url: "" });
+                      }}
+                    />
+                  </label>
+                </div>
+                <p className="text-[10px] text-circuit-muted mt-1">
+                  PNG, JPG, WEBP, GIF · Tối đa 10MB
+                </p>
               </Field>
 
               <label className="flex items-center gap-2 text-sm text-circuit-muted">
@@ -410,10 +454,13 @@ export default function AdminBannersPage() {
                 Hiển thị banner
               </label>
 
-              <button type="submit" disabled={saving}
-                className="w-full rounded-md bg-circuit-copper py-2.5 text-sm font-medium text-circuit-bg hover:bg-circuit-copperLight transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                {saving && <Loader2 size={16} className="animate-spin" />}
-                {editingBanner ? "Lưu thay đổi" : "Tạo banner"}
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full rounded-md bg-circuit-copper py-2.5 text-sm font-medium text-circuit-bg hover:bg-circuit-copperLight transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {(saving || uploadingImage) && <Loader2 size={16} className="animate-spin" />}
+                {uploadingImage ? "Đang tải ảnh..." : saving ? "Đang lưu..." : (editingBanner ? "Lưu thay đổi" : "Tạo banner")}
               </button>
             </form>
           </div>

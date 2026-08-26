@@ -15,6 +15,25 @@ export interface Banner {
   is_active: boolean;
 }
 
+export interface BannerInput {
+  title: string;
+  image_url: string;
+  subtitle?: string;
+  description?: string;
+  link_url?: string;
+  cta_label?: string;
+  position?: string;
+  display_order?: number;
+}
+
+/** Upload ảnh banner, trả về URL. */
+export async function uploadBannerImage(file: File): Promise<string> {
+  const fd = new FormData();
+  fd.append("image", file);
+  const { data } = await apiClient.post<{ image_url: string }>("/banners/upload-image", fd);
+  return data.image_url;
+}
+
 /** Danh sách banner công khai — dùng cho trang chủ (chỉ lấy banner đang active). */
 export async function listActiveBanners(position?: string): Promise<Banner[]> {
   const { data } = await apiClient.get<Banner[]>("/banners", {
@@ -29,20 +48,13 @@ export async function listAllBanners(): Promise<Banner[]> {
   return data;
 }
 
-export async function createBanner(formData: FormData): Promise<Banner> {
-  const { data } = await apiClient.post<Banner>("/banners", formData);
+export async function createBanner(input: BannerInput): Promise<Banner> {
+  const { data } = await apiClient.post<Banner>("/banners", input);
   return data;
 }
 
-export async function updateBanner(id: string, payload: Partial<Banner>): Promise<Banner> {
+export async function updateBanner(id: string, payload: Partial<BannerInput>): Promise<Banner> {
   const { data } = await apiClient.put<Banner>(`/banners/${id}`, payload);
-  return data;
-}
-
-export async function replaceBannerImage(id: string, file: File): Promise<Banner> {
-  const fd = new FormData();
-  fd.append("image", file);
-  const { data } = await apiClient.put<Banner>(`/banners/${id}/image`, fd);
   return data;
 }
 
