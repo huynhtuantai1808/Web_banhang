@@ -5,18 +5,39 @@ from fastapi import UploadFile, HTTPException
 
 UPLOAD_ROOT = Path("uploads/products")
 BANNER_ROOT = Path("uploads/banners")
-ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+# Danh sách rộng để chấp nhận tất cả các định dạng ảnh phổ biến (bao gồm HEIC từ iPhone, BMP, SVG, AVIF...)
+ALLOWED_IMAGE_TYPES = {
+    "image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif",
+    "image/bmp", "image/x-ms-bmp", "image/svg+xml", "image/avif",
+    "image/heic", "image/heif", "image/tiff", "image/x-icon",
+}
+ALLOWED_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".svg", ".avif", ".heic", ".heif", ".tiff", ".ico"}
 MAX_FILE_SIZE_MB = 5
 MAX_BANNER_SIZE_MB = 100
 
 
+async def _validate_image(file: UploadFile) -> str:
+    """Validate ảnh upload: chấp nhận dựa trên content_type HOẶC extension. Trả về ext."""
+    ext = os.path.splitext(file.filename or "")[1].lower() or ".jpg"
+
+    # Trường hợp 1: content_type hợp lệ → OK
+    if file.content_type and file.content_type in ALLOWED_IMAGE_TYPES:
+        return ext
+
+    # Trường hợp 2: extension hợp lệ (một số client không gửi content_type đúng)
+    if ext in ALLOWED_IMAGE_EXTS:
+        return ext
+
+    raise HTTPException(
+        status_code=400,
+        detail=f"Định dạng ảnh không hỗ trợ: {file.content_type or 'unknown'} (.{ext.lstrip('.') or 'no-ext'}). "
+        f"Chỉ nhận: {', '.join(sorted(ALLOWED_IMAGE_EXTS))}",
+    )
+
+
 async def save_product_image(product_id: str, file: UploadFile) -> str:
     """Lưu ảnh sản phẩm, trả về đường dẫn URL tương đối."""
-    if file.content_type not in ALLOWED_IMAGE_TYPES:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Định dạng ảnh không hỗ trợ: {file.content_type}. Chỉ nhận JPEG/PNG/WEBP/GIF.",
-        )
+    ext = await _validate_image(file)
 
     contents = await file.read()
     size_mb = len(contents) / (1024 * 1024)
@@ -26,7 +47,6 @@ async def save_product_image(product_id: str, file: UploadFile) -> str:
     product_dir = UPLOAD_ROOT / product_id
     product_dir.mkdir(parents=True, exist_ok=True)
 
-    ext = os.path.splitext(file.filename or "")[1] or ".jpg"
     filename = f"{uuid.uuid4()}{ext}"
     file_path = product_dir / filename
 
@@ -38,11 +58,7 @@ async def save_product_image(product_id: str, file: UploadFile) -> str:
 
 async def save_banner_image(file: UploadFile) -> str:
     """Lưu ảnh banner quảng cáo (tối đa 100MB)."""
-    if file.content_type not in ALLOWED_IMAGE_TYPES:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Định dạng ảnh không hỗ trợ: {file.content_type}. Chỉ nhận JPEG/PNG/WEBP/GIF.",
-        )
+    ext = await _validate_image(file)
 
     contents = await file.read()
     size_mb = len(contents) / (1024 * 1024)
@@ -50,9 +66,7 @@ async def save_banner_image(file: UploadFile) -> str:
         raise HTTPException(status_code=400, detail=f"Ảnh banner vượt quá {MAX_BANNER_SIZE_MB}MB")
 
     BANNER_ROOT.mkdir(parents=True, exist_ok=True)
-    BANNER_ROOT.joinpath(".gitkeep").touch()
 
-    ext = os.path.splitext(file.filename or "")[1] or ".jpg"
     filename = f"{uuid.uuid4()}{ext}"
     file_path = BANNER_ROOT / filename
 
