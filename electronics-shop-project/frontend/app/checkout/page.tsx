@@ -3,13 +3,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Truck, CreditCard, Tag, Check, X, CalendarClock, User } from "lucide-react";
+import { ArrowLeft, Loader2, Truck, CreditCard, Tag, Check, X, CalendarClock, User, Building2 } from "lucide-react";
 import { getCart, getAutoDiscountPreview, CartOut } from "@/lib/services/cart";
 import { getGuestCart, clearGuestCart } from "@/lib/guestCart";
 import { getProduct } from "@/lib/services/products";
 import { createOrder, createGuestOrder } from "@/lib/services/orders";
 import { validatePromoCode, listMyPromotions, PromotionOut } from "@/lib/services/promotions";
-import { calculateInstallment, ALLOWED_INSTALLMENT_MONTHS } from "@/lib/services/installment";
+import {
+  getInstallmentOptions, InstallmentOption, InstallmentType,
+  CREDIT_CARD_MONTHS, FINANCE_MONTHS,
+} from "@/lib/services/installment";
 import { getMediaUrl } from "@/lib/media";
 import { ApiError } from "@/lib/apiClient";
 import { isCustomerLoggedIn } from "@/lib/auth-storage";
@@ -29,8 +32,9 @@ export default function CheckoutPage() {
   const [address, setAddress] = useState("");
   const [gateway, setGateway] = useState<"cod" | "vnpay">("cod");
   const [paymentMethod, setPaymentMethod] = useState<"full" | "installment">("full");
-  const [installmentMonths, setInstallmentMonths] = useState<number>(6);
-  const [monthlyPreview, setMonthlyPreview] = useState<number | null>(null);
+  const [installmentType, setInstallmentType] = useState<InstallmentType>("credit_card");
+  const [installmentMonths, setInstallmentMonths] = useState<number>(12);
+  const [installmentOptions, setInstallmentOptions] = useState<InstallmentOption[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -106,18 +110,16 @@ export default function CheckoutPage() {
   const allEligibleForInstallment = loggedIn && cart ? cart.items.every((i) => i.is_installment_eligible) : false;
 
   useEffect(() => {
-    if (paymentMethod !== "installment") {
-      setMonthlyPreview(null);
+    if (paymentMethod !== "installment" || !allEligibleForInstallment) {
+      setInstallmentOptions([]);
       return;
     }
     let cancelled = false;
-    calculateInstallment(finalTotal, installmentMonths)
-      .then((res) => !cancelled && setMonthlyPreview(res.monthly_amount))
-      .catch(() => !cancelled && setMonthlyPreview(null));
-    return () => {
-      cancelled = true;
-    };
-  }, [paymentMethod, installmentMonths, finalTotal]);
+    getInstallmentOptions(finalTotal, installmentType)
+      .then((res) => { if (!cancelled) setInstallmentOptions(res.options); })
+      .catch(() => { if (!cancelled) setInstallmentOptions([]); });
+    return () => { cancelled = true; };
+  }, [paymentMethod, allEligibleForInstallment, finalTotal, installmentType]);
 
   async function handleApplyPromo() {
     if (!promoInput.trim() || !loggedIn) return; // xem trước mã KM chỉ khả dụng khi đã đăng nhập
@@ -165,6 +167,7 @@ export default function CheckoutPage() {
           gateway: paymentMethod === "installment" ? "cod" : gateway,
           paymentMethod,
           installmentMonths: paymentMethod === "installment" ? installmentMonths : undefined,
+          installmentType: paymentMethod === "installment" ? installmentType : undefined,
           promoCode: appliedPromo?.code,
         });
         if (paymentMethod === "full" && gateway === "vnpay" && result.payment_url) {
@@ -434,30 +437,134 @@ export default function CheckoutPage() {
 
             {paymentMethod === "installment" && (
               <div className="rounded-md border border-circuit-line bg-circuit-panel p-4">
-                <p className="text-xs font-mono text-circuit-muted uppercase mb-2">Chọn kỳ hạn</p>
-                <div className="grid grid-cols-4 gap-2 mb-3">
-                  {ALLOWED_INSTALLMENT_MONTHS.map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setInstallmentMonths(m)}
-                      className={`rounded-md border py-2 text-sm transition-colors ${
-                        installmentMonths === m
-                          ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight"
-                          : "border-circuit-line text-circuit-muted hover:border-circuit-copper"
-                      }`}
-                    >
-                      {m} tháng
-                    </button>
-                  ))}
+                {/* Tab chọn loại trả góp */}
+                <div className="flex gap-2 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => { setInstallmentType("credit_card"); setInstallmentMonths(12); }}
+                    className={`flex-1 rounded-md border py-2.5 px-3 text-sm text-left transition-colors ${
+                      installmentType === "credit_card"
+                        ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight"
+                        : "border-circuit-line text-circuit-muted hover:border-circuit-copper/50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <CreditCard size={14} />
+                      <div>
+                        <p className="font-medium">Thẻ tín dụng</p>
+                        <p className="text-xs opacity-70">0% lãi suất · Có phí chuyển đổi</p>
+                      </div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setInstallmentType("finance"); setInstallmentMonths(12); }}
+                    className={`flex-1 rounded-md border py-2.5 px-3 text-sm text-left transition-colors ${
+                      installmentType === "finance"
+                        ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight"
+                        : "border-circuit-line text-circuit-muted hover:border-circuit-copper/50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Building2 size={14} />
+                      <div>
+                        <p className="font-medium">Công ty tài chính</p>
+                        <p className="text-xs opacity-70">Trả trước 20% · Lãi suất giảm dần</p>
+                      </div>
+                    </div>
+                  </button>
                 </div>
-                {monthlyPreview !== null && (
-                  <p className="text-sm text-circuit-signal">
-                    Chỉ từ <strong>{formatVND(monthlyPreview)}</strong>/tháng × {installmentMonths} tháng
-                  </p>
+
+                {installmentOptions.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-circuit-line">
+                          <th className="py-1.5 text-left text-circuit-muted font-mono uppercase">Kỳ hạn</th>
+                          {installmentType === "finance" ? (
+                            <>
+                              <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Trả trước (20%)</th>
+                              <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Khoản vay</th>
+                              <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Lãi suất</th>
+                            </>
+                          ) : (
+                            <>
+                              <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Phí (%)</th>
+                              <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Số tiền phí</th>
+                            </>
+                          )}
+                          <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Tổng cộng</th>
+                          <th className="py-1.5 text-right text-circuit-copperLight font-mono uppercase">Mỗi tháng</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {installmentOptions.map((opt) => (
+                          <tr
+                            key={`${opt.type}-${opt.months}`}
+                            onClick={() => setInstallmentMonths(opt.months)}
+                            className={`border-b border-circuit-line/50 cursor-pointer transition-colors hover:bg-circuit-panel/60 ${
+                              installmentMonths === opt.months ? "bg-circuit-copper/10" : ""
+                            }`}
+                          >
+                            <td className={`py-1.5 font-mono ${installmentMonths === opt.months ? "text-circuit-copperLight font-semibold" : "text-circuit-text"}`}>
+                              {opt.months} tháng {installmentMonths === opt.months && "✓"}
+                            </td>
+                            {installmentType === "finance" ? (
+                              <>
+                                <td className="py-1.5 text-right text-circuit-muted">
+                                  {opt.down_payment_amount != null ? formatVND(opt.down_payment_amount) : "—"}
+                                </td>
+                                <td className="py-1.5 text-right text-circuit-muted">
+                                  {opt.loan_amount != null ? formatVND(opt.loan_amount) : "—"}
+                                </td>
+                                <td className="py-1.5 text-right text-circuit-muted">
+                                  {opt.monthly_interest_rate != null ? `${opt.monthly_interest_rate.toFixed(2)}%/tháng` : "—"}
+                                </td>
+                              </>
+                            ) : (
+                              <>
+                                <td className="py-1.5 text-right text-circuit-muted">{opt.conversion_fee}%</td>
+                                <td className="py-1.5 text-right text-circuit-muted">
+                                  {opt.fee_amount != null ? formatVND(opt.fee_amount) : "—"}
+                                </td>
+                              </>
+                            )}
+                            <td className="py-1.5 text-right text-circuit-text font-medium">{formatVND(opt.total_amount)}</td>
+                            <td className="py-1.5 text-right font-bold text-circuit-copperLight">
+                              {formatVND(opt.monthly_payment ?? opt.monthly_amount)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-xs text-circuit-muted text-center py-4">Đang tải bảng trả góp...</p>
                 )}
-                <p className="text-xs text-circuit-muted mt-2">
-                  Đơn trả góp sẽ được xác nhận qua thanh toán khi nhận hàng (COD) cho kỳ đầu.
+
+                {installmentOptions.find((o) => o.months === installmentMonths) && (() => {
+                  const sel = installmentOptions.find((o) => o.months === installmentMonths)!;
+                  return (
+                    <div className="mt-3 flex items-center gap-2 text-xs text-circuit-muted">
+                      <CalendarClock size={12} />
+                      <span>
+                        Tổng cộng: <strong className="text-circuit-text">{formatVND(sel.total_amount)}</strong>
+                        {installmentType === "finance" && sel.down_payment_amount != null && (
+                          <> · Trả trước <strong className="text-circuit-text">{formatVND(sel.down_payment_amount)}</strong></>
+                        )}
+                        {" "}— mỗi tháng{" "}
+                        <strong className="text-circuit-copperLight">
+                          {formatVND(sel.monthly_payment ?? sel.monthly_amount)}
+                        </strong>
+                      </span>
+                    </div>
+                  );
+                })()}
+
+                <p className="text-[10px] text-circuit-muted mt-3 border-t border-circuit-line pt-2">
+                  {installmentType === "credit_card"
+                    ? "* Phí chuyển đổi trả góp do ngân hàng/phát hành thẻ tín dụng áp dụng."
+                    : "* Lãi suất 1.5%/tháng (18%/năm) trên dư nợ giảm dần. Phí xử lý do công ty tài chính quy định."}
                 </p>
               </div>
             )}

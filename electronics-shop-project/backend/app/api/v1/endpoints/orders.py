@@ -14,7 +14,7 @@ from app.core.security import require_customer, hash_password
 from app.schemas.order import OrderCreate, OrderOut, OrderItemOut, OrderCreateResponse, GuestOrderCreate
 from app.services import vnpay_service
 from app.services.promotion_service import validate_and_compute_discount, mark_promotion_used, PromotionError
-from app.services.installment_service import create_installment_plan, ALLOWED_MONTHS
+from app.services.installment_service import create_installment_plan, CREDIT_CARD_MONTHS, FINANCE_TENURES
 from app.services.discount_rule_service import compute_auto_discount
 
 router = APIRouter(prefix="/orders", tags=["Orders (Đơn hàng)"])
@@ -101,8 +101,15 @@ async def _create_order_core(
         raise HTTPException(status_code=400, detail=f"payment_gateway phải là một trong {VALID_GATEWAYS}")
     if payload.payment_method not in VALID_PAYMENT_METHODS:
         raise HTTPException(status_code=400, detail=f"payment_method phải là một trong {VALID_PAYMENT_METHODS}")
-    if payload.payment_method == "installment" and payload.installment_months not in ALLOWED_MONTHS:
-        raise HTTPException(status_code=400, detail=f"installment_months phải là một trong {ALLOWED_MONTHS}")
+    if payload.payment_method == "installment":
+        inst_type = payload.installment_type or "credit_card"
+        allowed = CREDIT_CARD_MONTHS if inst_type == "credit_card" else FINANCE_TENURES
+        if payload.installment_months not in allowed:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Kỳ hạn {payload.installment_months} tháng không hợp lệ cho loại '{inst_type}'. "
+                f"Cho phép: {allowed}",
+            )
     if payload.payment_gateway == "vnpay" and not vnpay_service.is_configured():
         raise HTTPException(
             status_code=400,
@@ -169,7 +176,10 @@ async def _create_order_core(
         )
 
     if payload.payment_method == "installment":
-        await create_installment_plan(db, order.id, final_amount, payload.installment_months)
+        inst_type = payload.installment_type or "credit_card"
+        await create_installment_plan(
+            db, order.id, final_amount, payload.installment_months, inst_type,
+        )
 
     if promotion:
         await mark_promotion_used(db, promotion, promo_customer_row)

@@ -34,6 +34,7 @@ export interface CreateOrderInput {
   gateway?: "cod" | "vnpay";
   paymentMethod?: "full" | "installment";
   installmentMonths?: number;
+  installmentType?: "credit_card" | "finance";
   promoCode?: string;
 }
 
@@ -44,6 +45,7 @@ export async function createOrder(input: CreateOrderInput): Promise<OrderCreateR
     payment_gateway: input.gateway ?? "cod",
     payment_method: input.paymentMethod ?? "full",
     installment_months: input.installmentMonths,
+    installment_type: input.installmentType,
     promo_code: input.promoCode || undefined,
   });
   return data;

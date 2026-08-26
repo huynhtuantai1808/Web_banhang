@@ -17,8 +17,8 @@ import { addGuestCartItem } from "@/lib/guestCart";
 import { isInGuestWishlist, toggleGuestWishlist } from "@/lib/wishlist";
 import { isCustomerLoggedIn } from "@/lib/auth-storage";
 import { addToWishlist, removeFromWishlist } from "@/lib/services/wishlist";
-import { calculateInstallment } from "@/lib/services/installment";
 import { getMediaUrl } from "@/lib/media";
+import { CreditCardInstallment, FinanceInstallment } from "@/components/InstallmentTable";
 import { ApiError } from "@/lib/apiClient";
 import { addRecentlyViewed } from "@/lib/recentlyViewed";
 import SiteHeader from "@/components/SiteHeader";
@@ -60,7 +60,6 @@ export default function ProductDetailPage() {
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
-  const [installmentPreview, setInstallmentPreview] = useState<number | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -111,13 +110,6 @@ export default function ProductDetailPage() {
 
         if (imageData.length > 1 || productData.primary_image_url) {
           setTimeout(() => startAutoRotate(), 2000);
-        }
-
-        if (productData.is_installment_eligible) {
-          const price = productData.discount_price || productData.price;
-          calculateInstallment(price, 12)
-            .then((res) => setInstallmentPreview(res.monthly_amount))
-            .catch(() => setInstallmentPreview(null));
         }
 
         if (!isCustomerLoggedIn()) {
@@ -368,12 +360,14 @@ export default function ProductDetailPage() {
 
           {/* Installment */}
           {product.is_installment_eligible && (
-            <p className="flex items-center gap-2 text-sm text-circuit-copperLight mb-4">
-              <CreditCard size={16} />
-              {installmentPreview
-                ? `Trả góp chỉ từ ${formatVND(installmentPreview)}/tháng (12 tháng, 0% lãi suất)`
-                : "Hỗ trợ mua trả góp 0% lãi suất"}
-            </p>
+            <div className="space-y-3 mb-5">
+              <div className="flex items-center gap-2">
+                <CreditCard size={16} className="text-circuit-copper" />
+                <p className="text-sm font-medium text-circuit-copperLight">Hỗ trợ trả góp</p>
+              </div>
+              <CreditCardInstallment amount={product.discount_price || product.price} />
+              <FinanceInstallment amount={product.discount_price || product.price} />
+            </div>
           )}
 
           {/* Short description */}

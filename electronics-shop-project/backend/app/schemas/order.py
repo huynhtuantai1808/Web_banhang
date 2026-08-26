@@ -7,7 +7,8 @@ class OrderCreate(BaseModel):
     shipping_address: str
     payment_gateway: str = "cod"       # "cod" hoặc "vnpay" — bị ép về "cod" nếu payment_method="installment"
     payment_method: str = "full"       # "full" (trả toàn bộ) hoặc "installment" (trả góp)
-    installment_months: int | None = None  # bắt buộc nếu payment_method="installment": 3/6/9/12
+    installment_months: int | None = None  # bắt buộc nếu payment_method="installment"
+    installment_type: str | None = None  # "credit_card" | "finance" — mặc định "credit_card"
     promo_code: str | None = None      # mã khuyến mãi (tuỳ chọn)
 
 

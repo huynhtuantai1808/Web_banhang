@@ -1,10 +1,51 @@
 import { apiClient } from "../apiClient";
 
+export type InstallmentType = "credit_card" | "finance";
+
 export interface InstallmentCalculatorResponse {
+  type: InstallmentType;
   months: number;
   monthly_amount: number;
   total_amount: number;
   interest_rate: number;
+  fee_amount: number;
+  down_payment_amount: number;
+  loan_amount: number;
+  total_interest: number;
+}
+
+export interface InstallmentOption {
+  type: InstallmentType;
+  months: number;
+  conversion_fee?: number;
+  fee_amount?: number;
+  down_payment_pct?: number;
+  down_payment_amount?: number;
+  loan_amount?: number;
+  annual_interest_rate?: number;
+  monthly_interest_rate?: number;
+  total_interest?: number;
+  total_amount: number;
+  monthly_amount: number;
+  monthly_payment?: number;
+}
+
+export interface InstallmentOptionsResponse {
+  amount: number;
+  options: InstallmentOption[];
+}
+
+export interface InstallmentInfo {
+  credit_card: {
+    tenures: number[];
+    fees: Record<string, number>;
+  };
+  finance: {
+    tenures: number[];
+    down_payment_pct: number;
+    annual_interest_rate: number;
+    monthly_interest_rate: number;
+  };
 }
 
 export interface InstallmentPaymentOut {
@@ -33,12 +74,34 @@ export interface InstallmentPlanAdminOut extends InstallmentPlanOut {
   customer_phone: string;
 }
 
-export const ALLOWED_INSTALLMENT_MONTHS = [3, 6, 9, 12] as const;
+export const CREDIT_CARD_MONTHS = [3, 6, 9, 12, 18, 24] as const;
+export const FINANCE_MONTHS = [6, 12, 18, 24, 36] as const;
 
-/** Máy tính trả góp công khai — không cần đăng nhập. */
-export async function calculateInstallment(amount: number, months: number): Promise<InstallmentCalculatorResponse> {
+/** Trả về bảng phương án trả góp theo loại. */
+export async function getInstallmentOptions(
+  amount: number,
+  type: InstallmentType = "credit_card",
+): Promise<InstallmentOptionsResponse> {
+  const { data } = await apiClient.get<InstallmentOptionsResponse>("/installment-options", {
+    params: { amount, inst_type: type },
+  });
+  return data;
+}
+
+/** Lấy thông tin cấu hình trả góp. */
+export async function getInstallmentInfo(): Promise<InstallmentInfo> {
+  const { data } = await apiClient.get<InstallmentInfo>("/installment-info");
+  return data;
+}
+
+/** Máy tính một phương án cụ thể. */
+export async function calculateInstallment(
+  amount: number,
+  months: number,
+  type: InstallmentType = "credit_card",
+): Promise<InstallmentCalculatorResponse> {
   const { data } = await apiClient.get<InstallmentCalculatorResponse>("/installment-calculator", {
-    params: { amount, months },
+    params: { amount, months, inst_type: type },
   });
   return data;
 }
