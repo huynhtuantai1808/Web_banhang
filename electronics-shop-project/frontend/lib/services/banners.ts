@@ -31,7 +31,12 @@ export interface BannerInput {
 export async function uploadBannerImage(file: File): Promise<string> {
   const fd = new FormData();
   fd.append("file", file);
-  const { data } = await apiClient.post<{ image_url: string }>("/banners/upload-image", fd);
+  // Tăng timeout lên 5 phút cho file lớn
+  const { data } = await apiClient.post<{ image_url: string }>(
+    "/banners/upload-image",
+    fd,
+    { timeout: 300_000 },
+  );
   return data.image_url;
 }
 
