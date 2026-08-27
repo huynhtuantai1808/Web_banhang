@@ -1,8 +1,15 @@
 """
 Migration: Create blog_posts table
-Run: python database/migrate.py
+Run: cd backend && python database/migrate.py
 Or apply the SQL below directly in your database.
 """
+import sys
+import os
+
+# Thêm thư mục cha (backend/) vào sys.path để import được 'app'
+_backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
 
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS blog_posts (
@@ -27,10 +34,7 @@ DROP TABLE IF EXISTS blog_posts;
 """
 
 if __name__ == "__main__":
-    import sys
-    import os
-
-    # Try to run via SQLAlchemy
+    from sqlalchemy import text
     try:
         from app.db.session import engine
         import asyncio
@@ -42,6 +46,6 @@ if __name__ == "__main__":
 
         asyncio.run(run())
     except Exception as e:
-        print(f"Could not auto-migrate (missing DB config?): {e}")
+        print(f"Could not auto-migrate: {e}")
         print("\nRun this SQL manually in your database:\n")
         print(CREATE_TABLE_SQL)
