@@ -80,8 +80,9 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
     
     # Calculate tax (10% standard for demonstration, or 0% depending on business logic)
     tax_rate = 0.10
-    total_before_tax = int(order.total_amount / (1 + tax_rate))
-    tax_amount = order.total_amount - total_before_tax
+    total_amount_float = float(order.total_amount)
+    total_before_tax = int(total_amount_float / (1 + tax_rate))
+    tax_amount = total_amount_float - total_before_tax
     
     items_html = ""
     for item in items:
