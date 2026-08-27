@@ -155,3 +155,44 @@ def send_electronic_invoice(order: Order, user: Customer = None, guest_email: st
     </html>
     """
     _send_email_smtp(f"Hóa đơn điện tử - Đơn hàng {order.order_code}", html_content, to_email)
+
+
+async def send_revenue_report_email(to_email: str, period: str, from_date: str, to_date: str, total_revenue: float, order_count: int, top_products: list):
+    html_content = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #007bff;">Báo cáo doanh thu: {period.upper()}</h2>
+        <p>Từ ngày <strong>{from_date}</strong> đến <strong>{to_date}</strong></p>
+        <div style="background-color: #f8f9fa; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0; font-size: 16px;"><strong>Tổng doanh thu:</strong> {format_vnd(int(total_revenue))}</p>
+            <p style="margin: 0; font-size: 16px;"><strong>Số đơn hàng:</strong> {order_count}</p>
+        </div>
+        
+        <h3>Top Sản Phẩm Bán Chạy</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <thead>
+                <tr style="background-color: #f8f9fa;">
+                    <th style="padding: 10px; border-bottom: 1px solid #ddd; text-align: left;">Sản phẩm</th>
+                    <th style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">Đã bán</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    for item in top_products:
+        html_content += f"""
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">{item.get('name', 'N/A')}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">{item.get('quantity_sold', 0)}</td>
+                </tr>
+        """
+        
+    html_content += """
+            </tbody>
+        </table>
+        
+        <p>Trân trọng,<br>Hệ thống Electronics Shop</p>
+    </body>
+    </html>
+    """
+    _send_email_smtp(f"Báo cáo doanh thu {period.upper()}", html_content, to_email)
