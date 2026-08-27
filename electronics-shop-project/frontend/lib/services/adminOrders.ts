@@ -83,7 +83,7 @@ export async function getOrderInvoice(orderId: string): Promise<InvoiceData> {
 }
 
 /** Gửi hóa đơn qua email cho khách hàng. */
-export async function sendOrderInvoiceEmail(orderId: string): Promise<{ message: string }> {
-  const { data } = await apiClient.post<{ message: string }>(`/admin/orders/${orderId}/send-email`);
+export async function sendOrderInvoiceEmail(orderId: string, emailType: "confirmation" | "invoice" = "invoice"): Promise<{ message: string }> {
+  const { data } = await apiClient.post<{ message: string }>(`/admin/orders/${orderId}/send-email`, { email_type: emailType });
   return data;
 }

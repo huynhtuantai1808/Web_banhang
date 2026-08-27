@@ -196,14 +196,20 @@ async def get_order_invoice(
         "promotion_code": promotion_code,
     }
 
+from pydantic import BaseModel
+class AdminSendEmailRequest(BaseModel):
+    email_type: str  # "confirmation" or "invoice"
 
 @router.post("/{order_id}/send-email")
 async def send_order_email_endpoint(
     order_id: uuid.UUID,
+    payload: AdminSendEmailRequest,
     db: AsyncSession = Depends(get_db),
     _employee_id: str = Depends(require_employee),
 ):
-    """Gửi email hóa đơn đơn hàng cho khách."""
+    """Gửi email xác nhận hoặc hóa đơn điện tử cho đơn hàng này."""
+    from app.services.email_service import send_order_confirmation, send_electronic_invoice
+    
     order = await db.get(Order, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Không tìm thấy đơn hàng")
@@ -212,21 +218,28 @@ async def send_order_email_endpoint(
     if not customer or not customer.email:
         raise HTTPException(status_code=400, detail="Khách hàng không có email — không thể gửi mail")
 
+    # Eager load items
+    from sqlalchemy.orm import selectinload
+    stmt = select(Order).options(selectinload(Order.items)).where(Order.id == order.id)
+    result = await db.execute(stmt)
+    order_with_items = result.scalar_one()
+
+    # Get user if exists
+    user = None
+    if customer.user_id:
+        from app.models.user import User
+        user = await db.get(User, customer.user_id)
+
     try:
-        await send_order_email(
-            to_email=customer.email,
-            order_code=order.order_code,
-            customer_name=customer.full_name,
-            final_amount=float(order.final_amount),
-            items=[
-                {"product_name": str(row[1]), "quantity": row[0].quantity, "unit_price": float(row[0].unit_price)}
-                for row in (await db.execute(
-                    select(OrderItem, Product.name).join(Product, OrderItem.product_id == Product.id)
-                    .where(OrderItem.order_id == order.id)
-                )).all()
-            ],
-            shipping_address=order.shipping_address,
-        )
-        return {"message": f"Đã gửi email hóa đơn tới {customer.email}"}
+        if payload.email_type == "confirmation":
+            send_order_confirmation(order_with_items, user=user, guest_email=customer.email)
+            msg = "Đã gửi email xác nhận"
+        elif payload.email_type == "invoice":
+            send_electronic_invoice(order_with_items, user=user, guest_email=customer.email)
+            msg = "Đã gửi email hóa đơn điện tử"
+        else:
+            raise HTTPException(status_code=400, detail="Loại email không hợp lệ")
+            
+        return {"message": f"{msg} tới {customer.email}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gửi email thất bại: {str(e)}")

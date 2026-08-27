@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Package, Truck, CreditCard, CheckCircle2, Clock, XCircle, Tag, CalendarClock } from "lucide-react";
-import { getOrder, OrderOut } from "@/lib/services/orders";
+import { getOrder, sendOrderEmail, OrderOut } from "@/lib/services/orders";
 import { getInstallmentPlan, InstallmentPlanOut } from "@/lib/services/installment";
 import { getMyShipment, ShipmentOut, SHIPMENT_STATUS_LABEL } from "@/lib/services/shipments";
 import { ApiError } from "@/lib/apiClient";
@@ -69,6 +69,25 @@ export default function OrderDetailPage() {
       ? -1
       : STATUS_STEPS.findIndex((s) => s.key === order.status)
     : -1;
+
+  const [emailLoading, setEmailLoading] = useState<"confirmation" | "invoice" | null>(null);
+  const [emailSuccess, setEmailSuccess] = useState<string | null>(null);
+
+  async function handleSendEmail(type: "confirmation" | "invoice") {
+    if (!order) return;
+    setEmailLoading(type);
+    setEmailSuccess(null);
+    setError(null);
+    try {
+      const res = await sendOrderEmail(order.id, type);
+      setEmailSuccess(res.message);
+      setTimeout(() => setEmailSuccess(null), 3000);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Gửi email thất bại");
+    } finally {
+      setEmailLoading(null);
+    }
+  }
 
   return (
     

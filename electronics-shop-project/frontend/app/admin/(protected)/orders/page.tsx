@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ClipboardList, Loader2, Search, X, Truck, PackageCheck } from "lucide-react";
-import { listAllOrders, updateOrderStatus, AdminOrderOut } from "@/lib/services/adminOrders";
+import { listAllOrders, updateOrderStatus, sendOrderInvoiceEmail, AdminOrderOut } from "@/lib/services/adminOrders";
 import {
   createShipment, updateShipmentStatus, getShipmentForAdmin, ShipmentOut, ShipmentStatus,
   SUGGESTED_CARRIERS, SHIPMENT_STATUS_LABEL,
@@ -29,6 +29,22 @@ export default function AdminOrdersPage() {
   const [selected, setSelected] = useState<AdminOrderOut | null>(null);
   const [shipment, setShipment] = useState<ShipmentOut | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [emailSending, setEmailSending] = useState<"confirmation" | "invoice" | null>(null);
+  const [emailMessage, setEmailMessage] = useState<string | null>(null);
+
+  async function handleSendEmail(orderId: string, type: "confirmation" | "invoice") {
+    setEmailSending(type);
+    setEmailMessage(null);
+    try {
+      const res = await sendOrderInvoiceEmail(orderId, type);
+      setEmailMessage(res.message);
+      setTimeout(() => setEmailMessage(null), 3000);
+    } catch (err) {
+      setEmailMessage(err instanceof ApiError ? err.message : "Gửi email thất bại");
+    } finally {
+      setEmailSending(null);
+    }
+  }
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -226,6 +242,34 @@ export default function AdminOrdersPage() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Email Hành động */}
+            <div className="mb-8 p-5 rounded-2xl border border-circuit-signal/20 bg-circuit-signal/5">
+              <p className="text-[11px] font-mono text-circuit-signal uppercase tracking-widest font-semibold mb-3">Gửi Email Cho Khách</p>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => handleSendEmail(selected.id, "confirmation")}
+                  disabled={emailSending !== null}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider border border-circuit-copper bg-circuit-copper/10 text-circuit-copperLight hover:bg-circuit-copper/20 transition-all duration-300 disabled:opacity-50"
+                >
+                  {emailSending === "confirmation" ? <Loader2 size={14} className="animate-spin" /> : null}
+                  Gửi Xác Nhận Đơn
+                </button>
+                <button
+                  onClick={() => handleSendEmail(selected.id, "invoice")}
+                  disabled={emailSending !== null}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider border border-circuit-signal bg-circuit-signal/10 text-circuit-signal hover:bg-circuit-signal/20 transition-all duration-300 disabled:opacity-50"
+                >
+                  {emailSending === "invoice" ? <Loader2 size={14} className="animate-spin" /> : null}
+                  Gửi Hóa Đơn Điện Tử
+                </button>
+              </div>
+              {emailMessage && (
+                <p className={`mt-3 text-xs p-2 rounded ${emailMessage.includes("thất bại") ? "bg-red-400/10 text-red-400 border border-red-400/20" : "bg-circuit-signal/10 text-circuit-signal border border-circuit-signal/20"}`}>
+                  {emailMessage}
+                </p>
+              )}
             </div>
 
             {/* Vận chuyển */}

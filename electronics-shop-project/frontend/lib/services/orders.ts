@@ -90,3 +90,9 @@ export async function lookupOrder(orderCode: string, phone: string): Promise<Ord
   const { data } = await apiClient.get<OrderOut>("/orders/lookup", { params: { order_code: orderCode, phone } });
   return data;
 }
+
+/** Yêu cầu gửi email (confirmation / invoice) cho khách hàng (Frontend) */
+export async function sendOrderEmail(orderId: string, emailType: "confirmation" | "invoice"): Promise<{ message: string }> {
+  const { data } = await apiClient.post<{ message: string }>(`/orders/${orderId}/send-email`, { email_type: emailType });
+  return data;
+}

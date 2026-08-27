@@ -333,3 +333,46 @@ async def get_order(
     if not order or str(order.customer_id) != customer_id:
         raise HTTPException(status_code=404, detail="Không tìm thấy đơn hàng")
     return await _build_order_out(db, order)
+
+
+from pydantic import BaseModel
+class SendEmailRequest(BaseModel):
+    email_type: str  # "confirmation" or "invoice"
+    
+@router.post("/{order_id}/send-email")
+async def send_order_email(
+    order_id: uuid.UUID,
+    payload: SendEmailRequest,
+    db: AsyncSession = Depends(get_db),
+    customer_id: str = Depends(require_customer),
+):
+    """Gửi email xác nhận hoặc hóa đơn điện tử cho đơn hàng này."""
+    from app.services.email_service import send_order_confirmation, send_electronic_invoice
+    
+    order = await db.get(Order, order_id)
+    if not order or str(order.customer_id) != customer_id:
+        raise HTTPException(status_code=404, detail="Không tìm thấy đơn hàng")
+        
+    # Get customer to get email
+    customer = await db.get(Customer, order.customer_id)
+    # Lấy thông tin user (nếu customer được link tới user)
+    user = None
+    if customer and customer.user_id:
+        user = await db.get(User, customer.user_id)
+        
+    guest_email = customer.email if customer else None
+
+    # Eager load items for invoice
+    from sqlalchemy.orm import selectinload
+    stmt = select(Order).options(selectinload(Order.items)).where(Order.id == order.id)
+    result = await db.execute(stmt)
+    order_with_items = result.scalar_one()
+
+    if payload.email_type == "confirmation":
+        send_order_confirmation(order_with_items, user=user, guest_email=guest_email)
+    elif payload.email_type == "invoice":
+        send_electronic_invoice(order_with_items, user=user, guest_email=guest_email)
+    else:
+        raise HTTPException(status_code=400, detail="Loại email không hợp lệ (confirmation/invoice)")
+        
+    return {"message": "Đã gửi email thành công"}
