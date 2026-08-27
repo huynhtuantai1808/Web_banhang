@@ -193,7 +193,7 @@ export default function CheckoutPage() {
       if (loggedIn) {
         const result = await createOrder({
           shippingAddress: finalAddress,
-          gateway: paymentMethod === "installment" ? "cod" : gateway,
+          gateway: paymentMethod === "installment" ? (installmentType === "credit_card" ? "credit_card" : "finance") : gateway,
           paymentMethod,
           installmentMonths: paymentMethod === "installment" ? installmentMonths : undefined,
           installmentType: paymentMethod === "installment" ? installmentType : undefined,
@@ -211,7 +211,7 @@ export default function CheckoutPage() {
           phone: guestPhone,
           email: guestEmail || undefined,
           shippingAddress: finalAddress,
-          gateway,
+          gateway: paymentMethod === "installment" ? (installmentType === "credit_card" ? "credit_card" : "finance") : gateway,
           promoCode: promoInput.trim() || undefined,
           items: guestItems.map((i) => ({ productId: i.productId, quantity: i.quantity })),
         });

@@ -19,7 +19,7 @@ from app.services.discount_rule_service import compute_auto_discount
 
 router = APIRouter(prefix="/orders", tags=["Orders (Đơn hàng)"])
 
-VALID_GATEWAYS = ("cod", "vnpay")
+VALID_GATEWAYS = ("cod", "vnpay", "credit_card", "finance")
 VALID_PAYMENT_METHODS = ("full", "installment")
 
 
@@ -159,7 +159,7 @@ async def _create_order_core(
         discount_amount=discount_amount,
         final_amount=final_amount,
         payment_method=payload.payment_method,
-        payment_gateway="cod" if payload.payment_method == "installment" else payload.payment_gateway,
+        payment_gateway=payload.payment_gateway,
         payment_status="pending",
         status="confirmed" if (payload.payment_method == "installment" or payload.payment_gateway == "cod") else "pending",
         shipping_address=payload.shipping_address,
