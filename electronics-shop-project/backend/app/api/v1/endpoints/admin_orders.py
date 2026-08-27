@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_, extract
 
@@ -203,7 +203,7 @@ class AdminSendEmailRequest(BaseModel):
 @router.post("/{order_id}/send-email")
 async def send_order_email_endpoint(
     order_id: uuid.UUID,
-    payload: AdminSendEmailRequest,
+    payload: AdminSendEmailRequest = Body(...),
     db: AsyncSession = Depends(get_db),
     employee_id: str = Depends(require_employee),
 ):

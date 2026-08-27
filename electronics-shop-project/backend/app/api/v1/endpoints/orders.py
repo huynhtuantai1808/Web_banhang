@@ -1,5 +1,5 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
@@ -342,7 +342,7 @@ class SendEmailRequest(BaseModel):
 @router.post("/{order_id}/send-email")
 async def send_order_email(
     order_id: uuid.UUID,
-    payload: SendEmailRequest,
+    payload: SendEmailRequest = Body(...),
     db: AsyncSession = Depends(get_db),
     customer_id: str = Depends(require_customer),
 ):
