@@ -95,20 +95,26 @@ export default function OrderDetailPage() {
 
       {!loading && order && (
         <div className="space-y-6">
-          <div className="rounded-lg border border-circuit-line bg-circuit-panel p-5">
-            <div className="flex items-center justify-between">
+          <div className="rounded-2xl glass-panel p-6 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <p className="font-display text-lg text-circuit-text flex items-center gap-2">
-                  <Package size={18} /> {order.order_code}
+                <p className="font-display text-2xl text-circuit-text flex items-center gap-3">
+                  <Package size={24} className="text-circuit-copperLight" /> 
+                  #{order.order_code}
                 </p>
-                <p className="text-xs text-circuit-muted mt-1">
+                <p className="text-sm text-circuit-muted mt-2 flex items-center gap-2">
+                  <Clock size={14} />
                   Đặt lúc {new Date(order.created_at).toLocaleString("vi-VN")}
                 </p>
               </div>
               {order.status === "cancelled" ? (
-                <span className="px-3 py-1 rounded-full text-xs bg-red-400/15 text-red-300">Đã huỷ</span>
+                <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase bg-red-400/15 text-red-400 border border-red-400/30">
+                  Đã huỷ
+                </span>
               ) : (
-                <span className="px-3 py-1 rounded-full text-xs bg-circuit-signal/15 text-circuit-signal">
+                <span className={`px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase border ${
+                  order.status === 'completed' ? 'border-circuit-signal bg-circuit-signal/15 text-circuit-signal' : 'border-circuit-copper/50 bg-circuit-copper/15 text-circuit-copperLight'
+                }`}>
                   {STATUS_STEPS.find((s) => s.key === order.status)?.label || order.status}
                 </span>
               )}
@@ -116,29 +122,31 @@ export default function OrderDetailPage() {
 
             {/* Thanh tiến trình trạng thái đơn hàng */}
             {order.status !== "cancelled" && (
-              <div className="flex items-center mt-5">
+              <div className="flex items-center mt-8">
                 {STATUS_STEPS.map((step, i) => (
                   <div key={step.key} className="flex items-center flex-1 last:flex-none">
                     <div className="flex flex-col items-center">
                       <div
-                        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs border-2 ${
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-500 ${
                           i <= currentStepIndex
-                            ? "bg-circuit-signal border-circuit-signal text-circuit-bg"
-                            : "border-circuit-line text-circuit-muted"
+                            ? "bg-circuit-signal border-circuit-signal text-circuit-bg shadow-[0_0_10px_rgba(48,223,147,0.4)] scale-110"
+                            : "bg-circuit-bg/50 border-circuit-line text-circuit-muted"
                         }`}
                       >
                         {i + 1}
                       </div>
-                      <span className="text-[11px] text-circuit-muted mt-1 text-center w-16">
+                      <span className={`text-[11px] mt-2 text-center w-20 font-medium ${
+                          i <= currentStepIndex ? "text-circuit-text" : "text-circuit-muted"
+                      }`}>
                         {step.label}
                       </span>
                     </div>
                     {i < STATUS_STEPS.length - 1 && (
-                      <div
-                        className={`flex-1 h-0.5 mx-1 ${
-                          i < currentStepIndex ? "bg-circuit-signal" : "bg-circuit-line"
-                        }`}
-                      />
+                      <div className="flex-1 h-0.5 mx-2 relative overflow-hidden bg-circuit-line/50">
+                        <div className={`absolute top-0 left-0 h-full transition-all duration-1000 ${
+                          i < currentStepIndex ? "w-full bg-circuit-signal" : "w-0 bg-circuit-signal"
+                        }`} />
+                      </div>
                     )}
                   </div>
                 ))}
@@ -147,44 +155,44 @@ export default function OrderDetailPage() {
           </div>
 
           {/* Thông tin thanh toán + giao hàng */}
-          <div className="rounded-lg border border-circuit-line bg-circuit-panel p-5 grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-xs font-mono text-circuit-muted uppercase mb-1 flex items-center gap-1.5">
-                <CreditCard size={13} /> Thanh toán
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="rounded-2xl glass-panel p-6">
+              <p className="text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest font-semibold mb-4 flex items-center gap-2">
+                <CreditCard size={16} /> Thanh toán
               </p>
-              <p className={`flex items-center gap-1.5 ${PAYMENT_STATUS_META[order.payment_status]?.color}`}>
+              <div className={`flex items-center gap-2.5 font-medium ${PAYMENT_STATUS_META[order.payment_status]?.color}`}>
                 {PAYMENT_STATUS_META[order.payment_status]?.icon}
-                {PAYMENT_STATUS_META[order.payment_status]?.label || order.payment_status}
-                <span className="text-circuit-muted">
-                  ({order.payment_gateway === "vnpay" ? "VNPay" : "COD"})
-                </span>
+                <span className="tracking-wide">{PAYMENT_STATUS_META[order.payment_status]?.label || order.payment_status}</span>
+              </div>
+              <p className="text-sm text-circuit-muted mt-2">
+                Phương thức: <strong className="text-circuit-text font-medium">{order.payment_gateway === "vnpay" ? "VNPay" : "Tiền mặt (COD)"}</strong>
               </p>
             </div>
-            <div>
-              <p className="text-xs font-mono text-circuit-muted uppercase mb-1 flex items-center gap-1.5">
-                <Truck size={13} /> Giao hàng
+            <div className="rounded-2xl glass-panel p-6">
+              <p className="text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest font-semibold mb-4 flex items-center gap-2">
+                <Truck size={16} /> Giao hàng
               </p>
-              <p className="text-circuit-text">{order.shipping_address || "—"}</p>
+              <p className="text-sm text-circuit-text leading-relaxed">{order.shipping_address || "—"}</p>
             </div>
           </div>
 
           {/* Danh sách sản phẩm */}
-          <div className="rounded-lg border border-circuit-line bg-circuit-panel p-5">
-            <p className="text-xs font-mono text-circuit-muted uppercase mb-3">Sản phẩm</p>
-            <div className="space-y-2">
+          <div className="rounded-2xl glass-panel p-6">
+            <p className="text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest font-semibold mb-4">Sản phẩm</p>
+            <div className="space-y-3">
               {order.items.map((item, i) => (
-                <div key={i} className="flex justify-between text-sm">
-                  <span className="text-circuit-text">
-                    {item.product_name} × {item.quantity}
+                <div key={i} className="flex justify-between items-center bg-circuit-bg/30 p-3 rounded-xl border border-circuit-line/30 text-sm">
+                  <span className="text-circuit-text font-medium pr-4">
+                    {item.product_name} <span className="text-circuit-muted font-mono ml-2">× {item.quantity}</span>
                   </span>
-                  <span className="text-circuit-muted font-mono">
+                  <span className="text-circuit-text font-mono font-semibold">
                     {formatVND(item.unit_price * item.quantity)}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="border-t border-circuit-line mt-4 pt-4 space-y-1.5 text-sm">
+            <div className="border-t-2 border-dashed border-circuit-line/60 mt-6 pt-5 space-y-2.5 text-sm">
               <div className="flex justify-between text-circuit-muted">
                 <span>Tạm tính</span>
                 <span>{formatVND(order.total_amount)}</span>
@@ -192,39 +200,40 @@ export default function OrderDetailPage() {
               {order.discount_amount > 0 && (
                 <div className="flex justify-between text-circuit-signal">
                   <span className="flex items-center gap-1.5">
-                    <Tag size={13} /> Giảm giá{order.promotion_code ? ` (${order.promotion_code})` : ""}
+                    <Tag size={14} /> Giảm giá{order.promotion_code ? ` (${order.promotion_code})` : ""}
                   </span>
                   <span>-{formatVND(order.discount_amount)}</span>
                 </div>
               )}
-              <div className="flex justify-between font-display text-lg text-circuit-text pt-1">
-                <span>Tổng cộng</span>
-                <span className="text-circuit-signal">{formatVND(order.final_amount)}</span>
+              <div className="flex justify-between items-end font-display pt-2">
+                <span className="text-lg text-circuit-text">Tổng cộng</span>
+                <span className="text-2xl text-circuit-signal font-bold drop-shadow-[0_0_8px_rgba(48,223,147,0.4)]">{formatVND(order.final_amount)}</span>
               </div>
             </div>
           </div>
 
           {/* Theo dõi vận chuyển */}
           {shipment && (
-            <div className="rounded-lg border border-circuit-line bg-circuit-panel p-5">
-              <p className="text-xs font-mono text-circuit-muted uppercase mb-3 flex items-center gap-1.5">
-                <Truck size={14} /> Vận chuyển — {shipment.carrier}
-                {shipment.tracking_code && ` (${shipment.tracking_code})`}
+            <div className="rounded-2xl glass-panel p-6 border border-circuit-copper/30">
+              <p className="text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest font-semibold mb-6 flex items-center gap-2">
+                <Truck size={16} /> Vận chuyển — <span className="text-circuit-text">{shipment.carrier}</span>
+                {shipment.tracking_code && <span className="bg-circuit-bg/50 px-2 py-0.5 rounded text-circuit-muted ml-2">Mã: {shipment.tracking_code}</span>}
               </p>
-              <div className="space-y-3">
+              <div className="space-y-0 relative before:absolute before:inset-0 before:ml-[5px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-circuit-line before:to-transparent">
                 {[...shipment.logs].reverse().map((log, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <div
-                      className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${
-                        i === shipment.logs.length - 1 ? "bg-circuit-signal" : "bg-circuit-line"
+                  <div key={i} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                    <div className={`flex items-center justify-center w-3 h-3 rounded-full border-2 bg-circuit-bg z-10 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 ${
+                        i === 0 ? "border-circuit-signal shadow-[0_0_8px_rgba(48,223,147,0.5)]" : "border-circuit-line/60"
                       }`}
                     />
-                    <div>
-                      <p className="text-sm text-circuit-text">{SHIPMENT_STATUS_LABEL[log.status]}</p>
-                      <p className="text-xs text-circuit-muted">
-                        {new Date(log.created_at).toLocaleString("vi-VN")}
-                        {log.note ? ` — ${log.note}` : ""}
+                    <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] p-4 rounded-xl border border-circuit-line/40 bg-circuit-bg/30 mb-4 transition-colors group-hover:border-circuit-line/80">
+                      <p className={`font-semibold text-sm mb-1 ${i === 0 ? 'text-circuit-signal' : 'text-circuit-text'}`}>
+                        {SHIPMENT_STATUS_LABEL[log.status]}
                       </p>
+                      <p className="text-xs text-circuit-muted font-mono flex items-center gap-1.5 mb-1">
+                        <Clock size={12} /> {new Date(log.created_at).toLocaleString("vi-VN")}
+                      </p>
+                      {log.note && <p className="text-xs text-circuit-muted/80 italic mt-2 border-t border-circuit-line/30 pt-2">{log.note}</p>}
                     </div>
                   </div>
                 ))}
@@ -234,28 +243,34 @@ export default function OrderDetailPage() {
 
           {/* Lịch trả góp (nếu đơn chọn trả góp) */}
           {installmentPlan && (
-            <div className="rounded-lg border border-circuit-line bg-circuit-panel p-5">
-              <p className="text-xs font-mono text-circuit-muted uppercase mb-3 flex items-center gap-1.5">
-                <CalendarClock size={14} /> Lịch trả góp — {installmentPlan.total_months} tháng, 0% lãi suất
+            <div className="rounded-2xl glass-panel p-6 border-t-4 border-t-circuit-copper/50">
+              <p className="text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest font-semibold mb-6 flex items-center gap-2">
+                <CalendarClock size={16} /> Lịch trả góp
+                <span className="text-circuit-muted normal-case ml-2 bg-circuit-bg/50 px-2 py-0.5 rounded font-sans">
+                  {installmentPlan.total_months} tháng, 0% lãi suất
+                </span>
               </p>
-              <div className="space-y-1.5">
+              <div className="space-y-3">
                 {installmentPlan.payments.map((p) => (
-                  <div key={p.period_no} className="flex items-center justify-between text-sm">
-                    <span className="text-circuit-muted">
-                      Kỳ {p.period_no} — hạn {new Date(p.due_date).toLocaleDateString("vi-VN")}
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <span className="font-mono text-circuit-text">{formatVND(p.amount)}</span>
+                  <div key={p.period_no} className="flex items-center justify-between text-sm bg-circuit-bg/30 p-4 rounded-xl border border-circuit-line/30 transition-colors hover:border-circuit-copper/30">
+                    <div>
+                      <p className="font-semibold text-circuit-text mb-1">Kỳ {p.period_no}</p>
+                      <p className="text-xs text-circuit-muted flex items-center gap-1.5">
+                        <Clock size={12} /> Hạn: {new Date(p.due_date).toLocaleDateString("vi-VN")}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <span className="font-mono font-bold text-circuit-copperLight">{formatVND(p.amount)}</span>
                       <span
-                        className={`px-2 py-0.5 rounded-full text-xs ${
+                        className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-widest font-semibold ${
                           p.status === "paid"
-                            ? "bg-circuit-signal/15 text-circuit-signal"
-                            : "bg-circuit-line text-circuit-muted"
+                            ? "bg-circuit-signal/15 text-circuit-signal border border-circuit-signal/30"
+                            : "bg-circuit-line/50 text-circuit-muted border border-circuit-line"
                         }`}
                       >
                         {p.status === "paid" ? "Đã thanh toán" : "Chưa thanh toán"}
                       </span>
-                    </span>
+                    </div>
                   </div>
                 ))}
               </div>

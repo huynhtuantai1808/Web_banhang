@@ -20,7 +20,17 @@ export interface FilterState {
   brand?: string;
   priceLabel?: string;
   feature?: string;
+  sort_by?: string;
 }
+
+const SORT_OPTIONS = [
+  { value: "new", label: "Mới nhất" },
+  { value: "price_asc", label: "Giá thấp đến cao" },
+  { value: "price_desc", label: "Giá cao xuống thấp" },
+  { value: "name_asc", label: "Tên A-Z" },
+  { value: "name_desc", label: "Tên Z-A" },
+  { value: "discount_desc", label: "Giảm giá nhiều nhất" },
+];
 
 const PRICE_OPTIONS = [
   { label: "< 10tr", min: 0, max: 10_000_000 },
@@ -43,6 +53,7 @@ export default function FilterTabs({ value, onChange }: FilterTabsProps) {
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showBrandDropdown, setShowBrandDropdown] = useState(false);
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -81,18 +92,59 @@ export default function FilterTabs({ value, onChange }: FilterTabsProps) {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 glass-panel p-5 rounded-2xl">
+      {/* Sắp xếp */}
+      <div>
+        <p className="text-[11px] font-mono text-circuit-muted uppercase tracking-widest mb-2">Sắp xếp theo</p>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => { setShowSortDropdown((v) => !v); setShowCategoryDropdown(false); setShowBrandDropdown(false); }}
+            className={`w-full max-w-xs flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl border text-sm text-left transition-all duration-300 ${
+              value.sort_by
+                ? "border-circuit-copper/50 bg-circuit-copper/10 text-circuit-copperLight shadow-glow"
+                : "border-circuit-line/60 bg-circuit-panel text-circuit-muted hover:border-circuit-copper/40 hover:bg-circuit-panel/80"
+            }`}
+          >
+            <span>{value.sort_by ? SORT_OPTIONS.find((o) => o.value === value.sort_by)?.label : "Mặc định (Mới nhất)"}</span>
+            <ChevronDown size={14} />
+          </button>
+
+          {showSortDropdown && (
+            <div className="absolute z-30 mt-2 w-full max-w-xs overflow-hidden rounded-xl border border-circuit-line/60 bg-circuit-panel/95 backdrop-blur-xl shadow-glass">
+              {SORT_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    select("sort_by", opt.value);
+                    setShowSortDropdown(false);
+                  }}
+                  className={`w-full flex items-center px-4 py-2.5 text-sm text-left transition-colors ${
+                    value.sort_by === opt.value
+                      ? "text-circuit-copperLight bg-circuit-copper/10"
+                      : "text-circuit-muted hover:bg-circuit-surface/80 hover:text-circuit-text"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Danh mục — dropdown 2 cấp */}
       <div>
         <p className="text-xs font-mono text-circuit-muted uppercase tracking-wide mb-2">Danh mục</p>
         <div className="relative">
           <button
             type="button"
-            onClick={() => { setShowCategoryDropdown((v) => !v); setShowBrandDropdown(false); }}
-            className={`w-full max-w-xs flex items-center justify-between gap-2 px-3 py-2 rounded-md border text-sm text-left transition-colors ${
+            onClick={() => { setShowCategoryDropdown((v) => !v); setShowBrandDropdown(false); setShowSortDropdown(false); }}
+            className={`w-full max-w-xs flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl border text-sm text-left transition-all duration-300 ${
               value.category
-                ? "border-circuit-copper bg-circuit-copper/10 text-circuit-copperLight"
-                : "border-circuit-line text-circuit-muted hover:border-circuit-copper"
+                ? "border-circuit-copper/50 bg-circuit-copper/10 text-circuit-copperLight shadow-glow"
+                : "border-circuit-line/60 bg-circuit-panel text-circuit-muted hover:border-circuit-copper/40 hover:bg-circuit-panel/80"
             }`}
           >
             <span>{value.category || "— Chọn danh mục —"}</span>
@@ -100,7 +152,7 @@ export default function FilterTabs({ value, onChange }: FilterTabsProps) {
           </button>
 
           {showCategoryDropdown && (
-            <div className="absolute z-20 mt-1 w-80 max-h-80 overflow-y-auto rounded-lg border border-circuit-line bg-circuit-panel shadow-xl">
+            <div className="absolute z-20 mt-2 w-80 max-h-80 overflow-y-auto rounded-xl border border-circuit-line/60 bg-circuit-panel/95 backdrop-blur-xl shadow-glass">
               {topCategories.length === 0 ? (
                 <p className="px-4 py-3 text-xs text-circuit-muted">Chưa có danh mục nào.</p>
               ) : (
@@ -162,11 +214,11 @@ export default function FilterTabs({ value, onChange }: FilterTabsProps) {
         <div className="relative">
           <button
             type="button"
-            onClick={() => { setShowBrandDropdown((v) => !v); setShowCategoryDropdown(false); }}
-            className={`w-full max-w-xs flex items-center justify-between gap-2 px-3 py-2 rounded-md border text-sm text-left transition-colors ${
+            onClick={() => { setShowBrandDropdown((v) => !v); setShowCategoryDropdown(false); setShowSortDropdown(false); }}
+            className={`w-full max-w-xs flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl border text-sm text-left transition-all duration-300 ${
               value.brand
-                ? "border-circuit-copper bg-circuit-copper/10 text-circuit-copperLight"
-                : "border-circuit-line text-circuit-muted hover:border-circuit-copper"
+                ? "border-circuit-copper/50 bg-circuit-copper/10 text-circuit-copperLight shadow-glow"
+                : "border-circuit-line/60 bg-circuit-panel text-circuit-muted hover:border-circuit-copper/40 hover:bg-circuit-panel/80"
             }`}
           >
             <span>{value.brand || "— Chọn hãng —"}</span>
@@ -174,7 +226,7 @@ export default function FilterTabs({ value, onChange }: FilterTabsProps) {
           </button>
 
           {showBrandDropdown && (
-            <div className="absolute z-20 mt-1 w-56 max-h-72 overflow-y-auto rounded-lg border border-circuit-line bg-circuit-panel shadow-xl">
+            <div className="absolute z-20 mt-2 w-56 max-h-72 overflow-y-auto rounded-xl border border-circuit-line/60 bg-circuit-panel/95 backdrop-blur-xl shadow-glass">
               {brands.length === 0 ? (
                 <p className="px-4 py-3 text-xs text-circuit-muted">Chưa có hãng nào.</p>
               ) : (
@@ -257,10 +309,10 @@ export default function FilterTabs({ value, onChange }: FilterTabsProps) {
       </div>
 
       {/* Close dropdowns when clicking outside */}
-      {showCategoryDropdown || showBrandDropdown ? (
+      {showCategoryDropdown || showBrandDropdown || showSortDropdown ? (
         <div
           className="fixed inset-0 z-10"
-          onClick={() => { setShowCategoryDropdown(false); setShowBrandDropdown(false); }}
+          onClick={() => { setShowCategoryDropdown(false); setShowBrandDropdown(false); setShowSortDropdown(false); }}
         />
       ) : null}
     </div>

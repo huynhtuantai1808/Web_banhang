@@ -226,42 +226,42 @@ export default function CheckoutPage() {
 
           {/* Thông tin khách hàng — chỉ hiện khi chưa đăng nhập (đặt hàng không cần tài khoản) */}
           {!loggedIn && (
-            <div className="rounded-lg border border-circuit-line bg-circuit-panel p-4">
-              <p className="text-xs font-mono text-circuit-muted uppercase mb-3 flex items-center gap-1.5">
-                <User size={14} /> Thông tin đặt hàng (không cần đăng ký tài khoản)
+            <div className="rounded-2xl glass-panel p-6 border-t-4 border-t-circuit-copper/50">
+              <p className="text-[11px] font-mono text-circuit-copperLight uppercase mb-4 flex items-center gap-1.5 tracking-widest font-semibold">
+                <User size={16} /> Thông tin người nhận
               </p>
-              <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="grid grid-cols-2 gap-4 mb-4">
                 <label className="block">
-                  <span className="block text-xs text-circuit-muted mb-1">Họ và tên *</span>
+                  <span className="block text-xs text-circuit-muted mb-1.5 font-medium">Họ và tên *</span>
                   <input
                     required
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
-                    className="w-full rounded-md border border-circuit-line bg-circuit-bg px-3 py-2 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                    className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper transition-colors focus:shadow-[0_0_10px_rgba(200,127,69,0.15)]"
                   />
                 </label>
                 <label className="block">
-                  <span className="block text-xs text-circuit-muted mb-1">Số điện thoại *</span>
+                  <span className="block text-xs text-circuit-muted mb-1.5 font-medium">Số điện thoại *</span>
                   <input
                     required
                     value={guestPhone}
                     onChange={(e) => setGuestPhone(e.target.value)}
-                    className="w-full rounded-md border border-circuit-line bg-circuit-bg px-3 py-2 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                    className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper transition-colors focus:shadow-[0_0_10px_rgba(200,127,69,0.15)]"
                   />
                 </label>
               </div>
               <label className="block">
-                <span className="block text-xs text-circuit-muted mb-1">Email (tuỳ chọn)</span>
+                <span className="block text-xs text-circuit-muted mb-1.5 font-medium">Email (tuỳ chọn)</span>
                 <input
                   type="email"
                   value={guestEmail}
                   onChange={(e) => setGuestEmail(e.target.value)}
-                  className="w-full rounded-md border border-circuit-line bg-circuit-bg px-3 py-2 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                  className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper transition-colors focus:shadow-[0_0_10px_rgba(200,127,69,0.15)]"
                 />
               </label>
-              <p className="text-xs text-circuit-muted mt-2">
+              <p className="text-[11px] text-circuit-muted mt-3">
                 Thông tin này được lưu lại cùng đơn hàng để bạn tra cứu sau qua{" "}
-                <Link href="/orders/lookup" className="text-circuit-copperLight hover:underline">
+                <Link href="/orders/lookup" className="text-circuit-copperLight hover:underline font-medium">
                   trang tra cứu đơn hàng
                 </Link>{" "}
                 (chỉ cần mã đơn + số điện thoại, không cần mật khẩu).
@@ -271,12 +271,14 @@ export default function CheckoutPage() {
 
           {/* Tóm tắt giỏ hàng */}
           {cart && (
-            <div className="rounded-lg border border-circuit-line bg-circuit-panel p-4">
-              <p className="text-xs font-mono text-circuit-muted uppercase mb-3">Đơn hàng của bạn</p>
-              <div className="space-y-2 mb-3">
+            <div className="rounded-2xl glass-panel p-6 border-t-4 border-t-circuit-copper/50">
+              <p className="text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest mb-4 font-semibold flex items-center gap-2">
+                <ShoppingCart size={16} /> Đơn hàng của bạn
+              </p>
+              <div className="space-y-3 mb-4">
                 {cart.items.map((item) => (
                   <div key={item.id} className="flex items-center gap-3 text-sm">
-                    <div className="w-10 h-10 rounded bg-circuit-bg/60 overflow-hidden shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-circuit-bg/40 border border-circuit-line/30 overflow-hidden shrink-0 flex items-center justify-center p-1">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={getMediaUrl(item.product_image_url) || "/placeholder-product.png"}
@@ -284,10 +286,10 @@ export default function CheckoutPage() {
                         className="object-contain w-full h-full"
                       />
                     </div>
-                    <span className="flex-1 text-circuit-text truncate">
+                    <span className="flex-1 text-circuit-text truncate font-medium">
                       {item.product_name} × {item.quantity}
                     </span>
-                    <span className="text-circuit-muted font-mono">
+                    <span className="text-circuit-muted font-mono font-semibold">
                       {formatVND((item.product_discount_price ?? item.product_price) * item.quantity)}
                     </span>
                   </div>
@@ -380,57 +382,57 @@ export default function CheckoutPage() {
           )}
 
           {/* Địa chỉ giao hàng */}
-          <div>
-            <label className="block text-xs font-mono text-circuit-muted uppercase mb-2">
-              <Truck size={14} className="inline mr-1" /> Địa chỉ giao hàng *
+          <div className="rounded-2xl glass-panel p-6 border-t-4 border-t-circuit-copper/50">
+            <label className="block text-[11px] font-mono text-circuit-copperLight uppercase mb-4 tracking-widest font-semibold flex items-center gap-2">
+              <Truck size={16} /> Địa chỉ giao hàng *
             </label>
             <textarea
               required
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành..."
-              className="w-full min-h-[80px] rounded-md border border-circuit-line bg-circuit-bg px-3 py-2 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+              className="w-full min-h-[100px] rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper transition-colors focus:shadow-[0_0_10px_rgba(200,127,69,0.15)] resize-y"
             />
           </div>
 
           {/* Hình thức thanh toán: trả toàn bộ hay trả góp (trả góp yêu cầu đăng nhập) */}
-          <div className="rounded-lg border-2 border-circuit-copper bg-circuit-panel shadow-lg shadow-circuit-copper/10 p-4">
-            <label className="block text-xs font-mono text-circuit-copperLight uppercase mb-3 tracking-widest flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-circuit-copper inline-block" />
+          <div className="rounded-2xl glass-panel border border-circuit-copper/40 shadow-glow p-6">
+            <label className="block text-[11px] font-mono text-circuit-copperLight uppercase mb-4 tracking-widest font-semibold flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-circuit-copper inline-block animate-pulse-slow" />
               Hình thức thanh toán
             </label>
-            <div className="grid grid-cols-2 gap-3 mb-3">
+            <div className="grid grid-cols-2 gap-4 mb-4">
               <button
                 type="button"
                 onClick={() => setPaymentMethod("full")}
-                className={`rounded-md border-2 px-4 py-3 text-sm text-left transition-all hover:scale-[1.02] ${
+                className={`rounded-xl border-2 px-5 py-4 text-sm text-left transition-all duration-300 hover:scale-[1.02] ${
                   paymentMethod === "full"
-                    ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight shadow-md shadow-circuit-copper/20"
-                    : "border-circuit-line text-circuit-muted hover:border-circuit-copper/60 hover:bg-circuit-panel/80"
+                    ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight shadow-[0_0_15px_rgba(200,127,69,0.2)]"
+                    : "border-circuit-line/60 bg-circuit-panel/50 text-circuit-muted hover:border-circuit-copper/60 hover:bg-circuit-panel/80"
                 }`}
               >
-                <p className="font-medium flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-circuit-copper inline-block" />
+                <p className="font-medium flex items-center gap-1.5 text-base">
+                  <span className={`w-2 h-2 rounded-full inline-block transition-colors ${paymentMethod === "full" ? "bg-circuit-copper" : "bg-circuit-muted"}`} />
                   Trả toàn bộ
                 </p>
-                <p className="text-xs mt-1 opacity-80">Thanh toán 1 lần</p>
+                <p className="text-[11px] mt-1.5 opacity-80 uppercase tracking-wide">Thanh toán 1 lần</p>
               </button>
               <button
                 type="button"
                 onClick={() => allEligibleForInstallment && setPaymentMethod("installment")}
                 disabled={!allEligibleForInstallment}
                 title={!loggedIn ? "Cần đăng nhập để mua trả góp" : undefined}
-                className={`rounded-md border-2 px-4 py-3 text-sm text-left transition-all hover:scale-[1.02] disabled:opacity-40 disabled:hover:scale-100 ${
+                className={`rounded-xl border-2 px-5 py-4 text-sm text-left transition-all duration-300 hover:scale-[1.02] disabled:opacity-40 disabled:hover:scale-100 ${
                   paymentMethod === "installment"
-                    ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight shadow-md shadow-circuit-copper/20"
-                    : "border-circuit-line text-circuit-muted hover:border-circuit-copper/60 hover:bg-circuit-panel/80"
+                    ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight shadow-[0_0_15px_rgba(200,127,69,0.2)]"
+                    : "border-circuit-line/60 bg-circuit-panel/50 text-circuit-muted hover:border-circuit-copper/60 hover:bg-circuit-panel/80"
                 }`}
               >
-                <p className="font-medium flex items-center gap-1.5">
-                  <CalendarClock size={14} /> Trả góp 0%
+                <p className="font-medium flex items-center gap-1.5 text-base">
+                  <CalendarClock size={16} /> Trả góp 0%
                 </p>
-                <p className="text-xs mt-1 opacity-80">
-                  {loggedIn ? "Chia nhỏ theo tháng" : "Cần đăng nhập để dùng"}
+                <p className="text-[11px] mt-1.5 opacity-80 uppercase tracking-wide">
+                  {loggedIn ? "Chia nhỏ theo tháng" : "Cần đăng nhập"}
                 </p>
               </button>
             </div>
@@ -572,46 +574,44 @@ export default function CheckoutPage() {
 
           {/* Chọn cổng thanh toán — chỉ áp dụng khi trả toàn bộ */}
           {paymentMethod === "full" && (
-            <div className="rounded-lg border-2 border-circuit-copper bg-circuit-panel shadow-lg shadow-circuit-copper/10 p-4">
-              <label className="block text-xs font-mono text-circuit-copperLight uppercase mb-3 tracking-widest flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-circuit-copper inline-block" />
+            <div className="rounded-2xl glass-panel p-6 border-t-4 border-t-circuit-copper/50">
+              <label className="block text-[11px] font-mono text-circuit-copperLight uppercase mb-4 tracking-widest font-semibold flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-circuit-copper inline-block animate-pulse-slow" />
                 Cổng thanh toán
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <button
                   type="button"
                   onClick={() => setGateway("cod")}
-                  className={`relative rounded-md border-2 px-4 py-3 text-sm text-left transition-all hover:scale-[1.02] ${
+                  className={`relative rounded-xl border-2 px-5 py-4 text-sm text-left transition-all duration-300 hover:scale-[1.02] ${
                     gateway === "cod"
-                      ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight shadow-md shadow-circuit-copper/20"
-                      : "border-circuit-line text-circuit-muted hover:border-circuit-copper/60 hover:bg-circuit-panel/80"
+                      ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight shadow-[0_0_15px_rgba(200,127,69,0.2)]"
+                      : "border-circuit-line/60 bg-circuit-panel/50 text-circuit-muted hover:border-circuit-copper/60 hover:bg-circuit-panel/80"
                   }`}
                 >
                   {gateway === "cod" && (
-                    <span className="absolute -top-2 left-3 px-2 py-0.5 text-[10px] font-mono bg-circuit-signal/20 text-circuit-signal rounded">
-                      Gợi ý
+                    <span className="absolute -top-2.5 left-4 px-2 py-0.5 text-[10px] font-mono font-bold bg-circuit-signal text-circuit-bg rounded-md shadow-md">
+                      GỢI Ý
                     </span>
                   )}
-                  <p className="font-medium flex items-center gap-1.5">
-                    <Truck size={14} />
-                    Thanh toán khi nhận hàng
+                  <p className="font-medium flex items-center gap-2 text-base">
+                    <Truck size={16} /> Tiền mặt (COD)
                   </p>
-                  <p className="text-xs mt-1 opacity-80">Tiền mặt (COD)</p>
+                  <p className="text-[11px] mt-1.5 opacity-80 uppercase tracking-wide">Thanh toán khi nhận hàng</p>
                 </button>
                 <button
                   type="button"
                   onClick={() => setGateway("vnpay")}
-                  className={`relative rounded-md border-2 px-4 py-3 text-sm text-left transition-all hover:scale-[1.02] ${
+                  className={`relative rounded-xl border-2 px-5 py-4 text-sm text-left transition-all duration-300 hover:scale-[1.02] ${
                     gateway === "vnpay"
-                      ? "border-blue-400 bg-blue-400/10 text-blue-300 shadow-md shadow-blue-400/20"
-                      : "border-circuit-line text-circuit-muted hover:border-blue-400/60 hover:bg-circuit-panel/80"
+                      ? "border-blue-400 bg-blue-400/10 text-blue-300 shadow-[0_0_15px_rgba(96,165,250,0.2)]"
+                      : "border-circuit-line/60 bg-circuit-panel/50 text-circuit-muted hover:border-blue-400/60 hover:bg-circuit-panel/80"
                   }`}
                 >
-                  <p className="font-medium flex items-center gap-1.5">
-                    <CreditCard size={14} />
-                    VNPay
+                  <p className="font-medium flex items-center gap-2 text-base">
+                    <CreditCard size={16} /> VNPay
                   </p>
-                  <p className="text-xs mt-1 opacity-80">ATM / Thẻ quốc tế / QR</p>
+                  <p className="text-[11px] mt-1.5 opacity-80 uppercase tracking-wide">ATM / Thẻ quốc tế / QR</p>
                 </button>
               </div>
             </div>
@@ -620,10 +620,10 @@ export default function CheckoutPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full flex items-center justify-center gap-2 rounded-md bg-circuit-copper py-3 text-sm font-medium text-circuit-bg hover:bg-circuit-copperLight transition-colors disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-circuit-copper to-circuit-copperLight py-4 text-base font-bold text-circuit-bg hover:shadow-glow hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none mt-8"
           >
-            {submitting && <Loader2 size={18} className="animate-spin" />}
-            {paymentMethod === "full" && gateway === "vnpay" ? "Chuyển sang VNPay để thanh toán" : "Đặt hàng"}
+            {submitting && <Loader2 size={20} className="animate-spin" />}
+            {paymentMethod === "full" && gateway === "vnpay" ? "TIẾN HÀNH THANH TOÁN (VNPAY)" : "XÁC NHẬN ĐẶT HÀNG"}
           </button>
         </form>
       )}

@@ -12,9 +12,9 @@ export default function SearchBar({ onSearch }: { onSearch?: (keyword: string) =
         e.preventDefault();
         onSearch?.(value);
       }}
-      className="flex items-center gap-2 rounded-full border border-circuit-line bg-circuit-panel px-4 py-2.5 focus-within:border-circuit-copper transition-colors"
+      className="flex items-center gap-3 rounded-2xl border border-circuit-line/60 bg-circuit-panel/60 backdrop-blur-md px-5 py-3 focus-within:border-circuit-copper focus-within:shadow-[0_0_15px_rgba(200,127,69,0.2)] transition-all duration-300 w-full group"
     >
-      <Search size={18} className="text-circuit-muted" />
+      <Search size={20} className="text-circuit-muted group-focus-within:text-circuit-copperLight transition-colors" />
       <input
         value={value}
         onChange={(e) => setValue(e.target.value)}

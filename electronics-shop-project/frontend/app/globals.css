@@ -15,10 +15,18 @@
 body {
   @apply bg-circuit-bg text-circuit-text font-body;
   background-image:
-    linear-gradient(#1E2C47 1px, transparent 1px),
-    linear-gradient(90deg, #1E2C47 1px, transparent 1px);
-  background-size: 28px 28px;
+    linear-gradient(#202d45 1px, transparent 1px),
+    linear-gradient(90deg, #202d45 1px, transparent 1px);
+  background-size: 32px 32px;
   background-attachment: fixed;
+}
+
+.glass-panel {
+  @apply bg-circuit-surface/80 backdrop-blur-xl border border-circuit-line/50 shadow-glass;
+}
+
+.premium-card {
+  @apply bg-circuit-panel relative overflow-hidden transition-all duration-300 border border-circuit-line/60 hover:border-circuit-copper/50 hover:shadow-glow;
 }
 
 /* Trace line chạy dọc theo cạnh card khi hover — chi tiết chữ ký của giao diện */
@@ -33,8 +41,8 @@ body {
 }
 
 ::selection {
-  background: #C87F45;
-  color: #0B1220;
+  background: var(--accent-color);
+  color: #080c14;
 }
 
 /* ── ReactQuill dark theme ── */

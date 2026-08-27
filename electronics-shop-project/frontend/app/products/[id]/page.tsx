@@ -227,7 +227,7 @@ export default function ProductDetailPage() {
         <div>
           {/* Main image */}
           <div
-            className="relative aspect-square rounded-xl bg-circuit-panel border border-circuit-line flex items-center justify-center overflow-hidden mb-3 group cursor-zoom-in"
+            className="relative aspect-square rounded-2xl bg-circuit-panel border border-circuit-line flex items-center justify-center overflow-hidden mb-3 group cursor-zoom-in"
             onMouseEnter={stopAutoRotate}
             onMouseLeave={() => allImages.length > 1 && startAutoRotate()}
             onClick={() => { setLightboxIndex(activeImageIndex); setLightboxOpen(true); }}
@@ -236,7 +236,7 @@ export default function ProductDetailPage() {
             <img
               src={activeImageUrl || "/placeholder-product.png"}
               alt={product.name}
-              className="object-contain h-full w-full transition-opacity duration-300"
+              className="object-contain h-[90%] w-[90%] transition-transform duration-500 ease-out group-hover:scale-105"
               onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
             />
 
@@ -451,35 +451,41 @@ export default function ProductDetailPage() {
       </div>
 
       {/* ── SECTION 2: Tab Mô tả / Thông số (full width) ── */}
-      <div className="mb-10">
+      <div className="mb-12">
         {/* Mô tả chi tiết */}
         <div className="space-y-4">
           {/* Tab bar */}
-          <div className="flex border-b border-circuit-line">
+          <div className="flex border-b border-circuit-line/50">
             <button
               onClick={() => setActiveTab("mota")}
-              className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`px-6 py-4 text-sm font-medium transition-colors relative ${
                 activeTab === "mota"
-                  ? "border-circuit-copper text-circuit-copperLight"
-                  : "border-transparent text-circuit-muted hover:text-circuit-text"
+                  ? "text-circuit-copperLight"
+                  : "text-circuit-muted hover:text-circuit-text"
               }`}
             >
               Mô tả chi tiết
+              {activeTab === "mota" && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-circuit-copper shadow-[0_0_8px_rgba(200,127,69,0.8)]" />
+              )}
             </button>
             <button
               onClick={() => setActiveTab("thongso")}
-              className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`px-6 py-4 text-sm font-medium transition-colors relative ${
                 activeTab === "thongso"
-                  ? "border-circuit-copper text-circuit-copperLight"
-                  : "border-transparent text-circuit-muted hover:text-circuit-text"
+                  ? "text-circuit-copperLight"
+                  : "text-circuit-muted hover:text-circuit-text"
               }`}
             >
               Thông số kỹ thuật
+              {activeTab === "thongso" && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-circuit-copper shadow-[0_0_8px_rgba(200,127,69,0.8)]" />
+              )}
             </button>
           </div>
 
           {activeTab === "mota" && (
-            <div className="rounded-lg border border-circuit-line bg-circuit-panel p-6 space-y-6">
+            <div className="rounded-2xl glass-panel p-6 md:p-8 space-y-6">
               {/* Short description if no long_description */}
               {product.description && (
                 <p className="text-sm text-circuit-muted leading-relaxed">{product.description}</p>
@@ -501,12 +507,12 @@ export default function ProductDetailPage() {
           )}
 
           {activeTab === "thongso" && (
-            <div className="rounded-lg border border-circuit-line bg-circuit-panel p-6">
+            <div className="rounded-2xl glass-panel p-6 md:p-8">
               {product.specification && Object.keys(product.specification).length > 0 ? (
                 <table className="w-full text-sm">
-                  <tbody>
+                  <tbody className="divide-y divide-circuit-line/30">
                     {Object.entries(product.specification).map(([k, v], i) => (
-                      <tr key={k} className={i % 2 === 0 ? "bg-circuit-bg/40" : ""}>
+                      <tr key={k} className="hover:bg-circuit-line/10 transition-colors">
                         <td className="px-4 py-2.5 text-circuit-muted font-mono text-xs uppercase w-2/5">{k}</td>
                         <td className="px-4 py-2.5 text-circuit-text font-medium">{String(v)}</td>
                       </tr>
@@ -517,22 +523,22 @@ export default function ProductDetailPage() {
                 <p className="text-sm text-circuit-muted italic">Chưa có thông số kỹ thuật.</p>
               )}
               {(product.color || product.size_dimension || product.material) && (
-                <table className="w-full text-sm mt-4">
-                  <tbody>
+                <table className="w-full text-sm mt-6">
+                  <tbody className="divide-y divide-circuit-line/30">
                     {product.color && (
-                      <tr className="even:bg-circuit-bg/40">
+                      <tr className="hover:bg-circuit-line/10 transition-colors">
                         <td className="px-4 py-2.5 text-circuit-muted font-mono text-xs uppercase">Màu sắc</td>
                         <td className="px-4 py-2.5 text-circuit-text font-medium">{product.color}</td>
                       </tr>
                     )}
                     {product.size_dimension && (
-                      <tr className="even:bg-circuit-bg/40">
+                      <tr className="hover:bg-circuit-line/10 transition-colors">
                         <td className="px-4 py-2.5 text-circuit-muted font-mono text-xs uppercase">Kích thước</td>
                         <td className="px-4 py-2.5 text-circuit-text font-medium">{product.size_dimension}</td>
                       </tr>
                     )}
                     {product.material && (
-                      <tr className="even:bg-circuit-bg/40">
+                      <tr className="hover:bg-circuit-line/10 transition-colors">
                         <td className="px-4 py-2.5 text-circuit-muted font-mono text-xs uppercase">Chất liệu</td>
                         <td className="px-4 py-2.5 text-circuit-text font-medium">{product.material}</td>
                       </tr>
@@ -547,7 +553,7 @@ export default function ProductDetailPage() {
       </div>
 
       {/* ── SECTION 3: Đánh giá sản phẩm ── */}
-      <div className="rounded-xl border border-circuit-line bg-circuit-panel p-6 mb-10">
+      <div className="rounded-2xl glass-panel p-6 md:p-8 mb-12">
         <ReviewList
           reviews={reviews}
           productId={product.id}

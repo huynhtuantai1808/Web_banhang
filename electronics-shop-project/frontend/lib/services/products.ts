@@ -50,8 +50,17 @@ export interface ProductFilters {
   on_sale?: boolean;
   min_price?: number;
   max_price?: number;
+  sort_by?: string;
   page?: number;
   page_size?: number;
+}
+
+export interface PaginatedProducts {
+  items: ProductOut[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
 }
 
 export interface ProductImageOut {
@@ -88,8 +97,8 @@ export interface CatalogOption {
 }
 
 /** Lấy danh sách sản phẩm, có thể lọc theo hãng/danh mục/giá + từ khoá tìm kiếm. */
-export async function listProducts(filters: ProductFilters = {}): Promise<ProductOut[]> {
-  const { data } = await apiClient.get<ProductOut[]>("/products", { params: filters });
+export async function listProducts(filters: ProductFilters = {}): Promise<PaginatedProducts> {
+  const { data } = await apiClient.get<PaginatedProducts>("/products", { params: filters });
   return data;
 }
 

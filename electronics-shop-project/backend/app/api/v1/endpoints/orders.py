@@ -1,7 +1,7 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from app.db.session import get_db
 from app.models.cart import Cart, CartItem
@@ -30,15 +30,18 @@ class _QuantityHolder:
         self.quantity = quantity
 
 
-async def _next_order_code(db: AsyncSession) -> str:
-    result = await db.execute(select(Order.id))
-    count = len(result.all())
-    return f"DH{count + 1:08d}"
+import time
 
+async def _next_order_code(db: AsyncSession) -> str:
+    result = await db.execute(select(func.count()).select_from(Order))
+    count = result.scalar() or 0
+    # Use timestamp prefix to avoid collision
+    prefix = int(time.time()) % 100000
+    return f"DH{prefix:05d}{count + 1:04d}"
 
 async def _next_customer_code(db: AsyncSession) -> str:
-    result = await db.execute(select(Customer.id))
-    count = len(result.all())
+    result = await db.execute(select(func.count()).select_from(Customer))
+    count = result.scalar() or 0
     return f"KH{count + 1:06d}"
 
 

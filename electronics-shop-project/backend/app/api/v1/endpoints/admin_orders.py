@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, extract
+from sqlalchemy import select, func, and_, or_, extract
 
 from app.db.session import get_db
 from app.models.order import Order, OrderItem
@@ -68,30 +68,46 @@ async def list_all_orders(
     keyword: str | None = Query(None, description="Tìm theo mã đơn, tên hoặc SĐT khách hàng"),
     status: str | None = Query(None, description="Lọc theo trạng thái đơn hàng"),
     payment_status: str | None = Query(None, description="Lọc theo trạng thái thanh toán"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
     _employee_id: str = Depends(require_employee),
 ):
-    """Toàn bộ đơn hàng của khách — để nhân viên/quản lý nắm được tình hình bán hàng.
-    Mọi nhân viên đã đăng nhập đều xem được (chỉ thao tác ghi mới cần quyền riêng)."""
-    stmt = select(Order).order_by(Order.created_at.desc())
+    """Toàn bộ đơn hàng của khách — để nhân viên/quản lý nắm được tình hình bán hàng."""
+    stmt = select(Order).outerjoin(Customer, Order.customer_id == Customer.id)
+    
     if status:
         stmt = stmt.where(Order.status == status)
     if payment_status:
         stmt = stmt.where(Order.payment_status == payment_status)
+    if keyword:
+        kw = f"%{keyword.lower()}%"
+        stmt = stmt.where(
+            or_(
+                func.lower(Order.order_code).like(kw),
+                func.lower(Customer.full_name).like(kw),
+                Customer.phone.like(kw)
+            )
+        )
 
+    # Đếm tổng
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar() or 0
+
+    stmt = stmt.order_by(Order.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(stmt)
     orders = result.scalars().all()
 
     out = [await _build_admin_order_out(db, o) for o in orders]
-
-    if keyword:
-        kw = keyword.lower()
-        out = [
-            o for o in out
-            if kw in o["order_code"].lower() or kw in o["customer_name"].lower() or kw in o["customer_phone"].lower()
-        ]
-
-    return out
+    
+    return {
+        "items": out,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (total + page_size - 1) // page_size if page_size else 0
+    }
 
 
 @router.get("/{order_id}")

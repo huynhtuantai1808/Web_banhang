@@ -84,21 +84,21 @@ export default function AdminOrdersPage() {
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-        <div className="flex items-center gap-2 rounded-full border border-circuit-line bg-circuit-panel px-4 py-2 max-w-xs">
-          <Search size={16} className="text-circuit-muted" />
+      <div className="flex flex-wrap items-center gap-4 mb-8">
+        <div className="flex-1 min-w-[280px] max-w-md flex items-center gap-3 rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-2.5 glass-panel focus-within:border-circuit-copper focus-within:shadow-glow transition-all">
+          <Search size={18} className="text-circuit-muted" />
           <input
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && fetchOrders()}
             placeholder="Tìm theo mã đơn, tên, SĐT..."
-            className="flex-1 bg-transparent outline-none text-sm placeholder:text-circuit-muted"
+            className="flex-1 bg-transparent outline-none text-sm placeholder:text-circuit-muted/70 text-circuit-text"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-md border border-circuit-line bg-circuit-panel px-3 py-2 text-sm text-circuit-text"
+          className="rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-2.5 text-sm text-circuit-text glass-panel outline-none focus:border-circuit-copper transition-colors cursor-pointer"
         >
           <option value="">Tất cả trạng thái</option>
           {ORDER_STATUSES.map((s) => (
@@ -107,97 +107,118 @@ export default function AdminOrdersPage() {
         </select>
       </div>
 
-      <div className="rounded-lg border border-circuit-line overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-circuit-panel text-circuit-muted font-mono text-xs uppercase">
-            <tr>
-              <th className="text-left px-4 py-3">Mã đơn</th>
-              <th className="text-left px-4 py-3">Khách hàng</th>
-              <th className="text-right px-4 py-3">Tổng tiền</th>
-              <th className="text-left px-4 py-3">Thanh toán</th>
-              <th className="text-left px-4 py-3">Trạng thái</th>
-              <th className="text-left px-4 py-3">Ngày đặt</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={6} className="px-4 py-10 text-center text-circuit-muted">
-                <Loader2 className="inline animate-spin mr-2" size={16} /> Đang tải...
-              </td></tr>
-            ) : orders.length === 0 ? (
-              <tr><td colSpan={6} className="px-4 py-10 text-center text-circuit-muted">Không có đơn hàng nào.</td></tr>
-            ) : (
-              orders.map((o) => (
-                <tr
-                  key={o.id}
-                  onClick={() => openDetail(o)}
-                  className="border-t border-circuit-line hover:bg-circuit-panel/60 cursor-pointer"
-                >
-                  <td className="px-4 py-3 font-mono text-circuit-copperLight">{o.order_code}</td>
-                  <td className="px-4 py-3">
-                    <p>{o.customer_name}</p>
-                    <p className="text-xs text-circuit-muted">{o.customer_phone}</p>
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono">{formatVND(o.final_amount)}</td>
-                  <td className="px-4 py-3 text-circuit-muted text-xs">
-                    {o.payment_status === "paid" ? "Đã TT" : o.payment_status === "failed" ? "Thất bại" : "Chờ TT"}
-                    {" · "}{o.payment_gateway === "vnpay" ? "VNPay" : "COD"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="px-2 py-1 rounded-full text-xs bg-circuit-line text-circuit-muted">
-                      {ORDER_STATUS_LABEL[o.status] || o.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-circuit-muted text-xs">
-                    {new Date(o.created_at).toLocaleDateString("vi-VN")}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className="rounded-2xl glass-panel border border-circuit-line/60 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-circuit-bg/60 text-circuit-copperLight font-mono text-[11px] uppercase tracking-widest border-b border-circuit-line/60">
+              <tr>
+                <th className="text-left px-6 py-4 font-semibold">Mã đơn</th>
+                <th className="text-left px-6 py-4 font-semibold">Khách hàng</th>
+                <th className="text-right px-6 py-4 font-semibold">Tổng tiền</th>
+                <th className="text-left px-6 py-4 font-semibold">Thanh toán</th>
+                <th className="text-left px-6 py-4 font-semibold">Trạng thái</th>
+                <th className="text-left px-6 py-4 font-semibold">Ngày đặt</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-circuit-line/40">
+              {loading ? (
+                <tr><td colSpan={6} className="px-6 py-12 text-center text-circuit-muted">
+                  <Loader2 className="inline animate-spin mr-2" size={18} /> Đang tải...
+                </td></tr>
+              ) : orders.length === 0 ? (
+                <tr><td colSpan={6} className="px-6 py-12 text-center text-circuit-muted font-mono">Không có đơn hàng nào.</td></tr>
+              ) : (
+                orders.map((o) => (
+                  <tr
+                    key={o.id}
+                    onClick={() => openDetail(o)}
+                    className="hover:bg-circuit-bg/40 cursor-pointer transition-colors group"
+                  >
+                    <td className="px-6 py-4 font-mono text-circuit-text font-semibold group-hover:text-circuit-copperLight transition-colors">#{o.order_code}</td>
+                    <td className="px-6 py-4">
+                      <p className="font-medium text-circuit-text">{o.customer_name}</p>
+                      <p className="text-xs text-circuit-muted/80 mt-0.5">{o.customer_phone}</p>
+                    </td>
+                    <td className="px-6 py-4 text-right font-mono font-bold text-circuit-signal drop-shadow-[0_0_8px_rgba(48,223,147,0.2)]">{formatVND(o.final_amount)}</td>
+                    <td className="px-6 py-4">
+                      <p className={`text-xs font-semibold uppercase tracking-wider ${o.payment_status === "paid" ? "text-circuit-signal" : o.payment_status === "failed" ? "text-red-400" : "text-amber-400"}`}>
+                        {o.payment_status === "paid" ? "Đã TT" : o.payment_status === "failed" ? "Thất bại" : "Chờ TT"}
+                      </p>
+                      <p className="text-[10px] text-circuit-muted uppercase tracking-widest mt-1">{o.payment_gateway === "vnpay" ? "VNPay" : "COD"}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1.5 rounded-full text-[10px] font-semibold uppercase tracking-widest border ${
+                        o.status === 'completed' ? 'border-circuit-signal/50 bg-circuit-signal/10 text-circuit-signal' :
+                        o.status === 'cancelled' ? 'border-red-400/50 bg-red-400/10 text-red-400' :
+                        'border-circuit-copper/50 bg-circuit-copper/10 text-circuit-copperLight'
+                      }`}>
+                        {ORDER_STATUS_LABEL[o.status] || o.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-circuit-muted font-mono text-xs">
+                      {new Date(o.created_at).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" })}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {selected && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border border-circuit-line bg-circuit-panel p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-lg text-circuit-text">{selected.order_code}</h2>
-              <button onClick={() => setSelected(null)} className="text-circuit-muted hover:text-circuit-text">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-circuit-bg/80 backdrop-blur-md px-4 p-6">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border border-circuit-copper/30 bg-circuit-panel/90 shadow-[0_0_40px_rgba(200,127,69,0.15)] p-8 custom-scrollbar">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-circuit-line/60">
+              <h2 className="font-display text-2xl text-circuit-text flex items-center gap-3">
+                <PackageCheck size={28} className="text-circuit-copperLight" />
+                #{selected.order_code}
+              </h2>
+              <button onClick={() => setSelected(null)} className="p-2 rounded-full hover:bg-circuit-line/50 text-circuit-muted hover:text-circuit-text transition-colors">
                 <X size={20} />
               </button>
             </div>
 
-            <div className="space-y-1 text-sm mb-4">
-              <p className="text-circuit-muted">{selected.customer_name} — {selected.customer_phone}</p>
-              <p className="text-circuit-muted">{selected.shipping_address}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="bg-circuit-bg/40 p-4 rounded-xl border border-circuit-line/40">
+                <p className="text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest font-semibold mb-2">Khách hàng</p>
+                <p className="text-circuit-text font-medium">{selected.customer_name}</p>
+                <p className="text-sm text-circuit-muted mt-1">{selected.customer_phone}</p>
+              </div>
+              <div className="bg-circuit-bg/40 p-4 rounded-xl border border-circuit-line/40">
+                <p className="text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest font-semibold mb-2">Giao hàng đến</p>
+                <p className="text-sm text-circuit-muted leading-relaxed">{selected.shipping_address}</p>
+              </div>
             </div>
 
-            <div className="space-y-1 mb-4 border-t border-circuit-line pt-3">
-              {selected.items.map((item, i) => (
-                <div key={i} className="flex justify-between text-sm">
-                  <span>{item.product_name} × {item.quantity}</span>
-                  <span className="text-circuit-muted font-mono">{formatVND(item.unit_price * item.quantity)}</span>
-                </div>
-              ))}
-              <div className="flex justify-between font-display text-circuit-signal pt-2 border-t border-circuit-line mt-2">
-                <span>Tổng cộng</span>
-                <span>{formatVND(selected.final_amount)}</span>
+            <div className="mb-8">
+              <p className="text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest font-semibold mb-3">Sản phẩm ({selected.items.length})</p>
+              <div className="space-y-2 bg-circuit-bg/30 p-4 rounded-xl border border-circuit-line/30">
+                {selected.items.map((item, i) => (
+                  <div key={i} className="flex justify-between text-sm py-2 border-b border-circuit-line/40 last:border-0 last:pb-0">
+                    <span className="text-circuit-text font-medium">{item.product_name} <span className="text-circuit-muted font-mono ml-1">× {item.quantity}</span></span>
+                    <span className="text-circuit-text font-mono font-semibold">{formatVND(item.unit_price * item.quantity)}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between items-end font-display pt-4 mt-2 px-2">
+                <span className="text-lg text-circuit-text">Tổng thanh toán</span>
+                <span className="text-2xl text-circuit-signal font-bold drop-shadow-[0_0_8px_rgba(48,223,147,0.3)]">{formatVND(selected.final_amount)}</span>
               </div>
             </div>
 
             {/* Cập nhật trạng thái đơn hàng */}
-            <div className="mb-5">
-              <p className="text-xs font-mono text-circuit-muted uppercase mb-2">Trạng thái đơn hàng</p>
-              <div className="flex flex-wrap gap-2">
+            <div className="mb-8 p-5 rounded-2xl border border-circuit-copper/20 bg-circuit-copper/5">
+              <p className="text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest font-semibold mb-3">Cập nhật trạng thái</p>
+              <div className="flex flex-wrap gap-3">
                 {ORDER_STATUSES.map((s) => (
                   <button
                     key={s}
                     onClick={() => handleUpdateOrderStatus(s)}
-                    className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                    className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider border transition-all duration-300 hover:scale-[1.02] ${
                       selected.status === s
-                        ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight"
-                        : "border-circuit-line text-circuit-muted hover:border-circuit-copper"
+                        ? "border-circuit-copper bg-circuit-copper text-circuit-bg shadow-glow"
+                        : "border-circuit-line/60 bg-circuit-panel text-circuit-muted hover:border-circuit-copper/60 hover:text-circuit-copperLight"
                     }`}
                   >
                     {ORDER_STATUS_LABEL[s]}
@@ -207,20 +228,22 @@ export default function AdminOrdersPage() {
             </div>
 
             {/* Vận chuyển */}
-            <div className="border-t border-circuit-line pt-4">
-              <p className="text-xs font-mono text-circuit-muted uppercase mb-2 flex items-center gap-1.5">
-                <Truck size={13} /> Vận chuyển
+            <div>
+              <p className="text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest font-semibold mb-3 flex items-center gap-2">
+                <Truck size={16} /> Thông tin vận chuyển
               </p>
-              {detailLoading ? (
-                <Loader2 className="animate-spin text-circuit-muted" size={16} />
-              ) : shipment ? (
-                <ShipmentStatusEditor
-                  shipment={shipment}
-                  onUpdated={(s) => setShipment(s)}
-                />
-              ) : (
-                <CreateShipmentForm orderId={selected.id} onCreated={(s) => setShipment(s)} />
-              )}
+              <div className="p-5 rounded-2xl bg-circuit-bg/40 border border-circuit-line/50">
+                {detailLoading ? (
+                  <div className="flex justify-center py-4"><Loader2 className="animate-spin text-circuit-copperLight" size={24} /></div>
+                ) : shipment ? (
+                  <ShipmentStatusEditor
+                    shipment={shipment}
+                    onUpdated={(s) => setShipment(s)}
+                  />
+                ) : (
+                  <CreateShipmentForm orderId={selected.id} onCreated={(s) => setShipment(s)} />
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -251,12 +274,12 @@ function CreateShipmentForm({ orderId, onCreated }: { orderId: string; onCreated
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-2">
-      {error && <p className="text-xs text-red-300">{error}</p>}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && <p className="text-xs text-red-400 bg-red-400/10 p-2 rounded-lg border border-red-400/20">{error}</p>}
       <select
         value={carrier}
         onChange={(e) => setCarrier(e.target.value)}
-        className="w-full rounded-md border border-circuit-line bg-circuit-bg px-3 py-2 text-sm text-circuit-text"
+        className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper transition-colors cursor-pointer"
       >
         {SUGGESTED_CARRIERS.map((c) => <option key={c} value={c}>{c}</option>)}
       </select>
@@ -264,7 +287,7 @@ function CreateShipmentForm({ orderId, onCreated }: { orderId: string; onCreated
         value={trackingCode}
         onChange={(e) => setTrackingCode(e.target.value)}
         placeholder="Mã vận đơn (nếu có)"
-        className="w-full rounded-md border border-circuit-line bg-circuit-bg px-3 py-2 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+        className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper transition-colors focus:shadow-[0_0_10px_rgba(200,127,69,0.15)]"
       />
       <input
         type="number"
@@ -272,14 +295,14 @@ function CreateShipmentForm({ orderId, onCreated }: { orderId: string; onCreated
         value={fee}
         onChange={(e) => setFee(Number(e.target.value))}
         placeholder="Phí vận chuyển"
-        className="w-full rounded-md border border-circuit-line bg-circuit-bg px-3 py-2 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+        className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper transition-colors focus:shadow-[0_0_10px_rgba(200,127,69,0.15)]"
       />
       <button
         type="submit"
         disabled={saving}
-        className="w-full rounded-md bg-circuit-copper py-2 text-sm font-medium text-circuit-bg hover:bg-circuit-copperLight transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+        className="w-full rounded-xl bg-circuit-copper py-3 text-sm font-bold text-circuit-bg hover:bg-circuit-copperLight transition-all hover:-translate-y-0.5 hover:shadow-glow disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center gap-2"
       >
-        {saving && <Loader2 size={14} className="animate-spin" />} Tạo vận đơn
+        {saving && <Loader2 size={16} className="animate-spin" />} TẠO VẬN ĐƠN
       </button>
     </form>
   );
@@ -309,33 +332,44 @@ function ShipmentStatusEditor({
   }
 
   return (
-    <div className="space-y-2">
-      <p className="text-sm text-circuit-text">
-        {shipment.carrier} {shipment.tracking_code && `— ${shipment.tracking_code}`}
+    <div className="space-y-4">
+      <p className="text-sm font-medium text-circuit-text flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full bg-circuit-copper inline-block" />
+        {shipment.carrier} {shipment.tracking_code && <span className="text-circuit-muted font-mono bg-circuit-bg/50 px-2 py-0.5 rounded text-xs ml-2 border border-circuit-line/30">{shipment.tracking_code}</span>}
       </p>
-      {error && <p className="text-xs text-red-300">{error}</p>}
+      {error && <p className="text-xs text-red-400 bg-red-400/10 p-2 rounded-lg border border-red-400/20">{error}</p>}
       <div className="flex flex-wrap gap-2">
         {statuses.map((s) => (
           <button
             key={s}
             disabled={updating}
             onClick={() => handleChange(s)}
-            className={`px-2.5 py-1 rounded-full text-xs border transition-colors disabled:opacity-50 ${
+            className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-widest border transition-all duration-300 disabled:opacity-50 hover:scale-[1.02] ${
               shipment.status === s
-                ? "border-circuit-signal bg-circuit-signal/15 text-circuit-signal"
-                : "border-circuit-line text-circuit-muted hover:border-circuit-copper"
+                ? "border-circuit-signal bg-circuit-signal text-circuit-bg shadow-[0_0_10px_rgba(48,223,147,0.3)]"
+                : "border-circuit-line/60 bg-circuit-bg/50 text-circuit-muted hover:border-circuit-copper/60 hover:text-circuit-copperLight"
             }`}
           >
             {SHIPMENT_STATUS_LABEL[s]}
           </button>
         ))}
       </div>
-      <div className="mt-2 space-y-1">
-        {shipment.logs.map((log, i) => (
-          <p key={i} className="text-xs text-circuit-muted flex items-center gap-1.5">
-            <PackageCheck size={11} /> {SHIPMENT_STATUS_LABEL[log.status]} —{" "}
-            {new Date(log.created_at).toLocaleString("vi-VN")}
-          </p>
+      <div className="mt-4 space-y-0 relative before:absolute before:inset-0 before:ml-[5px] before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-circuit-line/60 before:to-transparent">
+        {[...shipment.logs].reverse().map((log, i) => (
+          <div key={i} className="relative flex items-center mb-3 last:mb-0 group">
+            <div className={`flex items-center justify-center w-3 h-3 rounded-full border-2 bg-circuit-bg z-10 shrink-0 ${
+                i === 0 ? "border-circuit-signal shadow-[0_0_8px_rgba(48,223,147,0.5)]" : "border-circuit-line/60"
+              }`}
+            />
+            <div className="ml-4 p-3 rounded-xl border border-circuit-line/30 bg-circuit-bg/30 flex-1">
+              <p className={`font-semibold text-xs mb-1 ${i === 0 ? 'text-circuit-signal' : 'text-circuit-text'}`}>
+                {SHIPMENT_STATUS_LABEL[log.status]}
+              </p>
+              <p className="text-[11px] text-circuit-muted font-mono">
+                {new Date(log.created_at).toLocaleString("vi-VN")}
+              </p>
+            </div>
+          </div>
         ))}
       </div>
     </div>

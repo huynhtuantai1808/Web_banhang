@@ -46,12 +46,12 @@ async def list_inventory(
     Danh sách toàn bộ tồn kho — tên sản phẩm, danh mục, hãng, giá, tổng tồn kho, đã bán.
     """
     # Subquery: đếm số lượng unit trong kho
-    in_stock_subq = (
+    units_subq = (
         select(
             ProductUnit.product_id,
-            func.count(ProductUnit.id).label("in_stock")
+            func.count(ProductUnit.id).filter(ProductUnit.status == "in_stock").label("in_stock"),
+            func.count(ProductUnit.id).label("total_units")
         )
-        .where(ProductUnit.status == "in_stock")
         .group_by(ProductUnit.product_id)
         .subquery()
     )
@@ -77,22 +77,15 @@ async def list_inventory(
             Product.discount_price,
             Category.name.label("category"),
             Brand.name.label("brand"),
-            func.coalesce(in_stock_subq.c.in_stock, 0).label("in_stock"),
+            func.coalesce(units_subq.c.in_stock, 0).label("in_stock"),
             func.coalesce(sold_subq.c.sold, 0).label("sold"),
-            func.count(ProductUnit.id).label("total_units"),
+            func.coalesce(units_subq.c.total_units, 0).label("total_units"),
         )
         .outerjoin(Category, Product.category_id == Category.id)
         .outerjoin(Brand, Product.brand_id == Brand.id)
-        .outerjoin(in_stock_subq, Product.id == in_stock_subq.c.product_id)
+        .outerjoin(units_subq, Product.id == units_subq.c.product_id)
         .outerjoin(sold_subq, Product.id == sold_subq.c.product_id)
-        .outerjoin(ProductUnit, ProductUnit.product_id == Product.id)
         .where(Product.status == "active")
-        .group_by(
-            Product.id, Product.product_code, Product.name,
-            Product.price, Product.discount_price,
-            Category.name, Brand.name,
-            in_stock_subq.c.in_stock, sold_subq.c.sold,
-        )
         .order_by(Product.name)
     )
 

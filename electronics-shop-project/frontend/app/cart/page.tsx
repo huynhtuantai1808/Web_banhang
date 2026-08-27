@@ -135,7 +135,7 @@ export default function CartPage() {
       )}
 
       {!loading && error && (
-        <div className="rounded-md border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm text-red-300 mb-6">
+        <div className="rounded-xl border border-red-400/40 bg-red-400/10 px-6 py-4 text-sm text-red-300 mb-6 backdrop-blur-sm">
           {error}
         </div>
       )}
@@ -157,67 +157,70 @@ export default function CartPage() {
             return (
               <div
                 key={item.id}
-                className="flex items-center gap-4 rounded-lg border border-circuit-line bg-circuit-panel p-4"
+                className="flex items-center gap-4 rounded-2xl glass-panel p-5 transition-all duration-300 hover:border-circuit-copper/30 hover:shadow-glow group"
               >
-                <div className="w-16 h-16 shrink-0 rounded-md bg-circuit-bg/60 overflow-hidden flex items-center justify-center">
+                <div className="w-20 h-20 shrink-0 rounded-xl bg-circuit-bg/40 border border-circuit-line/30 overflow-hidden flex items-center justify-center p-2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={getMediaUrl(item.product_image_url) || "/placeholder-product.png"}
                     alt={item.product_name}
-                    className="object-contain w-full h-full"
+                    className="object-contain w-full h-full transition-transform duration-300 group-hover:scale-110"
                   />
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className="text-circuit-text truncate">{item.product_name}</p>
-                  <p className="text-sm text-circuit-signal font-mono">{formatVND(unitPrice)}</p>
+                  <Link href={`/products/${item.product_id}`} className="text-circuit-text truncate hover:text-circuit-copperLight transition-colors block text-lg font-medium">
+                    {item.product_name}
+                  </Link>
+                  <p className="text-sm text-circuit-signal font-mono mt-1">{formatVND(unitPrice)}</p>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <button
                     disabled={isUpdating}
                     onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                    className="p-1.5 rounded border border-circuit-line hover:border-circuit-copper text-circuit-muted hover:text-circuit-copperLight disabled:opacity-50"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-circuit-line hover:border-circuit-copper hover:bg-circuit-copper/10 text-circuit-muted hover:text-circuit-copperLight disabled:opacity-50 transition-colors"
                   >
                     <Minus size={14} />
                   </button>
-                  <span className="w-6 text-center text-circuit-text">{item.quantity}</span>
+                  <span className="w-8 text-center text-circuit-text font-medium">{item.quantity}</span>
                   <button
                     disabled={isUpdating}
                     onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                    className="p-1.5 rounded border border-circuit-line hover:border-circuit-copper text-circuit-muted hover:text-circuit-copperLight disabled:opacity-50"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-circuit-line hover:border-circuit-copper hover:bg-circuit-copper/10 text-circuit-muted hover:text-circuit-copperLight disabled:opacity-50 transition-colors"
                   >
                     <Plus size={14} />
                   </button>
                 </div>
 
-                <p className="w-28 text-right font-mono text-circuit-text">
+                <p className="w-32 text-right font-mono text-circuit-text font-semibold">
                   {formatVND(unitPrice * item.quantity)}
                 </p>
 
                 <button
                   disabled={isUpdating}
                   onClick={() => handleRemove(item.id)}
-                  className="p-1.5 rounded hover:bg-circuit-line text-circuit-muted hover:text-red-400 disabled:opacity-50"
+                  className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-red-500/10 text-circuit-muted hover:text-red-400 disabled:opacity-50 transition-all hover:scale-105"
+                  title="Xoá"
                 >
-                  {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                  {isUpdating ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
                 </button>
               </div>
             );
           })}
 
-          <div className="flex items-center justify-between rounded-lg border border-circuit-line bg-circuit-panel p-4">
-            <span className="text-circuit-muted">Tổng cộng</span>
-            <span className="font-display text-xl text-circuit-signal">
+          <div className="flex items-center justify-between rounded-2xl glass-panel p-6 mt-6 border-t-4 border-t-circuit-copper/50">
+            <span className="text-circuit-muted uppercase tracking-widest text-sm font-mono">Tổng cộng</span>
+            <span className="font-display text-2xl text-circuit-signal font-bold drop-shadow-[0_0_8px_rgba(48,223,147,0.4)]">
               {formatVND(cart.total_amount)}
             </span>
           </div>
 
           <Link
             href="/checkout"
-            className="w-full flex items-center justify-center gap-2 rounded-md bg-circuit-copper py-3 text-sm font-medium text-circuit-bg hover:bg-circuit-copperLight transition-colors"
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-circuit-copper to-circuit-copperLight py-4 text-base font-bold text-circuit-bg hover:shadow-glow hover:-translate-y-1 transition-all duration-300 mt-6"
           >
-            <CreditCard size={18} /> Tiến hành thanh toán
+            <CreditCard size={20} /> TIẾN HÀNH THANH TOÁN
           </Link>
         </div>
       )}

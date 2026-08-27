@@ -35,7 +35,7 @@ export default function AdminProductsPage() {
     setLoadError(null);
     try {
       const data = await listProducts(kw ? { keyword: kw } : {});
-      setProducts(data);
+      setProducts(data.items);
     } catch (err) {
       setLoadError(err instanceof ApiError ? err.message : "Không tải được danh sách sản phẩm");
     } finally {

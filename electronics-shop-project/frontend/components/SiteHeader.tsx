@@ -71,7 +71,7 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="flex items-center justify-between mb-6">
+    <header className="sticky top-0 z-50 glass-panel rounded-2xl px-6 py-4 mb-10 flex items-center justify-between mx-auto max-w-7xl mt-4">
       <Link href="/">
         <Logo />
       </Link>
@@ -79,34 +79,35 @@ export default function SiteHeader() {
       <nav className="flex items-center gap-3">
         <Link
           href="/news"
-          className="flex items-center gap-1.5 px-4 py-2 rounded-md border border-circuit-copper text-circuit-copperLight hover:bg-circuit-copper hover:text-circuit-bg transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-circuit-copper/20 hover:scale-105 active:scale-95"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-circuit-muted hover:text-circuit-copperLight hover:bg-circuit-surface transition-all duration-300"
         >
           <Newspaper size={16} /> Tin tức
         </Link>
         <Link
           href="/promotions"
-          className="flex items-center gap-1.5 px-4 py-2 rounded-md border-2 border-circuit-copper bg-circuit-copper text-circuit-bg hover:bg-circuit-copperLight transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-circuit-copper/20 hover:scale-105 active:scale-95 font-semibold"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-circuit-muted hover:text-circuit-signal hover:bg-circuit-signal/10 transition-all duration-300"
         >
           <Tag size={16} /> Khuyến mãi
         </Link>
         <Link
           href="/contact"
-          className="relative flex items-center gap-2 px-4 py-2 rounded-md border border-circuit-copper text-circuit-copperLight hover:bg-circuit-copper hover:text-circuit-bg transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-circuit-copper/20 hover:scale-105 active:scale-95"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-circuit-muted hover:text-circuit-copperLight hover:bg-circuit-surface transition-all duration-300"
           title="Liên hệ"
         >
-          <Phone size={18} />
-          <span className="hidden sm:inline text-sm font-medium">Liên hệ</span>
+          <Phone size={16} />
+          <span className="hidden sm:inline">Liên hệ</span>
         </Link>
+
+        <div className="w-px h-6 bg-circuit-line mx-1"></div>
 
         <Link
           href="/cart"
-          className="relative flex items-center gap-2 px-4 py-2 rounded-md border border-circuit-copper text-circuit-copperLight hover:bg-circuit-copper hover:text-circuit-bg transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-circuit-copper/20 hover:scale-105 active:scale-95"
+          className="relative flex items-center justify-center w-10 h-10 rounded-xl text-circuit-copperLight hover:bg-circuit-copper/10 transition-all duration-300 hover:scale-105 active:scale-95"
           title="Giỏ hàng"
         >
-          <ShoppingCart size={18} />
-          <span className="hidden sm:inline text-sm font-medium">Giỏ hàng</span>
+          <ShoppingCart size={20} />
           {cartCount > 0 && (
-            <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none shadow-md">
+            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-circuit-signal text-circuit-bg text-[10px] font-bold flex items-center justify-center leading-none shadow-[0_0_10px_rgba(48,223,147,0.5)]">
               {cartCount > 9 ? "9+" : cartCount}
             </span>
           )}
@@ -114,13 +115,12 @@ export default function SiteHeader() {
 
         <Link
           href="/wishlist"
-          className="relative flex items-center gap-2 px-4 py-2 rounded-md border border-circuit-line text-circuit-copperLight hover:border-circuit-copper hover:bg-circuit-copper/10 transition-all duration-200"
+          className="relative flex items-center justify-center w-10 h-10 rounded-xl text-circuit-muted hover:text-red-400 hover:bg-red-400/10 transition-all duration-300 hover:scale-105 active:scale-95"
           title="Yêu thích"
         >
-          <Heart size={18} />
-          <span className="hidden sm:inline text-sm font-medium">Yêu thích</span>
+          <Heart size={20} />
           {wishlistCount > 0 && (
-            <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none shadow-md">
+            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none shadow-[0_0_10px_rgba(239,68,68,0.5)]">
               {wishlistCount > 9 ? "9+" : wishlistCount}
             </span>
           )}
@@ -130,33 +130,34 @@ export default function SiteHeader() {
           <>
             <Link
               href="/orders"
-              className="flex items-center gap-2 rounded-md border border-circuit-line px-4 py-2 text-sm text-circuit-text hover:border-circuit-copper hover:text-circuit-copperLight transition-colors"
+              className="flex items-center justify-center w-10 h-10 rounded-xl text-circuit-muted hover:text-circuit-copperLight hover:bg-circuit-copper/10 transition-all duration-300 hover:scale-105 active:scale-95"
+              title="Đơn hàng"
             >
-              <Package size={16} /> Đơn hàng
+              <Package size={20} />
             </Link>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 rounded-md border border-circuit-line px-4 py-2 text-sm text-circuit-muted hover:border-red-400/60 hover:text-red-400 transition-colors"
+              className="flex items-center justify-center w-10 h-10 rounded-xl text-circuit-muted hover:text-red-400 hover:bg-red-400/10 transition-all duration-300 hover:scale-105 active:scale-95"
+              title="Đăng xuất"
             >
-              <LogOut size={16} /> Đăng xuất
+              <LogOut size={20} />
             </button>
           </>
         ) : (
-          <>
+          <div className="flex items-center gap-2 ml-2">
             <Link
               href="/login"
-              className="relative flex items-center gap-2 rounded-md border-2 border-circuit-copper px-4 py-2 text-sm font-semibold text-circuit-copperLight hover:bg-circuit-copper hover:text-circuit-bg transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-circuit-copper/30 hover:scale-105 active:scale-95"
+              className="px-4 py-2 rounded-xl text-sm font-semibold text-circuit-copper hover:text-circuit-copperLight transition-colors"
             >
-              <LogIn size={16} /> Đăng nhập
+              Đăng nhập
             </Link>
             <Link
               href="/register"
-              style={{ backgroundColor: "var(--accent-color)" }}
-              className="flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-circuit-bg hover:opacity-90 transition-opacity shadow-md"
+              className="flex items-center gap-2 rounded-xl px-5 py-2 text-sm font-semibold text-circuit-bg bg-gradient-to-r from-circuit-copper to-circuit-copperLight hover:shadow-glow hover:-translate-y-0.5 transition-all duration-300"
             >
               <UserPlus size={16} /> Đăng ký
             </Link>
-          </>
+          </div>
         )}
       </nav>
     </header>

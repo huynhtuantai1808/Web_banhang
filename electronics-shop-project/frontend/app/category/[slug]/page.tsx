@@ -60,7 +60,7 @@ export default function CategoryPage() {
         setParentCategory(parent || null);
 
         const data = await listProducts({ category_id: current.id, ...buildFilterParams(filters) });
-        setProducts(data.map(toDisplayProduct));
+        setProducts(data.items.map(toDisplayProduct));
       } catch (err) {
         setError(err instanceof ApiError ? err.message : "Không tải được danh mục sản phẩm");
       } finally {
@@ -79,7 +79,7 @@ export default function CategoryPage() {
       "> 40tr": { min_price: 40_000_000 },
     };
     const range = f.priceLabel ? priceRanges[f.priceLabel] : undefined;
-    return { brand: f.brand, feature: f.feature, ...range };
+    return { brand: f.brand, feature: f.feature, sort_by: f.sort_by, ...range };
   }
 
   async function handleAddToCart(productId: string) {

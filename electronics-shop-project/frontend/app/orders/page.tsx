@@ -64,8 +64,9 @@ export default function MyOrdersPage() {
         <ArrowLeft size={16} /> Về trang chủ
       </Link>
 
-      <h1 className="font-display text-2xl text-circuit-text mb-6 flex items-center gap-2">
-        <Package size={22} /> Đơn hàng của tôi
+      <h1 className="font-display text-3xl text-circuit-text mb-8 flex items-center gap-3">
+        <Package size={28} className="text-circuit-copperLight drop-shadow-[0_0_8px_rgba(200,127,69,0.5)]" />
+        Đơn hàng của tôi
       </h1>
 
       {loading && (
@@ -89,49 +90,66 @@ export default function MyOrdersPage() {
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         {orders.map((order) => (
           <Link
             key={order.id}
             href={`/orders/${order.id}`}
-            className="block rounded-lg border border-circuit-line bg-circuit-panel p-5 hover:border-circuit-copper transition-colors"
+            className="block rounded-2xl glass-panel p-6 transition-all duration-300 hover:border-circuit-copper/40 hover:shadow-glow group relative overflow-hidden"
           >
-            <div className="flex items-center justify-between mb-3">
+            <div className="absolute inset-0 bg-gradient-to-br from-circuit-copper/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+            <div className="flex items-center justify-between mb-4 relative z-10">
               <div>
-                <p className="font-mono text-circuit-copperLight">{order.order_code}</p>
-                <p className="text-xs text-circuit-muted mt-1">
+                <p className="font-mono text-circuit-copperLight text-lg font-bold flex items-center gap-2">
+                  #{order.order_code}
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-widest font-sans font-semibold border ${
+                    order.status === 'completed' ? 'border-circuit-signal bg-circuit-signal/10 text-circuit-signal' :
+                    order.status === 'cancelled' ? 'border-red-400/50 bg-red-400/10 text-red-400' :
+                    'border-circuit-copper/50 bg-circuit-copper/10 text-circuit-copperLight'
+                  }`}>
+                    {STATUS_LABEL[order.status] || order.status}
+                  </span>
+                </p>
+                <p className="text-xs text-circuit-muted mt-1.5 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-circuit-muted inline-block" />
                   {new Date(order.created_at).toLocaleString("vi-VN")}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <span className="px-2 py-1 rounded-full text-xs bg-circuit-line text-circuit-muted">
-                    {STATUS_LABEL[order.status] || order.status}
-                  </span>
                   <p
-                    className={`text-xs mt-1 ${
-                      order.payment_status === "paid" ? "text-circuit-signal" : "text-circuit-muted"
+                    className={`text-xs font-semibold uppercase tracking-wider ${
+                      order.payment_status === "paid" ? "text-circuit-signal" : "text-amber-400"
                     }`}
                   >
-                    {PAYMENT_STATUS_LABEL[order.payment_status] || order.payment_status} ·{" "}
-                    {order.payment_gateway === "vnpay" ? "VNPay" : "COD"}
+                    {PAYMENT_STATUS_LABEL[order.payment_status] || order.payment_status}
+                  </p>
+                  <p className="text-[11px] text-circuit-muted mt-1 uppercase tracking-wide">
+                    {order.payment_gateway === "vnpay" ? "VNPay" : "Tiền mặt (COD)"}
                   </p>
                 </div>
-                <ChevronRight size={18} className="text-circuit-muted" />
+                <div className="w-8 h-8 rounded-full bg-circuit-line/30 flex items-center justify-center group-hover:bg-circuit-copper/20 group-hover:text-circuit-copperLight transition-colors">
+                  <ChevronRight size={18} />
+                </div>
               </div>
             </div>
 
-            <div className="space-y-1 mb-3">
+            <div className="space-y-2 mb-4 relative z-10 bg-circuit-bg/30 p-3 rounded-xl border border-circuit-line/30">
               {order.items.map((item, i) => (
-                <p key={i} className="text-sm text-circuit-muted">
-                  {item.product_name} × {item.quantity}
-                </p>
+                <div key={i} className="flex justify-between items-center">
+                  <p className="text-sm text-circuit-text truncate pr-4">
+                    {item.product_name}
+                  </p>
+                  <p className="text-sm text-circuit-muted font-mono whitespace-nowrap">
+                    × {item.quantity}
+                  </p>
+                </div>
               ))}
             </div>
 
-            <div className="flex justify-between border-t border-circuit-line pt-3">
-              <span className="text-circuit-muted text-sm">Tổng tiền</span>
-              <span className="font-display text-circuit-signal">{formatVND(order.final_amount)}</span>
+            <div className="flex justify-between items-end border-t border-circuit-line/60 pt-4 relative z-10">
+              <span className="text-circuit-muted text-[11px] uppercase tracking-widest font-mono font-semibold">Tổng cộng</span>
+              <span className="font-display text-xl text-circuit-signal font-bold drop-shadow-[0_0_8px_rgba(48,223,147,0.3)]">{formatVND(order.final_amount)}</span>
             </div>
           </Link>
         ))}

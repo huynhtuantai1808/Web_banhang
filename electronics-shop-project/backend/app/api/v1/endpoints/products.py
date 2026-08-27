@@ -81,7 +81,17 @@ def _base_query():
     )
 
 
-@router.get("", response_model=list[ProductOut])
+from typing import Any, Dict
+from pydantic import BaseModel
+
+class PaginatedProducts(BaseModel):
+    items: list[ProductOut]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+@router.get("", response_model=PaginatedProducts)
 async def list_products(
     keyword: str | None = Query(None, description="Từ khoá tìm kiếm tên sản phẩm"),
     brand: str | None = Query(None, description="Lọc theo tên hãng"),
@@ -91,8 +101,9 @@ async def list_products(
     on_sale: bool | None = Query(None, description="True = chỉ lấy sản phẩm đang có giá khuyến mãi"),
     min_price: float | None = None,
     max_price: float | None = None,
-    page: int = 1,
-    page_size: int = 20,
+    sort_by: str | None = Query(None, description="price_asc, price_desc, new, name_asc, name_desc, discount_desc"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
 ):
     """Danh mục sản phẩm theo hãng - giá - loại - chức năng + thanh tìm kiếm.
@@ -109,8 +120,6 @@ async def list_products(
     if category:
         stmt = stmt.where(Category.name.ilike(f"%{category}%"))
     if category_id is not None:
-        # Trang danh mục cha (VD "Laptop") phải hiển thị luôn sản phẩm của danh mục con
-        # (VD "Laptop Gaming", "Ultrabook") — lấy toàn bộ id con (1 cấp) rồi lọc IN (...).
         children_result = await db.execute(select(Category.id).where(Category.parent_id == category_id))
         child_ids = [row[0] for row in children_result.all()]
         stmt = stmt.where(Product.category_id.in_([category_id, *child_ids]))
@@ -125,11 +134,31 @@ async def list_products(
     if max_price is not None:
         stmt = stmt.where(Product.price <= max_price)
 
+    # Đếm tổng trước khi order by
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar() or 0
+
+    if sort_by == "price_asc":
+        stmt = stmt.order_by(Product.price.asc())
+    elif sort_by == "price_desc":
+        stmt = stmt.order_by(Product.price.desc())
+    elif sort_by == "new":
+        stmt = stmt.order_by(Product.created_at.desc())
+    elif sort_by == "name_asc":
+        stmt = stmt.order_by(Product.name.asc())
+    elif sort_by == "name_desc":
+        stmt = stmt.order_by(Product.name.desc())
+    elif sort_by == "discount_desc":
+        stmt = stmt.order_by(Product.discount_price.desc().nullslast())
+    else:
+        stmt = stmt.order_by(Product.created_at.desc())
+
     stmt = stmt.offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(stmt)
     rows = result.all()
     if not rows:
-        return []
+        return {"items": [], "total": total, "page": page, "page_size": page_size, "total_pages": 0}
 
     # Pre-load ratings for all products in one query
     product_ids = [p.id for p, *_ in rows]
@@ -147,7 +176,14 @@ async def list_products(
         for pid, avg, cnt in ratings_result.all()
     }
 
-    return [await _row_to_out(db, p, b, c, img, ratings_cache) for p, b, c, img in rows]
+    out_items = [await _row_to_out(db, p, b, c, img, ratings_cache) for p, b, c, img in rows]
+    return {
+        "items": out_items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (total + page_size - 1) // page_size if page_size else 0
+    }
 
 
 @router.get("/{product_id}", response_model=ProductOut)

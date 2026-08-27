@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Loader2, ShoppingCart, Check, Heart } from "lucide-react";
-import { listProductImages } from "@/lib/services/products";
 import { toggleGuestWishlist, isInGuestWishlist } from "@/lib/wishlist";
 import { isCustomerLoggedIn } from "@/lib/auth-storage";
 import { addToWishlist, removeFromWishlist } from "@/lib/services/wishlist";
@@ -51,21 +50,14 @@ export default function ProductCard({
     }
   }, [product.id]);
 
-  // Load additional product images — use prop if available (preloaded by parent), otherwise fetch
+  // Load additional product images if provided
   useEffect(() => {
     if (product.images && product.images.length > 0) {
       setImages(product.images.map((u) => getMediaUrl(u)));
-      return;
+    } else {
+      setImages([getMediaUrl(product.imageUrl)]);
     }
-    listProductImages(product.id)
-      .then((imgs) => {
-        const urls = imgs.length > 0
-          ? imgs.map((img) => getMediaUrl(img.url))
-          : [getMediaUrl(product.imageUrl)];
-        setImages(urls);
-      })
-      .catch(() => setImages([getMediaUrl(product.imageUrl)]));
-  }, [product.id, product.imageUrl, product.images]);
+  }, [product.imageUrl, product.images]);
 
   // Auto-rotate images every 3 seconds when not hovering
   useEffect(() => {
@@ -123,13 +115,15 @@ export default function ProductCard({
       onHoverEnd={() => setHover(false)}
       whileHover={{ y: -6 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      className="relative rounded-lg bg-circuit-panel border border-circuit-line p-4 overflow-hidden"
-      style={{ borderColor: hover ? "var(--accent-color)" : undefined, transition: "border-color 0.2s" }}
+      className="premium-card rounded-2xl p-5 flex flex-col h-full group"
     >
-      <Link href={`/products/${product.id}`} className="block relative z-10">
+      {/* Background glow effect */}
+      <div className="absolute inset-0 bg-premium-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+      <Link href={`/products/${product.id}`} className="block relative z-10 flex-1">
         {/* Image gallery */}
         <div
-          className="aspect-square rounded-md bg-circuit-bg/60 mb-3 flex items-center justify-center overflow-hidden relative"
+          className="aspect-square rounded-xl bg-circuit-bg/40 mb-4 flex items-center justify-center overflow-hidden relative border border-circuit-line/30 group-hover:border-circuit-copper/30 transition-colors"
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
         >
@@ -137,8 +131,8 @@ export default function ProductCard({
           <img
             src={images[imgIdx]}
             alt={product.name}
-            className="object-contain h-full w-full transition-transform duration-300"
-            style={{ transform: hover ? "scale(1.06)" : "scale(1)" }}
+            className="object-contain h-[90%] w-[90%] transition-transform duration-500 ease-out drop-shadow-2xl"
+            style={{ transform: hover ? "scale(1.08) translateY(-4px)" : "scale(1)" }}
             onError={(e) => {
               (e.target as HTMLImageElement).src =
                 "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='%23121B2E'/></svg>";
@@ -178,20 +172,20 @@ export default function ProductCard({
           )}
         </div>
 
-        <p className="text-xs font-mono text-circuit-copperLight uppercase tracking-wide mt-3">
+        <p className="text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest mt-4">
           {product.brand}
         </p>
-        <h3 className="font-display text-circuit-text text-base leading-snug mt-1 line-clamp-2">
+        <h3 className="font-display text-circuit-text text-base leading-snug mt-1.5 line-clamp-2 group-hover:text-circuit-copperLight transition-colors">
           {product.name}
         </h3>
-        <p className="text-xs text-circuit-muted font-mono mt-1">{product.specHighlight}</p>
+        <p className="text-xs text-circuit-muted font-mono mt-1.5">{product.specHighlight}</p>
 
-        <div className="flex items-baseline gap-2">
-          <span className="font-display text-lg text-circuit-signal">
+        <div className="flex items-baseline gap-2 mt-4">
+          <span className="font-display text-lg font-semibold text-circuit-signal group-hover:text-circuit-signal/90 transition-colors">
             {formatVND(hasDiscount ? product.discountPrice! : product.price)}
           </span>
           {hasDiscount && (
-            <span className="text-xs text-circuit-muted line-through">
+            <span className="text-xs text-circuit-muted line-through opacity-70">
               {formatVND(product.price)}
             </span>
           )}
@@ -201,10 +195,7 @@ export default function ProductCard({
       <button
         onClick={handleAddToCart}
         disabled={adding}
-        style={{ borderColor: "var(--accent-color)", color: "var(--accent-color-light)" }}
-        className="relative z-10 mt-4 w-full flex items-center justify-center gap-2 rounded-md border py-2 text-sm font-medium hover:text-circuit-bg transition-colors disabled:opacity-60"
-        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--accent-color)")}
-        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+        className="relative z-10 mt-5 w-full flex items-center justify-center gap-2 rounded-xl border border-circuit-copper/30 bg-circuit-copper/5 py-2.5 text-sm font-medium text-circuit-copperLight hover:bg-circuit-copper hover:text-circuit-bg transition-all duration-300 disabled:opacity-50 disabled:hover:bg-transparent shadow-sm hover:shadow-glow"
       >
         {adding ? (
           <Loader2 size={16} className="animate-spin" />
