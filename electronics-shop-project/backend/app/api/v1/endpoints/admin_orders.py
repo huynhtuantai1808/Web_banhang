@@ -205,7 +205,7 @@ async def send_order_email_endpoint(
     order_id: uuid.UUID,
     payload: AdminSendEmailRequest,
     db: AsyncSession = Depends(get_db),
-    _employee_id: str = Depends(require_employee),
+    employee_id: str = Depends(require_employee),
 ):
     """Gửi email xác nhận hoặc hóa đơn điện tử cho đơn hàng này."""
     from app.services.email_service import send_order_confirmation, send_electronic_invoice
