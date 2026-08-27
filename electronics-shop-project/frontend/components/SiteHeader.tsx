@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { LogIn, UserPlus, LogOut, ShoppingCart, Package, Phone, Heart } from "lucide-react";
+import { LogIn, UserPlus, LogOut, ShoppingCart, Package, Phone, Heart, Newspaper, Tag } from "lucide-react";
 import { isCustomerLoggedIn } from "@/lib/auth-storage";
 import { customerLogout } from "@/lib/services/auth";
 import { getGuestCart, getGuestCartCount } from "@/lib/guestCart";
@@ -77,6 +77,18 @@ export default function SiteHeader() {
       </Link>
 
       <nav className="flex items-center gap-3">
+        <Link
+          href="/news"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm text-circuit-muted hover:text-circuit-copperLight transition-colors"
+        >
+          <Newspaper size={15} /> Tin tức
+        </Link>
+        <Link
+          href="/promotions"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm text-circuit-muted hover:text-circuit-copperLight transition-colors"
+        >
+          <Tag size={15} /> Khuyến mãi
+        </Link>
         <Link
           href="/contact"
           className="relative flex items-center gap-2 px-4 py-2 rounded-md border border-circuit-copper text-circuit-copperLight hover:bg-circuit-copper hover:text-circuit-bg transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-circuit-copper/20 hover:scale-105 active:scale-95"

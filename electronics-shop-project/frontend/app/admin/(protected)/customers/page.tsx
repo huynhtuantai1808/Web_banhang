@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Users, Loader2, Search, Lock, Unlock, X } from "lucide-react";
+import { Users, Loader2, Search, Lock, Unlock, X, Pencil } from "lucide-react";
+import Link from "next/link";
 import { listCustomers, getCustomer, updateCustomer, CustomerOut, CustomerDetailOut } from "@/lib/services/customers";
 import { ApiError } from "@/lib/apiClient";
 
@@ -175,6 +176,10 @@ export default function AdminCustomersPage() {
                     <p className="font-display text-lg text-circuit-signal">{formatVND(detail.total_spent)}</p>
                   </div>
                 </div>
+                <Link href={`/admin/customers/${detail.id}/edit`}
+                  className="flex items-center justify-center gap-2 w-full mt-3 py-2 rounded-md bg-circuit-copper text-circuit-bg text-sm font-medium hover:bg-circuit-copperLight transition-colors">
+                  <Pencil size={14} /> Sửa thông tin
+                </Link>
               </div>
             )}
           </div>

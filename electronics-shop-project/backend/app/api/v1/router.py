@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from app.api.v1.endpoints import (
     auth, employees, products, inventory, product_media, catalog, cart, orders, payments, settings,
     promotions, installment, customers, shipments, admin_orders, discount_rules, wishlist, banners, reports,
+    blog,
 )
 
 api_router = APIRouter(prefix="/api/v1")
@@ -25,6 +26,7 @@ api_router.include_router(discount_rules.router)
 api_router.include_router(wishlist.router)
 api_router.include_router(banners.router)
 api_router.include_router(reports.router)
+api_router.include_router(blog.router)
 
 # Ghi chú: "categories" và "search" trong TODO cũ (bản nháp đầu tiên) đã được phủ đầy đủ mà
 # không cần router riêng:

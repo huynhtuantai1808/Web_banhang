@@ -9,7 +9,6 @@ def make_slug(title: str, max_len: int = 240) -> str:
         .strip()
         .replace(" ", "-")
     )
-    # Loại bỏ ký tự đặc biệt, giữ dấu tiếng Việt
     slug = re.sub(r"[^a-z0-9àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷđ\-]", "", slug)
     slug = re.sub(r"-+", "-", slug)
     slug = slug.strip("-")
