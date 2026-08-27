@@ -79,15 +79,15 @@ export default function SiteHeader() {
       <nav className="flex items-center gap-3">
         <Link
           href="/news"
-          className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm text-circuit-muted hover:text-circuit-copperLight transition-colors"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-md border border-circuit-copper text-circuit-copperLight hover:bg-circuit-copper hover:text-circuit-bg transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-circuit-copper/20 hover:scale-105 active:scale-95"
         >
-          <Newspaper size={15} /> Tin tức
+          <Newspaper size={16} /> Tin tức
         </Link>
         <Link
           href="/promotions"
-          className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm text-circuit-muted hover:text-circuit-copperLight transition-colors"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-md border-2 border-circuit-copper bg-circuit-copper text-circuit-bg hover:bg-circuit-copperLight transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-circuit-copper/20 hover:scale-105 active:scale-95 font-semibold"
         >
-          <Tag size={15} /> Khuyến mãi
+          <Tag size={16} /> Khuyến mãi
         </Link>
         <Link
           href="/contact"

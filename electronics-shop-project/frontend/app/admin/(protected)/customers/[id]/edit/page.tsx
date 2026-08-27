@@ -19,7 +19,7 @@ export default function EditCustomerPage() {
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ full_name: "", email: "", address: "", is_active: true });
+  const [form, setForm] = useState({ full_name: "", email: "", address: "", is_active: true, new_password: "" });
 
   useEffect(() => {
     if (!id) return;
@@ -31,6 +31,7 @@ export default function EditCustomerPage() {
           email: c.email ?? "",
           address: c.address ?? "",
           is_active: c.is_active,
+          new_password: "",
         });
       })
       .catch(() => setError("Không tải được thông tin khách hàng"))
@@ -49,6 +50,7 @@ export default function EditCustomerPage() {
         address: form.address.trim() || undefined,
       };
       if (isAdmin) payload.is_active = form.is_active;
+      if (form.new_password.trim()) payload.new_password = form.new_password.trim();
       await updateCustomer(id!, payload);
       setMsg("Đã lưu thay đổi");
       setTimeout(() => router.push("/admin/customers"), 1500);
@@ -106,10 +108,16 @@ export default function EditCustomerPage() {
             <textarea value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="input min-h-[80px]" />
           </Field>
           {isAdmin && (
-            <label className="flex items-center gap-2 text-sm text-circuit-muted">
-              <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="accent-circuit-copper" />
-              Tài khoản đang kích hoạt
-            </label>
+            <>
+              <Field label="Mật khẩu mới">
+                <input type="password" value={form.new_password} onChange={(e) => setForm({ ...form, new_password: e.target.value })} className="input"
+                  placeholder="Bỏ trống nếu không đổi mật khẩu" />
+              </Field>
+              <label className="flex items-center gap-2 text-sm text-circuit-muted">
+                <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="accent-circuit-copper" />
+                Tài khoản đang kích hoạt
+              </label>
+            </>
           )}
           <button type="submit" disabled={saving}
             className="w-full rounded-md bg-circuit-copper py-2.5 text-sm font-medium text-circuit-bg hover:bg-circuit-copperLight disabled:opacity-50 flex items-center justify-center gap-2">

@@ -2,12 +2,15 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+from passlib.context import CryptContext
 
 from app.db.session import get_db
 from app.models.customer import Customer
 from app.models.order import Order
 from app.core.security import require_admin
 from app.schemas.customer import CustomerOut, CustomerDetailOut, CustomerUpdate
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter(prefix="/customers", tags=["Customers (Khách hàng — Admin)"])
 
@@ -66,12 +69,18 @@ async def update_customer(
     db: AsyncSession = Depends(get_db),
     _admin_id: str = Depends(require_admin),
 ):
-    """Sửa thông tin / khoá-mở khoá tài khoản khách hàng — chỉ admin."""
+    """Sửa thông tin / khoá-mở khoá / đổi mật khẩu tài khoản khách hàng — chỉ admin."""
     customer = await db.get(Customer, customer_id)
     if not customer:
         raise HTTPException(status_code=404, detail="Không tìm thấy khách hàng")
 
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    data = payload.model_dump(exclude_unset=True)
+
+    # Đổi mật khẩu riêng
+    if data.get("new_password"):
+        customer.password_hash = pwd_context.hash(data.pop("new_password"))
+
+    for field, value in data.items():
         setattr(customer, field, value)
 
     await db.commit()

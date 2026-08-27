@@ -22,6 +22,7 @@ export interface CustomerUpdateInput {
   email?: string;
   address?: string;
   is_active?: boolean;
+  new_password?: string;
 }
 
 export async function listCustomers(keyword?: string): Promise<CustomerOut[]> {

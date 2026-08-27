@@ -131,7 +131,7 @@ async def send_revenue_report_email(
 
     products_html = ""
     for i, p in enumerate(top_products, 1):
-        products_html += f"<tr><td style='padding:8px'>{i}</td><td style='padding:8px'>{p['Name']}</td><td style='padding:8px;text-align:center'>{p['quantity_sold']}</td><td style='padding:8px;text-align:right'>{_format_vnd(p['revenue'])}</td></tr>"
+        products_html += f"<tr><td style='padding:8px'>{i}</td><td style='padding:8px'>{p['name']}</td><td style='padding:8px;text-align:center'>{p['quantity_sold']}</td><td style='padding:8px;text-align:right'>{_format_vnd(p['revenue'])}</td></tr>"
 
     html = f"""
 <!DOCTYPE html><html><head><meta charset="utf-8"/></head>

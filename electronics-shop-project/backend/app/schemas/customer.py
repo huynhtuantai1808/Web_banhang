@@ -28,3 +28,4 @@ class CustomerUpdate(BaseModel):
     email: str | None = None
     address: str | None = None
     is_active: bool | None = None
+    new_password: str | None = None
