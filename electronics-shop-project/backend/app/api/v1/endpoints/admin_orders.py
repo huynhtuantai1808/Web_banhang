@@ -12,7 +12,7 @@ from app.models.promotion import Promotion
 from app.models.installment import InstallmentPlan
 from app.core.security import require_employee, require_permission
 from app.schemas.order import OrderItemOut
-from app.services.email_service import send_order_email
+# from app.services.email_service import send_order_email (removed)
 
 router = APIRouter(prefix="/admin/orders", tags=["Orders Management (Admin)"])
 
