@@ -109,8 +109,9 @@ export default function CartPage() {
   }
 
   return (
-    <main className="max-w-4xl mx-auto px-6 py-10">
+    <>
       <SiteHeader />
+      <main className="max-w-4xl mx-auto px-6 pb-10">
 
       <Link
         href="/"
@@ -225,7 +226,8 @@ export default function CartPage() {
         </div>
       )}
 
+      </main>
       <SiteFooter />
-    </main>
+    </>
   );
 }

@@ -156,8 +156,9 @@ export default function HomePage() {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-6 py-10">
+    <>
       <SiteHeader />
+      <main className="max-w-7xl mx-auto px-6 pb-10">
 
       {/* HERO — thesis: bo mạch điện tử là ngôn ngữ hình ảnh xuyên suốt */}
       <motion.section
@@ -187,13 +188,14 @@ export default function HomePage() {
           {settings.hero_title}
         </h1>
         <p className="text-circuit-muted mt-4 max-w-xl">{settings.hero_description}</p>
-        <div className="mt-6 flex flex-wrap gap-3 max-w-xl">
-          <CategoryMenu />
-          <div className="flex-1 min-w-[240px]">
-            <SearchBar onSearch={handleSearch} />
-          </div>
-        </div>
       </motion.section>
+
+      <div className="mb-8 flex flex-wrap items-center gap-3">
+        <CategoryMenu />
+        <div className="flex-1 min-w-[240px]">
+          <SearchBar onSearch={handleSearch} />
+        </div>
+      </div>
 
       {cartMessage && (
         <div className="mb-6 rounded-md border border-circuit-line bg-circuit-panel px-4 py-3 text-sm text-circuit-signal">
@@ -271,7 +273,8 @@ export default function HomePage() {
         </section>
       </div>
 
+      </main>
       <SiteFooter />
-    </main>
+    </>
   );
 }

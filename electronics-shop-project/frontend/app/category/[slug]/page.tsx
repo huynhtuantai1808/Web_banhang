@@ -99,8 +99,9 @@ export default function CategoryPage() {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-6 py-10">
+    <>
       <SiteHeader />
+      <main className="max-w-7xl mx-auto px-6 pb-10">
 
       {/* Breadcrumb kiểu "Laptop > Gaming Laptop" */}
       <div className="flex items-center gap-1.5 text-sm text-circuit-muted mb-6">
@@ -183,7 +184,8 @@ export default function CategoryPage() {
         </section>
       </div>
 
+      </main>
       <SiteFooter />
-    </main>
+    </>
   );
 }

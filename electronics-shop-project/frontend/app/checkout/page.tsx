@@ -200,24 +200,25 @@ export default function CheckoutPage() {
   }
 
   return (
-    <main className="max-w-3xl mx-auto px-6 py-10">
+    <>
       <SiteHeader />
+      <main className="max-w-3xl mx-auto px-6 pb-10">
 
-      <Link
-        href="/cart"
-        className="inline-flex items-center gap-2 text-sm text-circuit-muted hover:text-circuit-copperLight mb-6"
-      >
-        <ArrowLeft size={16} /> Quay lại giỏ hàng
-      </Link>
+        <Link
+          href="/cart"
+          className="inline-flex items-center gap-2 text-sm text-circuit-muted hover:text-circuit-copperLight mb-6"
+        >
+          <ArrowLeft size={16} /> Quay lại giỏ hàng
+        </Link>
 
-      <h1 className="font-display text-2xl text-circuit-text mb-6">Thanh toán đơn hàng</h1>
+        <h1 className="font-display text-2xl text-circuit-text mb-6">Thanh toán đơn hàng</h1>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-20 text-circuit-muted">
-          <Loader2 className="animate-spin mr-2" size={18} /> Đang tải...
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-6">
+        {loading ? (
+          <div className="flex items-center justify-center py-20 text-circuit-muted">
+            <Loader2 className="animate-spin mr-2" size={18} /> Đang tải...
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
             <div className="rounded-md border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm text-red-300">
               {error}
@@ -628,7 +629,8 @@ export default function CheckoutPage() {
         </form>
       )}
 
+      </main>
       <SiteFooter />
-    </main>
+    </>
   );
 }

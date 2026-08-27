@@ -116,8 +116,9 @@ export default function WishlistPage() {
   }
 
   return (
-    <main className="max-w-4xl mx-auto px-6 py-10">
+    <>
       <SiteHeader />
+      <main className="max-w-4xl mx-auto px-6 pb-10">
 
       <Link href="/" className="inline-flex items-center gap-2 text-sm text-circuit-muted hover:text-circuit-copperLight mb-6">
         <ArrowLeft size={16} /> Quay lại trang chủ
@@ -239,7 +240,8 @@ export default function WishlistPage() {
         </div>
       )}
 
+      </main>
       <SiteFooter />
-    </main>
+    </>
   );
 }

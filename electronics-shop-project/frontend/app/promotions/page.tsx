@@ -20,8 +20,9 @@ export default function PromotionsPage() {
   }, []);
 
   return (
-    <main className="max-w-7xl mx-auto px-6 py-10">
+    <>
       <SiteHeader />
+      <main className="max-w-7xl mx-auto px-6 pb-10">
       <div className="mb-8">
         <h1 className="font-display text-3xl text-circuit-text uppercase tracking-tight">Khuyến mãi</h1>
         <p className="text-circuit-muted mt-2">Các chương trình ưu đãi hấp dẫn dành cho bạn</p>
@@ -66,7 +67,8 @@ export default function PromotionsPage() {
           ))}
         </div>
       )}
+      </main>
       <SiteFooter />
-    </main>
+    </>
   );
 }

@@ -24,29 +24,34 @@ export default function NewsDetailPage() {
   }, [slug]);
 
   if (loading) return (
-    <main className="max-w-4xl mx-auto px-6 py-10">
+    <>
       <SiteHeader />
-      <div className="text-center py-20 text-circuit-muted">Đang tải...</div>
+      <main className="max-w-4xl mx-auto px-6 pb-10">
+        <div className="text-center py-20 text-circuit-muted">Đang tải...</div>
+      </main>
       <SiteFooter />
-    </main>
+    </>
   );
 
   if (error || !post) return (
-    <main className="max-w-4xl mx-auto px-6 py-10">
+    <>
       <SiteHeader />
-      <div className="text-center py-20">
-        <p className="text-circuit-muted">{error || "Không tìm thấy bài viết"}</p>
-        <Link href="/news" className="mt-4 inline-block text-circuit-copperLight hover:text-circuit-copper text-sm">
-          ← Quay lại tin tức
-        </Link>
-      </div>
+      <main className="max-w-4xl mx-auto px-6 pb-10">
+        <div className="text-center py-20">
+          <p className="text-circuit-muted">{error || "Không tìm thấy bài viết"}</p>
+          <Link href="/news" className="mt-4 inline-block text-circuit-copperLight hover:text-circuit-copper text-sm">
+            ← Quay lại tin tức
+          </Link>
+        </div>
+      </main>
       <SiteFooter />
-    </main>
+    </>
   );
 
   return (
-    <main className="max-w-4xl mx-auto px-6 py-10">
+    <>
       <SiteHeader />
+      <main className="max-w-4xl mx-auto px-6 pb-10">
       <Link href="/news" className="inline-flex items-center gap-1.5 text-sm text-circuit-muted hover:text-circuit-copperLight mb-6 transition-colors">
         <ArrowLeft size={14} /> Quay lại Tin tức
       </Link>
@@ -76,7 +81,8 @@ export default function NewsDetailPage() {
         )}
         <div className="border-t border-circuit-line pt-6 prose-custom" dangerouslySetInnerHTML={{ __html: post.content || "" }} />
       </article>
+      </main>
       <SiteFooter />
-    </main>
+    </>
   );
 }

@@ -214,8 +214,9 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <main className="max-w-5xl mx-auto px-6 py-8">
+    <>
       <SiteHeader />
+      <main className="max-w-5xl mx-auto px-6 pb-8">
 
       <Link href="/" className="inline-flex items-center gap-2 text-sm text-circuit-muted hover:text-circuit-copperLight mb-6">
         <ArrowLeft size={16} /> Quay lại danh sách sản phẩm
@@ -632,5 +633,7 @@ export default function ProductDetailPage() {
         </div>
       )}
     </main>
+    <SiteFooter />
+    </>
   );
 }
