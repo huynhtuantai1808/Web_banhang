@@ -187,7 +187,7 @@ export default function ProductDetailPage() {
     }
   }
 
-  async function handleBuyNow() {
+  async function handleBuyNow(type: "full" | "credit" | "finance" = "full") {
     if (!product) return;
     setAdding(true);
     setCartError(null);
@@ -198,9 +198,9 @@ export default function ProductDetailPage() {
         addGuestCartItem(product.id, 1);
       }
       window.dispatchEvent(new Event("cart-updated"));
-      router.push('/cart');
+      router.push(`/checkout?type=${type}`);
     } catch (err) {
-      setCartError(err instanceof ApiError ? err.message : "Mua ngay thất bại");
+      setCartError(err instanceof ApiError ? err.message : "Thao tác thất bại");
       setAdding(false);
     }
   }
@@ -433,7 +433,7 @@ export default function ProductDetailPage() {
           <div className="flex flex-col gap-2">
             <div className="flex gap-2">
               <button
-                onClick={handleBuyNow}
+                onClick={() => handleBuyNow('full')}
                 disabled={adding}
                 className="flex-[2] flex flex-col items-center justify-center rounded-lg bg-[#d70018] text-white py-2.5 transition-colors hover:bg-red-700 shadow-md"
               >
@@ -458,26 +458,21 @@ export default function ProductDetailPage() {
             {product.is_installment_eligible && (
               <div className="flex gap-2">
                 <button
-                  onClick={() => setShowInstallment(!showInstallment)}
-                  className="flex-1 flex flex-col items-center justify-center rounded-lg bg-[#2f80ed] text-white py-2 transition-colors hover:bg-blue-600 shadow-md"
+                  onClick={() => handleBuyNow('credit')}
+                  disabled={adding}
+                  className="flex-1 flex flex-col items-center justify-center rounded-lg bg-[#2f80ed] text-white py-2 transition-colors hover:bg-blue-600 shadow-md disabled:opacity-60"
                 >
-                  <span className="font-bold text-sm uppercase">Trả góp 0%</span>
-                  <span className="text-[11px] font-normal mt-0.5">Qua thẻ tín dụng</span>
+                  <span className="font-bold text-sm uppercase">Thẻ tín dụng</span>
+                  <span className="text-[11px] font-normal mt-0.5">Trả góp 0%</span>
                 </button>
                 <button
-                  onClick={() => setShowInstallment(!showInstallment)}
-                  className="flex-1 flex flex-col items-center justify-center rounded-lg bg-[#2f80ed] text-white py-2 transition-colors hover:bg-blue-600 shadow-md"
+                  onClick={() => handleBuyNow('finance')}
+                  disabled={adding}
+                  className="flex-1 flex flex-col items-center justify-center rounded-lg bg-[#2f80ed] text-white py-2 transition-colors hover:bg-blue-600 shadow-md disabled:opacity-60"
                 >
-                  <span className="font-bold text-sm uppercase">Mua trả góp</span>
-                  <span className="text-[11px] font-normal mt-0.5">Qua công ty tài chính</span>
+                  <span className="font-bold text-sm uppercase">Công ty tài chính</span>
+                  <span className="text-[11px] font-normal mt-0.5">Duyệt hồ sơ online</span>
                 </button>
-              </div>
-            )}
-            
-            {showInstallment && product.is_installment_eligible && (
-              <div className="mt-4 space-y-3">
-                <CreditCardInstallment amount={product.discount_price || product.price} />
-                <FinanceInstallment amount={product.discount_price || product.price} />
               </div>
             )}
           </div>

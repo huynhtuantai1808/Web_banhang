@@ -38,6 +38,15 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const CREDIT_BANKS = ["Sacombank", "VIB", "HSBC", "Techcombank", "VPBank", "TPBank"];
+  const CARD_TYPES = ["VISA", "Mastercard", "JCB"];
+  const FINANCE_COMPANIES = ["Home Credit", "FE Credit", "HD Saison"];
+
+  const [selectedBank, setSelectedBank] = useState(CREDIT_BANKS[0]);
+  const [selectedCardType, setSelectedCardType] = useState(CARD_TYPES[0]);
+  const [selectedFinanceCo, setSelectedFinanceCo] = useState(FINANCE_COMPANIES[0]);
+  const [creditDownPayment, setCreditDownPayment] = useState(0);
+
   // Thông tin khách vãng lai (chỉ hiện khi chưa đăng nhập)
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
@@ -52,6 +61,17 @@ export default function CheckoutPage() {
   const [autoDiscount, setAutoDiscount] = useState(0);
 
   useEffect(() => {
+    // Determine payment type from URL
+    const params = new URLSearchParams(window.location.search);
+    const type = params.get("type");
+    if (type === "credit") {
+       setPaymentMethod("installment");
+       setInstallmentType("credit_card");
+    } else if (type === "finance") {
+       setPaymentMethod("installment");
+       setInstallmentType("finance");
+    }
+
     async function load() {
       try {
         if (loggedIn) {
@@ -161,9 +181,18 @@ export default function CheckoutPage() {
     setSubmitting(true);
     setError(null);
     try {
+      let finalAddress = address.trim();
+      if (paymentMethod === "installment") {
+        if (installmentType === "credit_card") {
+          finalAddress += `\n[Trả góp: Ngân hàng ${selectedBank} - Thẻ ${selectedCardType}]`;
+        } else {
+          finalAddress += `\n[Trả góp: Cty tài chính ${selectedFinanceCo}]`;
+        }
+      }
+
       if (loggedIn) {
         const result = await createOrder({
-          shippingAddress: address,
+          shippingAddress: finalAddress,
           gateway: paymentMethod === "installment" ? "cod" : gateway,
           paymentMethod,
           installmentMonths: paymentMethod === "installment" ? installmentMonths : undefined,
@@ -181,7 +210,7 @@ export default function CheckoutPage() {
           fullName: guestName,
           phone: guestPhone,
           email: guestEmail || undefined,
-          shippingAddress: address,
+          shippingAddress: finalAddress,
           gateway,
           promoCode: promoInput.trim() || undefined,
           items: guestItems.map((i) => ({ productId: i.productId, quantity: i.quantity })),
@@ -396,87 +425,67 @@ export default function CheckoutPage() {
             />
           </div>
 
-          {/* Hình thức thanh toán: trả toàn bộ hay trả góp (trả góp yêu cầu đăng nhập) */}
-          <div className="rounded-2xl glass-panel border border-circuit-copper/40 shadow-glow p-6">
-            <label className="block text-[11px] font-mono text-circuit-copperLight uppercase mb-4 tracking-widest font-semibold flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-circuit-copper inline-block animate-pulse-slow" />
-              Hình thức thanh toán
-            </label>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <button
-                type="button"
-                onClick={() => setPaymentMethod("full")}
-                className={`rounded-xl border-2 px-5 py-4 text-sm text-left transition-all duration-300 hover:scale-[1.02] ${
-                  paymentMethod === "full"
-                    ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight shadow-[0_0_15px_rgba(200,127,69,0.2)]"
-                    : "border-circuit-line/60 bg-circuit-panel/50 text-circuit-muted hover:border-circuit-copper/60 hover:bg-circuit-panel/80"
-                }`}
-              >
-                <p className="font-medium flex items-center gap-1.5 text-base">
-                  <span className={`w-2 h-2 rounded-full inline-block transition-colors ${paymentMethod === "full" ? "bg-circuit-copper" : "bg-circuit-muted"}`} />
-                  Trả toàn bộ
-                </p>
-                <p className="text-[11px] mt-1.5 opacity-80 uppercase tracking-wide">Thanh toán 1 lần</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => allEligibleForInstallment && setPaymentMethod("installment")}
-                disabled={!allEligibleForInstallment}
-                title={!loggedIn ? "Cần đăng nhập để mua trả góp" : undefined}
-                className={`rounded-xl border-2 px-5 py-4 text-sm text-left transition-all duration-300 hover:scale-[1.02] disabled:opacity-40 disabled:hover:scale-100 ${
-                  paymentMethod === "installment"
-                    ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight shadow-[0_0_15px_rgba(200,127,69,0.2)]"
-                    : "border-circuit-line/60 bg-circuit-panel/50 text-circuit-muted hover:border-circuit-copper/60 hover:bg-circuit-panel/80"
-                }`}
-              >
-                <p className="font-medium flex items-center gap-1.5 text-base">
-                  <CalendarClock size={16} /> Trả góp 0%
-                </p>
-                <p className="text-[11px] mt-1.5 opacity-80 uppercase tracking-wide">
-                  {loggedIn ? "Chia nhỏ theo tháng" : "Cần đăng nhập"}
-                </p>
-              </button>
-            </div>
+          {/* Cấu hình trả góp */}
+          {paymentMethod === "installment" && (
+            <div className="rounded-2xl glass-panel border border-circuit-copper/40 shadow-glow p-6">
+              <label className="block text-[11px] font-mono text-circuit-copperLight uppercase mb-4 tracking-widest font-semibold flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-circuit-copper inline-block animate-pulse-slow" />
+                Thông tin trả góp
+              </label>
 
-            {paymentMethod === "installment" && (
-              <div className="rounded-md border border-circuit-line bg-circuit-panel p-4">
-                {/* Tab chọn loại trả góp */}
-                <div className="flex gap-2 mb-4">
-                  <button
-                    type="button"
-                    onClick={() => { setInstallmentType("credit_card"); setInstallmentMonths(12); }}
-                    className={`flex-1 rounded-md border py-2.5 px-3 text-sm text-left transition-colors ${
-                      installmentType === "credit_card"
-                        ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight"
-                        : "border-circuit-line text-circuit-muted hover:border-circuit-copper/50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <CreditCard size={14} />
-                      <div>
-                        <p className="font-medium">Thẻ tín dụng</p>
-                        <p className="text-xs opacity-70">0% lãi suất · Có phí chuyển đổi</p>
-                      </div>
+              {installmentType === "credit_card" && (
+                <div className="mb-6 space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-circuit-muted mb-1.5">Chọn ngân hàng trả góp</label>
+                    <select
+                      value={selectedBank}
+                      onChange={(e) => setSelectedBank(e.target.value)}
+                      className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                    >
+                      {CREDIT_BANKS.map((b) => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-circuit-muted mb-1.5">Loại thẻ</label>
+                      <select
+                        value={selectedCardType}
+                        onChange={(e) => setSelectedCardType(e.target.value)}
+                        className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                      >
+                        {CARD_TYPES.map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
                     </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setInstallmentType("finance"); setInstallmentMonths(12); }}
-                    className={`flex-1 rounded-md border py-2.5 px-3 text-sm text-left transition-colors ${
-                      installmentType === "finance"
-                        ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight"
-                        : "border-circuit-line text-circuit-muted hover:border-circuit-copper/50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Building2 size={14} />
-                      <div>
-                        <p className="font-medium">Công ty tài chính</p>
-                        <p className="text-xs opacity-70">Trả trước 20% · Lãi suất giảm dần</p>
-                      </div>
+                    <div>
+                      <label className="block text-xs font-medium text-circuit-muted mb-1.5">Số tiền trả trước (VNĐ)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={creditDownPayment}
+                        onChange={(e) => setCreditDownPayment(Number(e.target.value))}
+                        className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                      />
                     </div>
-                  </button>
+                  </div>
                 </div>
+              )}
+
+              {installmentType === "finance" && (
+                <div className="mb-6 space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-circuit-muted mb-1.5">Công ty tài chính</label>
+                    <select
+                      value={selectedFinanceCo}
+                      onChange={(e) => setSelectedFinanceCo(e.target.value)}
+                      className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                    >
+                      {FINANCE_COMPANIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-md border border-circuit-line bg-circuit-panel p-4">
 
                 {installmentOptions.length > 0 ? (
                   <div className="overflow-x-auto">
