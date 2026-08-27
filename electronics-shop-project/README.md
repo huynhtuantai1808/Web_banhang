@@ -470,7 +470,51 @@ thái không hợp lệ bị từ chối, lịch sử ghi log đầy đủ) — 
 
 Đã build thử `npm run build` (FE, 20 routes) và import `app.main` (BE, 74 routes) — không lỗi.
 
-## 21. Cập nhật mới nhất (đợt 8) — Footer, Menu danh mục, Guest Checkout, Tối ưu Admin
+## 21. Cập nhật mới nhất (đợt 9) — Tin tức, Khuyến mãi & Chỉnh sửa hồ sơ
+
+**a) Trang Tin tức & Chương trình khuyến mãi**
+- Bảng mới `blog_posts` (id, title, slug, summary, content HTML, image_url, category, is_published,
+  published_at, display_order, created_by) — chung model cho cả Tin tức và Khuyến mãi, phân biệt
+  qua `category`: `news` | `promotion` | `guide`.
+- Backend: `app/models/blog_post.py`, `app/schemas/blog_post.py`, `app/api/v1/endpoints/blog.py`
+  (7 endpoints: list/detail/categories public + all/list/create/update/delete admin).
+  Slug tự động tạo từ title + short-uuid suffix.
+- Frontend: `app/news/page.tsx` + `app/news/[slug]/page.tsx` (tin tức) và
+  `app/promotions/page.tsx` + `app/promotions/[slug]/page.tsx` (khuyến mãi) — trang danh sách grid
+  + chi tiết bài viết với nội dung HTML từ React Quill editor.
+  `app/admin/(protected)/posts/page.tsx` — trang quản lý bài viết cho admin (CRUD đầy đủ
+  với React Quill rich text editor, upload ảnh đại diện, publish/unpublish).
+- Thêm nav "Tin tức" + "Khuyến mãi" vào `SiteHeader`; nav "Bài viết" vào admin sidebar.
+
+**b) Chỉnh sửa thông tin khách hàng**
+- `app/admin/(protected)/customers/[id]/edit/page.tsx` — trang sửa: họ tên, email, địa chỉ.
+  Admin có thêm tuỳ chọn kích hoạt/vô hiệu hoá tài khoản.
+  Backend đã có `PUT /customers/{id}` — chỉ cần gắn form, endpoint đã đầy đủ.
+
+**c) Chỉnh sửa thông tin nhân viên**
+- `app/admin/(protected)/users/[id]/edit/page.tsx` — trang sửa: họ tên, SĐT, email, mật khẩu
+  mới (optional), vai trò (admin/staff), quyền hạn (nếu staff), trạng thái.
+  Backend đã có `PUT /employees/{id}` với `EmployeeUpdate` schema đầy đủ.
+
+**d) Upload ảnh quảng cáo — mở rộng định dạng & dung lượng**
+- Chấp nhận tất cả định dạng phổ biến: JPEG/PNG/WEBP/GIF/BMP/SVG/AVIF/HEIC/HEIF/TIFF/ICO
+  (cả content_type và extension — phòng client gửi sai content-type).
+- Dung lượng tối đa cho banner: **100MB**.
+- Sửa upload ảnh: xoá file cũ trên disk khi thay đổi hoặc xoá bài viết.
+- Sửa nginx config (server-side): thêm `client_max_body_size 100M;` cho location `/api/`.
+
+**Database migration cần chạy trên server:**
+```bash
+cd /home/ubuntu/cuahang/electronics-shop-project/backend
+python database/migrate.py
+```
+Hoặc chạy SQL trong `database/migrate.py` trực tiếp vào PostgreSQL.
+
+Đã build thử `npm run build` (FE, 31 routes, bao gồm `/news`, `/news/[slug]`,
+`/promotions`, `/promotions/[slug]`, `/admin/posts`, `/admin/customers/[id]/edit`,
+`/admin/users/[id]/edit`) — không lỗi.
+
+## 20. Cập nhật mới nhất (đợt 8) — Footer, Menu danh mục, Guest Checkout, Tối ưu Admin
 
 **a) Footer hiển thị thông tin cửa hàng**
 - `components/SiteFooter.tsx` — logo, mô tả shop, liên hệ (hotline/Zalo/Facebook/giờ mở cửa), link
@@ -562,6 +606,11 @@ thái không hợp lệ bị từ chối, lịch sử ghi log đầy đủ) — 
 - Hiển thị sản phẩm theo nhóm ở trang chủ (đang giảm giá / theo danh mục nổi bật)
 - Quản lý Phân loại tối ưu: cây danh mục cha/con + banner riêng từng danh mục
 - Chatbot tư vấn tự động (rule-based FAQ) + trang liên kết hotline/Zalo/Facebook
+- **Trang Tin tức** (`/news`, `/news/[slug]`) + **Khuyến mãi** (`/promotions`, `/promotions/[slug]`) với React Quill rich editor
+- **Trang quản lý Bài viết** cho admin (`/admin/posts`) — CRUD đầy đủ
+- **Chỉnh sửa khách hàng** (`/admin/customers/[id]/edit`) — họ tên, email, địa chỉ, kích hoạt
+- **Chỉnh sửa nhân viên** (`/admin/users/[id]/edit`) — họ tên, SĐT, email, mật khẩu, vai trò, quyền, trạng thái
+- Upload ảnh quảng cáo: mở rộng định dạng + 100MB, xoá file cũ khi thay đổi
 - OTP qua Email thật (SMTP) nếu đã cấu hình, fallback console nếu chưa — SMS thật cần tích hợp thêm nhà cung cấp trả phí
 - Module Site Settings: admin tuỳ chỉnh tên shop/banner/mô tả/màu chủ đạo/logo, áp dụng trực tiếp lên storefront
 - Đã build thử `npm run build` (FE, 22 routes) + `tsc --noEmit` và import `app.main` (BE, 78 routes) — thành công, không lỗi
