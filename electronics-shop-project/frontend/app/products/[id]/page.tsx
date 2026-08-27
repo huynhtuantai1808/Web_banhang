@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -48,6 +48,7 @@ function StarRating({ value, size = 14 }: { value: number; size?: number }) {
 
 export default function ProductDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
 
   const [product, setProduct] = useState<ProductOut | null>(null);
   const [images, setImages] = useState<ProductImageOut[]>([]);
@@ -64,6 +65,7 @@ export default function ProductDetailPage() {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [togglingWishlist, setTogglingWishlist] = useState(false);
+  const [showInstallment, setShowInstallment] = useState(false);
   const [activeTab, setActiveTab] = useState<"mota" | "thongso">("mota");
 
   const allImages = images.length > 0
@@ -181,6 +183,24 @@ export default function ProductDetailPage() {
     } catch (err) {
       setCartError(err instanceof ApiError ? err.message : "Thêm vào giỏ hàng thất bại");
     } finally {
+      setAdding(false);
+    }
+  }
+
+  async function handleBuyNow() {
+    if (!product) return;
+    setAdding(true);
+    setCartError(null);
+    try {
+      if (isCustomerLoggedIn()) {
+        await addToCart(product.id, 1);
+      } else {
+        addGuestCartItem(product.id, 1);
+      }
+      window.dispatchEvent(new Event("cart-updated"));
+      router.push('/cart');
+    } catch (err) {
+      setCartError(err instanceof ApiError ? err.message : "Mua ngay thất bại");
       setAdding(false);
     }
   }
@@ -362,17 +382,7 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          {/* Installment */}
-          {product.is_installment_eligible && (
-            <div className="space-y-3 mb-5">
-              <div className="flex items-center gap-2">
-                <CreditCard size={16} className="text-circuit-copper" />
-                <p className="text-sm font-medium text-circuit-copperLight">Hỗ trợ trả góp</p>
-              </div>
-              <CreditCardInstallment amount={product.discount_price || product.price} />
-              <FinanceInstallment amount={product.discount_price || product.price} />
-            </div>
-          )}
+          {/* Installment (Moved below buttons) */}
 
           {/* Short description */}
           {product.description && (
@@ -420,29 +430,56 @@ export default function ProductDetailPage() {
           )}
 
           {/* Action buttons */}
-          <div className="flex gap-3">
-            <button
-              onClick={handleAddToCart}
-              disabled={adding}
-              className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-circuit-copper py-3.5 text-sm font-semibold text-circuit-bg hover:bg-circuit-copperLight transition-colors disabled:opacity-60 shadow-md hover:shadow-lg hover:shadow-circuit-copper/20"
-            >
-              {adding ? <Loader2 size={18} className="animate-spin" />
-                : added ? <Check size={18} />
-                : <ShoppingCart size={18} />}
-              {added ? "Đã thêm vào giỏ!" : "Thêm vào giỏ hàng"}
-            </button>
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <button
+                onClick={handleBuyNow}
+                disabled={adding}
+                className="flex-[2] flex flex-col items-center justify-center rounded-lg bg-[#d70018] text-white py-2.5 transition-colors hover:bg-red-700 shadow-md"
+              >
+                <span className="font-bold text-[15px] uppercase">Mua ngay</span>
+                <span className="text-[11px] font-normal mt-0.5">Giao nhanh từ 2 giờ trong nội thành</span>
+              </button>
 
-            <button
-              onClick={handleWishlistToggle}
-              disabled={togglingWishlist}
-              className={`w-14 h-14 rounded-lg border flex items-center justify-center transition-colors shadow-sm ${
-                isWishlisted
-                  ? "bg-red-500 border-red-500 text-white"
-                  : "border-circuit-copper text-circuit-copperLight hover:bg-red-500/10 hover:border-red-400 hover:text-red-400"
-              } disabled:opacity-50`}
-            >
-              <Heart size={22} fill={isWishlisted ? "currentColor" : "none"} />
-            </button>
+              <button
+                onClick={handleAddToCart}
+                disabled={adding}
+                className="flex-1 flex flex-col items-center justify-center rounded-lg border border-[#d70018] bg-white text-[#d70018] py-2 transition-colors hover:bg-red-50 shadow-sm"
+              >
+                {adding ? <Loader2 size={20} className="animate-spin mb-0.5" />
+                  : added ? <Check size={20} className="mb-0.5" />
+                  : <ShoppingCart size={20} className="mb-0.5" />}
+                <span className="text-[11px] font-medium leading-tight">
+                  {added ? "Đã thêm" : "Thêm giỏ hàng"}
+                </span>
+              </button>
+            </div>
+
+            {product.is_installment_eligible && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowInstallment(!showInstallment)}
+                  className="flex-1 flex flex-col items-center justify-center rounded-lg bg-[#2f80ed] text-white py-2 transition-colors hover:bg-blue-600 shadow-md"
+                >
+                  <span className="font-bold text-sm uppercase">Trả góp 0%</span>
+                  <span className="text-[11px] font-normal mt-0.5">Qua thẻ tín dụng</span>
+                </button>
+                <button
+                  onClick={() => setShowInstallment(!showInstallment)}
+                  className="flex-1 flex flex-col items-center justify-center rounded-lg bg-[#2f80ed] text-white py-2 transition-colors hover:bg-blue-600 shadow-md"
+                >
+                  <span className="font-bold text-sm uppercase">Mua trả góp</span>
+                  <span className="text-[11px] font-normal mt-0.5">Qua công ty tài chính</span>
+                </button>
+              </div>
+            )}
+            
+            {showInstallment && product.is_installment_eligible && (
+              <div className="mt-4 space-y-3">
+                <CreditCardInstallment amount={product.discount_price || product.price} />
+                <FinanceInstallment amount={product.discount_price || product.price} />
+              </div>
+            )}
           </div>
 
           {/* Hotline */}
