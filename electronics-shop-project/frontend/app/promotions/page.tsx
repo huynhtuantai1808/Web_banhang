@@ -20,7 +20,7 @@ export default function PromotionsPage() {
   }, []);
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col bg-circuit-bg text-circuit-text">
       <SiteHeader />
       <main className="max-w-7xl mx-auto px-6 pb-10">
       <div className="mb-8">
@@ -69,6 +69,6 @@ export default function PromotionsPage() {
       )}
       </main>
       <SiteFooter />
-    </>
+    </div>
   );
 }

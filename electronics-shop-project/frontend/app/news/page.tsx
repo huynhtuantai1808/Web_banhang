@@ -20,9 +20,9 @@ export default function NewsPage() {
   }, []);
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col bg-circuit-bg text-circuit-text">
       <SiteHeader />
-      <main className="max-w-7xl mx-auto px-6 pb-10">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="font-display text-3xl text-circuit-text uppercase tracking-tight">Tin tức công nghệ</h1>
         <p className="text-circuit-muted mt-2">Cập nhật tin tức mới nhất về sản phẩm và công nghệ</p>
@@ -66,6 +66,6 @@ export default function NewsPage() {
       )}
       </main>
       <SiteFooter />
-    </>
+    </div>
   );
 }

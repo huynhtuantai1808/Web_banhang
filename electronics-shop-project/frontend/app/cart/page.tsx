@@ -109,7 +109,7 @@ export default function CartPage() {
   }
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col bg-circuit-bg text-circuit-text">
       <SiteHeader />
       <main className="max-w-4xl mx-auto px-6 pb-10">
 
@@ -228,6 +228,6 @@ export default function CartPage() {
 
       </main>
       <SiteFooter />
-    </>
+    </div>
   );
 }

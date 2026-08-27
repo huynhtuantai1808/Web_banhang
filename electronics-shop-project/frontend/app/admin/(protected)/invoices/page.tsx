@@ -32,7 +32,8 @@ export default function AdminInvoicesPage() {
     setLoading(true);
     setError(null);
     try {
-      setOrders(await listAllOrders({ keyword: keyword || undefined, status: statusFilter || undefined }));
+      const result = await listAllOrders({ keyword: keyword || undefined, status: statusFilter || undefined });
+      setOrders(result.items);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Không tải được danh sách đơn hàng");
     } finally {

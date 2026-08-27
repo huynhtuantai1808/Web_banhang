@@ -214,7 +214,7 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col bg-circuit-bg text-circuit-text">
       <SiteHeader />
       <main className="max-w-5xl mx-auto px-6 pb-8">
 
@@ -633,7 +633,7 @@ export default function ProductDetailPage() {
         </div>
       )}
     </main>
-    <SiteFooter />
-    </>
+      <SiteFooter />
+    </div>
   );
 }

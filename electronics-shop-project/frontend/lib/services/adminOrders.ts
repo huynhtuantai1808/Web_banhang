@@ -51,9 +51,16 @@ export interface AdminOrderFilters {
   payment_status?: string;
 }
 
+export interface PaginatedAdminOrders {
+  items: AdminOrderOut[];
+  total: number;
+  page: number;
+  total_pages: number;
+}
+
 /** Toàn bộ đơn hàng của khách — mọi nhân viên đã đăng nhập đều xem được. */
-export async function listAllOrders(filters: AdminOrderFilters = {}): Promise<AdminOrderOut[]> {
-  const { data } = await apiClient.get<AdminOrderOut[]>("/admin/orders", { params: filters });
+export async function listAllOrders(filters: AdminOrderFilters = {}): Promise<PaginatedAdminOrders> {
+  const { data } = await apiClient.get<PaginatedAdminOrders>("/admin/orders", { params: filters });
   return data;
 }
 

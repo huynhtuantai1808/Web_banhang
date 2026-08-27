@@ -200,7 +200,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col bg-circuit-bg text-circuit-text">
       <SiteHeader />
       <main className="max-w-3xl mx-auto px-6 pb-10">
 
@@ -631,6 +631,6 @@ export default function CheckoutPage() {
 
       </main>
       <SiteFooter />
-    </>
+    </div>
   );
 }
