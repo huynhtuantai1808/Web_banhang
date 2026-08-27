@@ -579,8 +579,8 @@ export default function CheckoutPage() {
                     : "* Lãi suất 1.5%/tháng (18%/năm) trên dư nợ giảm dần. Phí xử lý do công ty tài chính quy định."}
                 </p>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Chọn cổng thanh toán — chỉ áp dụng khi trả toàn bộ */}
           {paymentMethod === "full" && (
