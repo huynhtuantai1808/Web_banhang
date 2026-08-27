@@ -8,6 +8,7 @@ import { listProductImages } from "@/lib/services/products";
 import { toggleGuestWishlist, isInGuestWishlist } from "@/lib/wishlist";
 import { isCustomerLoggedIn } from "@/lib/auth-storage";
 import { addToWishlist, removeFromWishlist } from "@/lib/services/wishlist";
+import { getMediaUrl } from "@/lib/media";
 
 
 
@@ -37,7 +38,7 @@ export default function ProductCard({
   const [hover, setHover] = useState(false);
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
-  const [images, setImages] = useState<string[]>([product.imageUrl]);
+  const [images, setImages] = useState<string[]>([getMediaUrl(product.imageUrl)]);
   const [imgIdx, setImgIdx] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [togglingWishlist, setTogglingWishlist] = useState(false);
@@ -53,17 +54,17 @@ export default function ProductCard({
   // Load additional product images — use prop if available (preloaded by parent), otherwise fetch
   useEffect(() => {
     if (product.images && product.images.length > 0) {
-      setImages(product.images);
+      setImages(product.images.map((u) => getMediaUrl(u)));
       return;
     }
     listProductImages(product.id)
       .then((imgs) => {
         const urls = imgs.length > 0
-          ? imgs.map((img) => img.url)
-          : [product.imageUrl];
+          ? imgs.map((img) => getMediaUrl(img.url))
+          : [getMediaUrl(product.imageUrl)];
         setImages(urls);
       })
-      .catch(() => setImages([product.imageUrl]));
+      .catch(() => setImages([getMediaUrl(product.imageUrl)]));
   }, [product.id, product.imageUrl, product.images]);
 
   // Auto-rotate images every 3 seconds when not hovering
