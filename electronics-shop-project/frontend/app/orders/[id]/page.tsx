@@ -71,8 +71,10 @@ export default function OrderDetailPage() {
     : -1;
 
   return (
-    <main className="max-w-2xl mx-auto px-6 py-10">
+    
+    <div className="min-h-screen flex flex-col bg-circuit-bg text-circuit-text">
       <SiteHeader />
+      <main className="max-w-2xl mx-auto px-6 py-10">
 
       <Link
         href="/orders"
@@ -278,8 +280,8 @@ export default function OrderDetailPage() {
           )}
         </div>
       )}
-
-      <SiteFooter />
     </main>
+      <SiteFooter />
+    </div>
   );
 }

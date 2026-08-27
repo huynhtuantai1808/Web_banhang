@@ -24,11 +24,14 @@ export default function PromotionDetailPage() {
   }, [slug]);
 
   if (loading) return (
-    <main className="max-w-4xl mx-auto px-6 py-10">
+    
+    <div className="min-h-screen flex flex-col bg-circuit-bg text-circuit-text">
       <SiteHeader />
+      <main className="max-w-4xl mx-auto px-6 py-10">
       <div className="text-center py-20 text-circuit-muted">Đang tải...</div>
-      <SiteFooter />
     </main>
+      <SiteFooter />
+    </div>
   );
 
   if (error || !post) return (

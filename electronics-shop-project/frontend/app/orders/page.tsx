@@ -54,8 +54,10 @@ export default function MyOrdersPage() {
   }, []);
 
   return (
-    <main className="max-w-3xl mx-auto px-6 py-10">
+    
+    <div className="min-h-screen flex flex-col bg-circuit-bg text-circuit-text">
       <SiteHeader />
+      <main className="max-w-3xl mx-auto px-6 py-10">
 
       <Link
         href="/"
@@ -154,8 +156,8 @@ export default function MyOrdersPage() {
           </Link>
         ))}
       </div>
-
-      <SiteFooter />
     </main>
+      <SiteFooter />
+    </div>
   );
 }

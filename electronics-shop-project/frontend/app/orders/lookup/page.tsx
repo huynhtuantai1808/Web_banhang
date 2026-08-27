@@ -40,8 +40,10 @@ export default function OrderLookupPage() {
   }
 
   return (
-    <main className="max-w-lg mx-auto px-6 py-10">
+    
+    <div className="min-h-screen flex flex-col bg-circuit-bg text-circuit-text">
       <SiteHeader />
+      <main className="max-w-lg mx-auto px-6 py-10">
 
       <Link href="/" className="inline-flex items-center gap-2 text-sm text-circuit-muted hover:text-circuit-copperLight mb-6">
         <ArrowLeft size={16} /> Về trang chủ
@@ -107,8 +109,8 @@ export default function OrderLookupPage() {
           </div>
         </div>
       )}
-
-      <SiteFooter />
     </main>
+      <SiteFooter />
+    </div>
   );
 }

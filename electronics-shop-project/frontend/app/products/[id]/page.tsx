@@ -191,13 +191,16 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
+      
+    <div className="min-h-screen flex flex-col bg-circuit-bg text-circuit-text">
+      <SiteHeader />
       <main className="max-w-5xl mx-auto px-6 py-10">
-        <SiteHeader />
         <div className="flex items-center justify-center py-24 text-circuit-muted">
           <Loader2 className="animate-spin mr-2" size={18} /> Đang tải sản phẩm...
         </div>
-        <SiteFooter />
       </main>
+      <SiteFooter />
+    </div>
     );
   }
 

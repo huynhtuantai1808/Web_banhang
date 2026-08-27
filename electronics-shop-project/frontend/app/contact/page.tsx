@@ -32,8 +32,10 @@ const CHANNELS = [
 
 export default function ContactPage() {
   return (
-    <main className="max-w-4xl mx-auto px-6 py-10">
+    
+    <div className="min-h-screen flex flex-col bg-circuit-bg text-circuit-text">
       <SiteHeader />
+      <main className="max-w-4xl mx-auto px-6 py-10">
 
       <motion.section
         initial={{ opacity: 0, y: 16 }}
@@ -102,8 +104,8 @@ export default function ContactPage() {
       <p className="text-center text-sm text-circuit-muted mt-8">
         Cần hỗ trợ nhanh? Bấm vào biểu tượng chat ở góc màn hình để trò chuyện với trợ lý ảo.
       </p>
-
-      <SiteFooter />
     </main>
+      <SiteFooter />
+    </div>
   );
 }

@@ -51,8 +51,10 @@ function OrderResultContent() {
   const info = content[(payment as keyof typeof content) || "failed"] || content.failed;
 
   return (
-    <main className="max-w-lg mx-auto px-6 py-16 text-center">
+    
+    <div className="min-h-screen flex flex-col bg-circuit-bg text-circuit-text">
       <SiteHeader />
+      <main className="max-w-lg mx-auto px-6 py-16 text-center">
 
       <div className="mt-10 flex flex-col items-center rounded-lg border border-circuit-line bg-circuit-panel p-10">
         {info.icon}
@@ -77,8 +79,8 @@ function OrderResultContent() {
           </Link>
         </div>
       </div>
-
-      <SiteFooter />
     </main>
+      <SiteFooter />
+    </div>
   );
 }
