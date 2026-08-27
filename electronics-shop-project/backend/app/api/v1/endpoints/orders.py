@@ -353,13 +353,7 @@ async def send_order_email(
     if not order or str(order.customer_id) != customer_id:
         raise HTTPException(status_code=404, detail="Không tìm thấy đơn hàng")
         
-    # Get customer to get email
     customer = await db.get(Customer, order.customer_id)
-    # Lấy thông tin user (nếu customer được link tới user)
-    user = None
-    if customer and customer.user_id:
-        user = await db.get(User, customer.user_id)
-        
     guest_email = customer.email if customer else None
 
     # Eager load items for invoice
@@ -369,9 +363,9 @@ async def send_order_email(
     order_with_items = result.scalar_one()
 
     if payload.email_type == "confirmation":
-        send_order_confirmation(order_with_items, user=user, guest_email=guest_email)
+        send_order_confirmation(order_with_items, user=customer, guest_email=guest_email)
     elif payload.email_type == "invoice":
-        send_electronic_invoice(order_with_items, user=user, guest_email=guest_email)
+        send_electronic_invoice(order_with_items, user=customer, guest_email=guest_email)
     else:
         raise HTTPException(status_code=400, detail="Loại email không hợp lệ (confirmation/invoice)")
         

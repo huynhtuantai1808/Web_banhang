@@ -3,7 +3,7 @@ from email.message import EmailMessage
 from datetime import datetime
 from app.core.config import settings
 from app.models.order import Order
-from app.models.user import User
+from app.models.customer import Customer
 
 # Hàm tiện ích format tiền tệ
 def format_vnd(amount: int) -> str:
@@ -48,7 +48,7 @@ def _send_email_smtp(subject: str, html_content: str, to_email: str):
         raise e
 
 
-def send_order_confirmation(order: Order, user: User = None, guest_email: str = None):
+def send_order_confirmation(order: Order, user: Customer = None, guest_email: str = None):
     to_email = user.email if user else guest_email
     if not to_email:
         return
@@ -71,7 +71,7 @@ def send_order_confirmation(order: Order, user: User = None, guest_email: str = 
     _send_email_smtp(f"Xác nhận đơn hàng {order.order_code}", html_content, to_email)
 
 
-def send_electronic_invoice(order: Order, user: User = None, guest_email: str = None):
+def send_electronic_invoice(order: Order, user: Customer = None, guest_email: str = None):
     to_email = user.email if user else guest_email
     if not to_email:
         return

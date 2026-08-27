@@ -225,10 +225,7 @@ async def send_order_email_endpoint(
     order_with_items = result.scalar_one()
 
     # Get user if exists
-    user = None
-    if customer.user_id:
-        from app.models.user import User
-        user = await db.get(User, customer.user_id)
+    user = customer
 
     try:
         if payload.email_type == "confirmation":
