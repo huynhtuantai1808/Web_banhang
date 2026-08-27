@@ -109,7 +109,7 @@ export default function HomePage() {
           listCategories(),
         ]);
 
-        const allIds = onSaleData.map((p) => p.id);
+        const allIds = onSaleData.items.map((p) => p.id);
         const topCategories = allCategories.filter((c) => !c.parent_id).slice(0, 3);
         const catGroupsData = await Promise.all(
           topCategories.map(async (category) => {
