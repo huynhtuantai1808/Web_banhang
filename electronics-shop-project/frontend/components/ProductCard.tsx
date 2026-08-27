@@ -131,8 +131,8 @@ export default function ProductCard({
           <img
             src={images[imgIdx]}
             alt={product.name}
-            className="object-contain h-[90%] w-[90%] transition-transform duration-500 ease-out drop-shadow-2xl"
-            style={{ transform: hover ? "scale(1.08) translateY(-4px)" : "scale(1)" }}
+            className="object-cover h-full w-full transition-transform duration-500 ease-out drop-shadow-2xl"
+            style={{ transform: hover ? "scale(1.08)" : "scale(1)" }}
             onError={(e) => {
               (e.target as HTMLImageElement).src =
                 "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='%23121B2E'/></svg>";

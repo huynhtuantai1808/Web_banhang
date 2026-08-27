@@ -49,7 +49,8 @@ export default function CategoryPage() {
       setError(null);
       try {
         const allCategories = await listCategories();
-        const current = allCategories.find((c) => c.slug === params.slug);
+        const decodedSlug = decodeURIComponent(params.slug);
+        const current = allCategories.find((c) => c.slug === decodedSlug);
         if (!current) {
           setError("Không tìm thấy danh mục này.");
           setLoading(false);
