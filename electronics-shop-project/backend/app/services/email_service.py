@@ -71,7 +71,7 @@ def send_order_confirmation(order: Order, user: Customer = None, guest_email: st
     _send_email_smtp(f"Xác nhận đơn hàng {order.order_code}", html_content, to_email)
 
 
-def send_electronic_invoice(order: Order, user: Customer = None, guest_email: str = None):
+def send_electronic_invoice(order: Order, items: list, user: Customer = None, guest_email: str = None):
     to_email = user.email if user else guest_email
     if not to_email:
         return
@@ -84,13 +84,13 @@ def send_electronic_invoice(order: Order, user: Customer = None, guest_email: st
     tax_amount = order.total_amount - total_before_tax
     
     items_html = ""
-    for item in order.items:
+    for item in items:
         items_html += f"""
         <tr>
-            <td style="padding: 10px; border-bottom: 1px solid #ddd;">{item.product_name}</td>
-            <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: center;">{item.quantity}</td>
-            <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">{format_vnd(item.unit_price)}</td>
-            <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">{format_vnd(item.unit_price * item.quantity)}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #ddd;">{item['product_name']}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: center;">{item['quantity']}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">{format_vnd(item['unit_price'])}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">{format_vnd(item['unit_price'] * item['quantity'])}</td>
         </tr>
         """
 

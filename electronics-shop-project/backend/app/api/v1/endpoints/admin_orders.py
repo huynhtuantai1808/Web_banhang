@@ -218,21 +218,23 @@ async def send_order_email_endpoint(
     if not customer or not customer.email:
         raise HTTPException(status_code=400, detail="Khách hàng không có email — không thể gửi mail")
 
-    # Eager load items
-    from sqlalchemy.orm import selectinload
-    stmt = select(Order).options(selectinload(Order.items)).where(Order.id == order.id)
-    result = await db.execute(stmt)
-    order_with_items = result.scalar_one()
-
-    # Get user if exists
-    user = customer
+    # Fetch items and product names
+    items_result = await db.execute(
+        select(OrderItem, Product.name)
+        .join(Product, OrderItem.product_id == Product.id)
+        .where(OrderItem.order_id == order.id)
+    )
+    items = [
+        {"product_name": n, "quantity": i.quantity, "unit_price": float(i.unit_price)}
+        for i, n in items_result.all()
+    ]
 
     try:
         if payload.email_type == "confirmation":
-            send_order_confirmation(order_with_items, user=user, guest_email=customer.email)
+            send_order_confirmation(order, user=customer, guest_email=customer.email)
             msg = "Đã gửi email xác nhận"
         elif payload.email_type == "invoice":
-            send_electronic_invoice(order_with_items, user=user, guest_email=customer.email)
+            send_electronic_invoice(order, items, user=customer, guest_email=customer.email)
             msg = "Đã gửi email hóa đơn điện tử"
         else:
             raise HTTPException(status_code=400, detail="Loại email không hợp lệ")

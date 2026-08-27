@@ -356,16 +356,23 @@ async def send_order_email(
     customer = await db.get(Customer, order.customer_id)
     guest_email = customer.email if customer else None
 
-    # Eager load items for invoice
-    from sqlalchemy.orm import selectinload
-    stmt = select(Order).options(selectinload(Order.items)).where(Order.id == order.id)
-    result = await db.execute(stmt)
-    order_with_items = result.scalar_one()
+    # Fetch items and product names
+    from app.models.product import Product
+    from app.models.order import OrderItem
+    items_result = await db.execute(
+        select(OrderItem, Product.name)
+        .join(Product, OrderItem.product_id == Product.id)
+        .where(OrderItem.order_id == order.id)
+    )
+    items = [
+        {"product_name": n, "quantity": i.quantity, "unit_price": float(i.unit_price)}
+        for i, n in items_result.all()
+    ]
 
     if payload.email_type == "confirmation":
-        send_order_confirmation(order_with_items, user=customer, guest_email=guest_email)
+        send_order_confirmation(order, user=customer, guest_email=guest_email)
     elif payload.email_type == "invoice":
-        send_electronic_invoice(order_with_items, user=customer, guest_email=guest_email)
+        send_electronic_invoice(order, items, user=customer, guest_email=guest_email)
     else:
         raise HTTPException(status_code=400, detail="Loại email không hợp lệ (confirmation/invoice)")
         
