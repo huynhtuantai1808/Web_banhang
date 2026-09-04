@@ -60,10 +60,15 @@ apiClient.interceptors.response.use(
         "(3) CORS_ORIGINS ở Backend .env có chứa origin của FE không.";
       return Promise.reject(new ApiError(hint));
     }
-
-    const detail = error.response.data?.detail;
+    let detailMsg = error.response.data?.detail;
+    if (Array.isArray(detailMsg)) {
+      detailMsg = detailMsg.map((err) => err.msg || JSON.stringify(err)).join(", ");
+    } else if (typeof detailMsg === "object") {
+      detailMsg = JSON.stringify(detailMsg);
+    }
+    
     return Promise.reject(
-      new ApiError(detail || error.message || "Có lỗi xảy ra khi gọi API", error.response.status)
+      new ApiError(typeof detailMsg === "string" ? detailMsg : (error.message || "Có lỗi xảy ra khi gọi API"), error.response.status)
     );
   }
 );

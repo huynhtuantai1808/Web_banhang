@@ -27,8 +27,8 @@ export default function AdminSettingsPage() {
       try {
         const data = await getSiteSettings();
         setSettings(data);
-      } catch (err) {
-        setBanner({ type: "error", text: err instanceof ApiError ? err.message : "Không tải được cấu hình" });
+      } catch (err: any) {
+        setBanner({ type: "error", text: err instanceof ApiError ? String(err.message) : (err?.message ? String(err.message) : "Không tải được cấu hình") });
       } finally {
         setLoading(false);
       }
@@ -58,8 +58,8 @@ setBanner(null);
       setSettings(updated);
       await refresh();
       setBanner({ type: "success", text: "Đã lưu cấu hình giao diện. Tải lại trang chủ để xem thay đổi." });
-    } catch (err) {
-      setBanner({ type: "error", text: err instanceof ApiError ? err.message : "Lưu thất bại" });
+    } catch (err: any) {
+      setBanner({ type: "error", text: err instanceof ApiError ? String(err.message) : (err?.message ? String(err.message) : "Lưu thất bại") });
     } finally {
       setSaving(false);
     }
@@ -74,8 +74,8 @@ setBanner(null);
       const updated = await uploadBannerImage(file);
       setSettings(updated);
       setBanner({ type: "success", text: "Đã cập nhật ảnh banner." });
-    } catch (err) {
-      setBanner({ type: "error", text: err instanceof ApiError ? err.message : "Tải ảnh thất bại" });
+    } catch (err: any) {
+      setBanner({ type: "error", text: err instanceof ApiError ? String(err.message) : (err?.message ? String(err.message) : "Tải ảnh thất bại") });
     } finally {
       setUploadingBanner(false);
       if (bannerInputRef.current) bannerInputRef.current.value = "";
@@ -91,8 +91,8 @@ setBanner(null);
       const updated = await uploadLogoImage(file);
       setSettings(updated);
       setBanner({ type: "success", text: "Đã cập nhật logo." });
-    } catch (err) {
-      setBanner({ type: "error", text: err instanceof ApiError ? err.message : "Tải logo thất bại" });
+    } catch (err: any) {
+      setBanner({ type: "error", text: err instanceof ApiError ? String(err.message) : (err?.message ? String(err.message) : "Tải logo thất bại") });
     } finally {
       setUploadingLogo(false);
       if (logoInputRef.current) logoInputRef.current.value = "";

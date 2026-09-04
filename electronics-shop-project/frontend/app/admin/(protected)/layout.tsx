@@ -25,9 +25,14 @@ export default function AdminProtectedLayout({ children }: { children: React.Rea
       router.replace("/admin/login");
       return;
     }
-    setIsAdmin(isCurrentEmployeeAdmin());
+    const userIsAdmin = isCurrentEmployeeAdmin();
+    setIsAdmin(userIsAdmin);
     setChecked(true);
-  }, [router]);
+    
+    if (!userIsAdmin && (pathname.startsWith("/admin/settings") || pathname.startsWith("/admin/employees") || pathname.startsWith("/admin/users"))) {
+      router.replace("/admin/dashboard");
+    }
+  }, [router, pathname]);
 
   function handleLogout() {
     employeeLogout();
