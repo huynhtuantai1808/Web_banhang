@@ -19,6 +19,7 @@ import { isCustomerLoggedIn } from "@/lib/auth-storage";
 import { useSiteSettings } from "@/components/SiteSettingsProvider";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import BannerCarousel from "@/components/BannerCarousel";
+import QuickCategories from "@/components/QuickCategories";
 
 // Khoảng giá hiển thị trên FilterTabs → khoảng min/max thực tế gửi xuống Backend (đơn vị: VNĐ)
 const PRICE_RANGES: Record<string, { min_price?: number; max_price?: number }> = {
@@ -189,6 +190,8 @@ export default function HomePage() {
         </h1>
         <p className="text-circuit-muted mt-4 max-w-xl">{settings.hero_description}</p>
       </motion.section>
+
+      <QuickCategories />
 
       <div className="mb-8 flex flex-wrap items-center gap-3">
         <CategoryMenu />
