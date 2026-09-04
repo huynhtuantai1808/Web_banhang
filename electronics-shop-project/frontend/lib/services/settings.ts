@@ -9,7 +9,7 @@ export interface SiteSettingsOut {
   banner_image_url?: string | null;
   logo_image_url?: string | null;
   accent_color: string;
-  quick_links?: { name: string; icon: string }[];
+  quick_links?: { name: string; icon?: string; image_url?: string }[];
 }
 
 export interface SiteSettingsUpdateInput {
@@ -19,7 +19,7 @@ export interface SiteSettingsUpdateInput {
   hero_description?: string;
   footer_intro?: string;
   accent_color?: string;
-  quick_links?: { name: string; icon: string }[];
+  quick_links?: { name: string; icon?: string; image_url?: string }[];
 }
 
 /** Đọc cấu hình hiển thị hiện tại — API công khai, không cần đăng nhập. */
@@ -47,6 +47,15 @@ export async function uploadLogoImage(file: File): Promise<SiteSettingsOut> {
   const formData = new FormData();
   formData.append("file", file);
   const { data } = await apiClient.post<SiteSettingsOut>("/settings/logo-image", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+}
+
+export async function uploadGeneralImage(file: File): Promise<{ url: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const { data } = await apiClient.post<{ url: string }>("/settings/upload-image", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return data;

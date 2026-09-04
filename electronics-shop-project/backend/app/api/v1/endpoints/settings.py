@@ -53,11 +53,20 @@ async def upload_banner_image(
 ):
     """Tải ảnh banner cho khu vực hero của trang chủ — chỉ Quản lý (admin)."""
     settings_row = await _get_or_create_settings(db)
-    image_url = await save_product_image("site-banner", file)  # tái dùng thư mục uploads/products/site-banner
+    image_url = await save_product_image("site-banner", file)
     settings_row.banner_image_url = image_url
     await db.commit()
     await db.refresh(settings_row)
     return settings_row
+
+@router.post("/upload-image")
+async def upload_general_image(
+    file: UploadFile = File(..., description="Ảnh chung (JPEG/PNG/WEBP/GIF, tối đa 5MB)"),
+    _admin_id: str = Depends(require_admin),
+):
+    """Upload ảnh chung (ví dụ cho Quick Links) và trả về URL — chỉ Quản lý (admin)."""
+    image_url = await save_product_image("quick-links", file)
+    return {"url": image_url}
 
 
 @router.post("/logo-image", response_model=SiteSettingsOut)

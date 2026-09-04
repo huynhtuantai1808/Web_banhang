@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Palette, Loader2, Image as ImageIcon, Upload, Plus, Trash2 } from "lucide-react";
 import {
-  getSiteSettings, updateSiteSettings, uploadBannerImage, uploadLogoImage, SiteSettingsOut,
+  getSiteSettings, updateSiteSettings, uploadBannerImage, uploadLogoImage, uploadGeneralImage, SiteSettingsOut,
 } from "@/lib/services/settings";
+import { useSiteSettings } from "@/components/SiteSettingsProvider";
 import { getMediaUrl } from "@/lib/media";
 import { ApiError } from "@/lib/apiClient";
 
@@ -14,7 +15,9 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingQuickLinkIdx, setUploadingQuickLinkIdx] = useState<number | null>(null);
   const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const { refresh } = useSiteSettings();
 
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -53,6 +56,7 @@ setBanner(null);
         quick_links: settings.quick_links,
       });
       setSettings(updated);
+      await refresh();
       setBanner({ type: "success", text: "Đã lưu cấu hình giao diện. Tải lại trang chủ để xem thay đổi." });
     } catch (err) {
       setBanner({ type: "error", text: err instanceof ApiError ? err.message : "Lưu thất bại" });
@@ -266,6 +270,42 @@ setBanner(null);
           <div className="space-y-3 mb-3">
             {(settings.quick_links || []).map((ql, idx) => (
               <div key={idx} className="flex items-center gap-3 bg-circuit-panel p-3 rounded-md border border-circuit-line">
+                <div className="w-10 h-10 shrink-0 bg-gray-100 rounded overflow-hidden flex items-center justify-center border border-circuit-line relative group">
+                  {ql.image_url ? (
+                    <img src={getMediaUrl(ql.image_url)} alt="icon" className="w-full h-full object-contain" />
+                  ) : (
+                    <ImageIcon size={16} className="text-gray-400" />
+                  )}
+                  {uploadingQuickLinkIdx === idx ? (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <Loader2 size={16} className="animate-spin text-white" />
+                    </div>
+                  ) : (
+                    <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
+                      <Upload size={14} className="text-white" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setUploadingQuickLinkIdx(idx);
+                          try {
+                            const res = await uploadGeneralImage(file);
+                            const newLinks = [...(settings.quick_links || [])];
+                            newLinks[idx] = { ...newLinks[idx], image_url: res.url };
+                            update("quick_links", newLinks);
+                          } catch (err) {
+                            alert("Upload ảnh thất bại");
+                          } finally {
+                            setUploadingQuickLinkIdx(null);
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
                 <input
                   value={ql.name}
                   onChange={(e) => {
@@ -277,7 +317,7 @@ setBanner(null);
                   placeholder="Tên danh mục (VD: iPhone 17)"
                 />
                 <select
-                  value={ql.icon}
+                  value={ql.icon || "Smartphone"}
                   onChange={(e) => {
                     const newLinks = [...(settings.quick_links || [])];
                     newLinks[idx] = { ...newLinks[idx], icon: e.target.value };
