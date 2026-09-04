@@ -175,12 +175,12 @@ export default function ProductCard({
         <p className="text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest mt-4">
           {product.brand}
         </p>
-        <h3 className="font-display text-circuit-text text-base leading-snug mt-1.5 line-clamp-2 group-hover:text-circuit-copperLight transition-colors">
+        <h3 className="font-display text-circuit-text text-base leading-snug mt-1.5 line-clamp-2 min-h-[2.75rem] group-hover:text-circuit-copperLight transition-colors">
           {product.name}
         </h3>
-        <p className="text-xs text-circuit-muted font-mono mt-1.5">{product.specHighlight}</p>
+        <p className="text-xs text-circuit-muted font-mono mt-1.5 line-clamp-1 min-h-[1.25rem]">{product.specHighlight}</p>
 
-        <div className="flex items-baseline gap-2 mt-4">
+        <div className="flex items-baseline gap-2 mt-4 min-h-[1.75rem]">
           <span className="font-display text-lg font-semibold text-circuit-signal group-hover:text-circuit-signal/90 transition-colors">
             {formatVND(hasDiscount ? product.discountPrice! : product.price)}
           </span>
