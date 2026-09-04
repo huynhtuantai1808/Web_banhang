@@ -37,8 +37,12 @@ async def update_site_settings(
     settings_row = await _get_or_create_settings(db)
 
     update_data = payload.model_dump(exclude_unset=True)
+    from sqlalchemy.orm.attributes import flag_modified
+    
     for field, value in update_data.items():
         setattr(settings_row, field, value)
+        if field == "quick_links":
+            flag_modified(settings_row, "quick_links")
 
     await db.commit()
     await db.refresh(settings_row)

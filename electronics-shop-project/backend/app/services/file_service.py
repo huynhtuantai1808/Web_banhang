@@ -3,8 +3,9 @@ import uuid
 from pathlib import Path
 from fastapi import UploadFile, HTTPException
 
-UPLOAD_ROOT = Path("uploads/products")
-BANNER_ROOT = Path("uploads/banners")
+UPLOAD_ROOT = Path(os.environ.get("UPLOADS_DIR", os.path.join(os.path.dirname(__file__), "..", "..", "uploads"))).resolve() / "products"
+BANNER_ROOT = Path(os.environ.get("UPLOADS_DIR", os.path.join(os.path.dirname(__file__), "..", "..", "uploads"))).resolve() / "banners"
+
 # Danh sách rộng để chấp nhận tất cả các định dạng ảnh phổ biến (bao gồm HEIC từ iPhone, BMP, SVG, AVIF...)
 ALLOWED_IMAGE_TYPES = {
     "image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif",
