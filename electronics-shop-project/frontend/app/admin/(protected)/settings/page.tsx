@@ -306,25 +306,27 @@ setBanner(null);
                     </label>
                   )}
                 </div>
-                <input
-                  value={ql.name}
-                  onChange={(e) => {
-                    const newLinks = [...(settings.quick_links || [])];
-                    newLinks[idx] = { ...newLinks[idx], name: e.target.value };
-                    update("quick_links", newLinks);
-                  }}
-                  className="input flex-1"
-                  placeholder="Tên danh mục (VD: iPhone 17)"
-                />
-                <select
-                  value={ql.icon || "Smartphone"}
-                  onChange={(e) => {
-                    const newLinks = [...(settings.quick_links || [])];
-                    newLinks[idx] = { ...newLinks[idx], icon: e.target.value };
-                    update("quick_links", newLinks);
-                  }}
-                  className="input w-40 cursor-pointer"
-                >
+                <div className="flex-1 flex gap-2">
+                  <input
+                    value={ql.name}
+                    onChange={(e) => {
+                      const newLinks = [...(settings.quick_links || [])];
+                      newLinks[idx] = { ...newLinks[idx], name: e.target.value };
+                      update("quick_links", newLinks);
+                    }}
+                    className="input w-full"
+                    style={{ minWidth: "200px" }}
+                    placeholder="Tên danh mục (VD: iPhone 17)"
+                  />
+                  <select
+                    value={ql.icon || "Smartphone"}
+                    onChange={(e) => {
+                      const newLinks = [...(settings.quick_links || [])];
+                      newLinks[idx] = { ...newLinks[idx], icon: e.target.value };
+                      update("quick_links", newLinks);
+                    }}
+                    className="input w-48 cursor-pointer shrink-0"
+                  >
                   <option value="Smartphone">Điện thoại</option>
                   <option value="Laptop">Laptop</option>
                   <option value="Tablet">Tablet / iPad</option>
@@ -335,6 +337,7 @@ setBanner(null);
                   <option value="Shell">Ốp lưng</option>
                   <option value="Sparkles">Phụ kiện</option>
                 </select>
+                </div>
                 <button
                   type="button"
                   onClick={() => {
