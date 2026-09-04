@@ -5,16 +5,16 @@ module.exports = {
     extend: {
       colors: {
         circuit: {
-          bg: "#080c14",      // Deepest midnight blue
-          panel: "#0f1624",   // Slightly elevated dark
-          surface: "#182236", // Floating element surface
-          line: "#202d45",    // Borders
-          copper: "#d48b50",  // Premium gold/copper
-          copperLight: "#eab88e",
-          signal: "#30df93",  // Neon green for positive signals
-          signalMuted: "#1a754f",
-          text: "#f0f4f8",
-          muted: "#9ba8ba",
+          bg: "#ffffff",        // White background
+          panel: "#f8f9fb",     // Slightly off-white panels
+          surface: "#f0f2f5",   // Floating element surface
+          line: "#e2e5ea",      // Light borders
+          copper: "#c87f45",    // Premium gold/copper accent (kept)
+          copperLight: "#b06e35",// Slightly darker for readability on white
+          signal: "#16a34a",    // Green for positive signals (darker for contrast)
+          signalMuted: "#bbf7d0",
+          text: "#1a1a2e",      // Dark text
+          muted: "#6b7280",     // Gray muted text
         },
         brand: {
           primary: "var(--accent-color)",
@@ -27,17 +27,17 @@ module.exports = {
         mono: ["var(--font-mono)", "monospace"],
       },
       backgroundImage: {
-        "circuit-grid": "linear-gradient(#202d45 1px, transparent 1px), linear-gradient(90deg, #202d45 1px, transparent 1px)",
-        "premium-gradient": "linear-gradient(135deg, rgba(200,127,69,0.1) 0%, rgba(11,18,32,0) 100%)",
-        "glass-gradient": "linear-gradient(145deg, rgba(24, 34, 54, 0.4) 0%, rgba(15, 22, 36, 0.6) 100%)",
+        "circuit-grid": "linear-gradient(#f0f2f5 1px, transparent 1px), linear-gradient(90deg, #f0f2f5 1px, transparent 1px)",
+        "premium-gradient": "linear-gradient(135deg, rgba(200,127,69,0.08) 0%, rgba(255,255,255,0) 100%)",
+        "glass-gradient": "linear-gradient(145deg, rgba(248,249,251,0.8) 0%, rgba(240,242,245,0.9) 100%)",
       },
       backgroundSize: {
         "circuit-grid": "32px 32px",
       },
       boxShadow: {
-        'glow': '0 0 20px rgba(200, 127, 69, 0.15)',
-        'glow-strong': '0 0 30px rgba(200, 127, 69, 0.3)',
-        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+        'glow': '0 0 20px rgba(200, 127, 69, 0.12)',
+        'glow-strong': '0 0 30px rgba(200, 127, 69, 0.2)',
+        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.06)',
       },
       animation: {
         'float': 'float 6s ease-in-out infinite',

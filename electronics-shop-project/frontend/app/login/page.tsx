@@ -199,11 +199,11 @@ function LoginForm() {
         .input {
           width: 100%;
           border-radius: 0.375rem;
-          border: 1px solid #1e2c47;
-          background: #0b1220;
+          border: 1px solid #e2e5ea;
+          background: #ffffff;
           padding: 0.5rem 0.75rem;
           font-size: 0.875rem;
-          color: #e7ecf5;
+          color: #1a1a2e;
           outline: none;
         }
         .input:focus {

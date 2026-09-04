@@ -135,7 +135,7 @@ export default function ProductCard({
             style={{ transform: hover ? "scale(1.08)" : "scale(1)" }}
             onError={(e) => {
               (e.target as HTMLImageElement).src =
-                "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='%23121B2E'/></svg>";
+                "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='%23f0f2f5'/></svg>";
             }}
           />
 

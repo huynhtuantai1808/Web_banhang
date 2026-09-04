@@ -129,7 +129,7 @@ export default function CategoryPage() {
           animate={{ opacity: 1 }}
           className="mb-8 rounded-xl border border-circuit-line overflow-hidden h-40 relative"
           style={{
-            backgroundImage: `linear-gradient(rgba(11,18,32,0.5), rgba(11,18,32,0.75)), url(${getMediaUrl(category.banner_image_url)})`,
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.75)), url(${getMediaUrl(category.banner_image_url)})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}

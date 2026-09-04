@@ -126,7 +126,7 @@ export default function ProductRow({
         <div
           ref={scrollRef}
           className="flex gap-5 overflow-x-auto pb-2"
-          style={{ scrollbarWidth: "thin", scrollbarColor: "var(--accent-color) #1e2c47" }}
+          style={{ scrollbarWidth: "thin", scrollbarColor: "var(--accent-color) #e2e5ea" }}
         >
           {products.map((product, i) => (
             <motion.div

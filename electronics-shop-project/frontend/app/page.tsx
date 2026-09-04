@@ -169,7 +169,7 @@ export default function HomePage() {
         style={
           settings.banner_image_url
             ? {
-                backgroundImage: `linear-gradient(rgba(11,18,32,0.82), rgba(11,18,32,0.92)), url(${getMediaUrl(
+                backgroundImage: `linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.92)), url(${getMediaUrl(
                   settings.banner_image_url
                 )})`,
                 backgroundSize: "cover",
