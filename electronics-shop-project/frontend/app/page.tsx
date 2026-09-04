@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import SearchBar from "@/components/SearchBar";
@@ -48,11 +49,15 @@ function toDisplayProduct(p: ProductOut): Product {
 
 
 
-export default function HomePage() {
+function HomePageContent() {
   const { settings } = useSiteSettings();
+  const searchParams = useSearchParams();
+  
+  const urlKw = searchParams.get("keyword") || "";
+  const urlCat = searchParams.get("category") || undefined;
 
-  const [keyword, setKeyword] = useState("");
-  const [filters, setFilters] = useState<FilterState>({});
+  const [keyword, setKeyword] = useState(urlKw);
+  const [filters, setFilters] = useState<FilterState>({ category: urlCat });
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,6 +99,12 @@ export default function HomePage() {
     setKeyword(kw);
     loadProducts(kw, filters);
   }, [loadProducts, filters]);
+
+  // React to URL changes (e.g. from QuickCategories)
+  useEffect(() => {
+    setKeyword(urlKw);
+    setFilters((prev) => ({ ...prev, category: urlCat }));
+  }, [urlKw, urlCat]);
 
   useEffect(() => {
     loadProducts(keyword, filters);
@@ -280,5 +291,13 @@ export default function HomePage() {
       </main>
       <SiteFooter />
     </>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center p-20"><Loader2 className="animate-spin text-circuit-copper" size={32} /></div>}>
+      <HomePageContent />
+    </Suspense>
   );
 }
