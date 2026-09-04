@@ -113,7 +113,8 @@ export default function AdminProductsPage() {
             disabled={importing}
             className="flex items-center gap-2 rounded-md border border-circuit-line px-4 py-2 text-sm font-medium text-circuit-text hover:border-circuit-copper hover:text-circuit-copperLight transition-colors disabled:opacity-50"
           >
-            {importing ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+            <Loader2 size={16} className={`animate-spin ${!importing && "hidden"}`} />
+            <Upload size={16} className={`${importing && "hidden"}`} />
             Nhập file Excel/CSV
           </button>
           <input
@@ -133,17 +134,17 @@ export default function AdminProductsPage() {
         </div>
       </header>
 
-      {banner && (
-        <div
-          className={`mb-6 rounded-md border px-4 py-3 text-sm ${
-            banner.type === "success"
+      <div
+        className={`mb-6 rounded-md border px-4 py-3 text-sm transition-all ${
+          banner
+            ? banner.type === "success"
               ? "border-circuit-line bg-circuit-panel text-circuit-signal"
               : "border-red-400/40 bg-red-400/10 text-red-300"
-          }`}
-        >
-          {banner.text}
-        </div>
-      )}
+            : "hidden"
+        }`}
+      >
+        {banner?.text}
+      </div>
 
       <div className="flex items-center gap-2 rounded-full border border-circuit-line bg-circuit-panel px-4 py-2 mb-6 max-w-sm">
         <Search size={16} className="text-circuit-muted" />
@@ -156,11 +157,9 @@ export default function AdminProductsPage() {
         />
       </div>
 
-      {loadError && (
-        <div className="mb-6 rounded-md border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm text-red-300">
-          {loadError}
-        </div>
-      )}
+      <div className={`mb-6 rounded-md border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm text-red-300 ${!loadError && "hidden"}`}>
+        {loadError}
+      </div>
 
       <div className="rounded-lg border border-circuit-line overflow-hidden">
         <table className="w-full text-sm">
@@ -180,13 +179,13 @@ export default function AdminProductsPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-circuit-muted">
+                <td colSpan={9} className="px-4 py-10 text-center text-circuit-muted">
                   <Loader2 className="inline animate-spin mr-2" size={16} /> Đang tải dữ liệu từ Backend...
                 </td>
               </tr>
             ) : products.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-circuit-muted">
+                <td colSpan={9} className="px-4 py-10 text-center text-circuit-muted">
                   Chưa có sản phẩm nào. Bấm "Thêm sản phẩm" hoặc "Nhập file Excel/CSV" để bắt đầu.
                 </td>
               </tr>
