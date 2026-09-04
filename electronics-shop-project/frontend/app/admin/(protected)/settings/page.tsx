@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Palette, Loader2, Image as ImageIcon, Upload } from "lucide-react";
+import { Palette, Loader2, Image as ImageIcon, Upload, Plus, Trash2 } from "lucide-react";
 import {
   getSiteSettings, updateSiteSettings, uploadBannerImage, uploadLogoImage, SiteSettingsOut,
 } from "@/lib/services/settings";
@@ -42,15 +42,16 @@ export default function AdminSettingsPage() {
     setSaving(true);
 setBanner(null);
 
-try {
-  const updated = await updateSiteSettings({
-    site_name: settings.site_name,
-    hero_title: settings.hero_title,
-    hero_subtitle: settings.hero_subtitle,
-    hero_description: settings.hero_description,
-    footer_intro: settings.footer_intro ?? undefined,
-    accent_color: settings.accent_color,
-  });
+    try {
+      const updated = await updateSiteSettings({
+        site_name: settings.site_name,
+        hero_title: settings.hero_title,
+        hero_subtitle: settings.hero_subtitle,
+        hero_description: settings.hero_description,
+        footer_intro: settings.footer_intro ?? undefined,
+        accent_color: settings.accent_color,
+        quick_links: settings.quick_links,
+      });
       setSettings(updated);
       setBanner({ type: "success", text: "Đã lưu cấu hình giao diện. Tải lại trang chủ để xem thay đổi." });
     } catch (err) {
@@ -257,6 +258,68 @@ try {
               onChange={handleLogoUpload}
             />
           </div>
+        </div>
+
+        {/* Quick Links */}
+        <div className="pt-4 border-t border-circuit-line">
+          <span className="block text-xs font-mono text-circuit-muted uppercase mb-4">Danh mục truy cập nhanh (Trang chủ)</span>
+          <div className="space-y-3 mb-3">
+            {(settings.quick_links || []).map((ql, idx) => (
+              <div key={idx} className="flex items-center gap-3 bg-circuit-panel p-3 rounded-md border border-circuit-line">
+                <input
+                  value={ql.name}
+                  onChange={(e) => {
+                    const newLinks = [...(settings.quick_links || [])];
+                    newLinks[idx] = { ...newLinks[idx], name: e.target.value };
+                    update("quick_links", newLinks);
+                  }}
+                  className="input flex-1"
+                  placeholder="Tên danh mục (VD: iPhone 17)"
+                />
+                <select
+                  value={ql.icon}
+                  onChange={(e) => {
+                    const newLinks = [...(settings.quick_links || [])];
+                    newLinks[idx] = { ...newLinks[idx], icon: e.target.value };
+                    update("quick_links", newLinks);
+                  }}
+                  className="input w-40 cursor-pointer"
+                >
+                  <option value="Smartphone">Điện thoại</option>
+                  <option value="Laptop">Laptop</option>
+                  <option value="Tablet">Tablet / iPad</option>
+                  <option value="Watch">Đồng hồ</option>
+                  <option value="Headphones">Tai nghe / Loa</option>
+                  <option value="Camera">Camera</option>
+                  <option value="HardDrive">Lưu trữ</option>
+                  <option value="Shell">Ốp lưng</option>
+                  <option value="Sparkles">Phụ kiện</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newLinks = [...(settings.quick_links || [])];
+                    newLinks.splice(idx, 1);
+                    update("quick_links", newLinks);
+                  }}
+                  className="p-2 text-red-400 hover:bg-red-400/10 rounded-md transition-colors"
+                  title="Xoá"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const newLinks = [...(settings.quick_links || []), { name: "Mục mới", icon: "Smartphone" }];
+              update("quick_links", newLinks);
+            }}
+            className="flex items-center gap-2 text-sm text-circuit-copperLight hover:text-circuit-copper transition-colors"
+          >
+            <Plus size={16} /> Thêm liên kết nhanh
+          </button>
         </div>
 
         <button

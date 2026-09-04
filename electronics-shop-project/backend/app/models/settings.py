@@ -1,5 +1,6 @@
 from datetime import datetime
 from sqlalchemy import String, Text, DateTime, SmallInteger, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base
 
@@ -21,4 +22,9 @@ class SiteSettings(Base):
     banner_image_url: Mapped[str | None] = mapped_column(Text)
     logo_image_url: Mapped[str | None] = mapped_column(Text)
     accent_color: Mapped[str] = mapped_column(String(7), default="#C87F45")
+    
+    # JSONB để lưu trữ danh sách Quick Links (ví dụ: [{"name": "iPhone", "icon": "Smartphone"}])
+    quick_links: Mapped[list | None] = mapped_column(JSONB, default=list)
+
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
