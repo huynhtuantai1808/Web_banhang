@@ -2,6 +2,7 @@ import io
 import uuid
 import pandas as pd
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.models.product import Product
 from app.services.catalog_service import get_or_create_brand, get_or_create_category
@@ -50,20 +51,35 @@ async def import_products_from_file(db: AsyncSession, filename: str, content: by
             brand_id = await get_or_create_brand(db, row.get("brand"))
             category_id = await get_or_create_category(db, row.get("category"))
 
-            product = Product(
-                id=uuid.uuid4(),
-                product_code=str(row["product_code"]).strip(),
-                name=str(row["name"]).strip(),
-                description=None if pd.isna(row.get("description")) else str(row.get("description")),
-                brand_id=brand_id,
-                category_id=category_id,
-                color=None if pd.isna(row.get("color")) else str(row.get("color")),
-                material=None if pd.isna(row.get("material")) else str(row.get("material")),
-                size_dimension=None if pd.isna(row.get("size_dimension")) else str(row.get("size_dimension")),
-                price=float(row["price"]),
-                discount_price=None if pd.isna(row.get("discount_price")) else float(row.get("discount_price")),
-            )
-            db.add(product)
+            product_code = str(row["product_code"]).strip()
+            
+            existing_product = await db.scalar(select(Product).where(Product.product_code == product_code))
+            
+            if existing_product:
+                existing_product.name = str(row["name"]).strip()
+                existing_product.description = None if pd.isna(row.get("description")) else str(row.get("description"))
+                existing_product.brand_id = brand_id
+                existing_product.category_id = category_id
+                existing_product.color = None if pd.isna(row.get("color")) else str(row.get("color"))
+                existing_product.material = None if pd.isna(row.get("material")) else str(row.get("material"))
+                existing_product.size_dimension = None if pd.isna(row.get("size_dimension")) else str(row.get("size_dimension"))
+                existing_product.price = float(row["price"])
+                existing_product.discount_price = None if pd.isna(row.get("discount_price")) else float(row.get("discount_price"))
+            else:
+                product = Product(
+                    id=uuid.uuid4(),
+                    product_code=product_code,
+                    name=str(row["name"]).strip(),
+                    description=None if pd.isna(row.get("description")) else str(row.get("description")),
+                    brand_id=brand_id,
+                    category_id=category_id,
+                    color=None if pd.isna(row.get("color")) else str(row.get("color")),
+                    material=None if pd.isna(row.get("material")) else str(row.get("material")),
+                    size_dimension=None if pd.isna(row.get("size_dimension")) else str(row.get("size_dimension")),
+                    price=float(row["price"]),
+                    discount_price=None if pd.isna(row.get("discount_price")) else float(row.get("discount_price")),
+                )
+                db.add(product)
             await db.flush()
             success_count += 1
         except Exception as e:
