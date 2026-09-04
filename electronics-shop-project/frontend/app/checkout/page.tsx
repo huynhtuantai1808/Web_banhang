@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Truck, CreditCard, Tag, Check, X, CalendarClock, User, Building2, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Loader2, Truck, CreditCard, Tag, Check, X, CalendarClock, User, Building2, ShoppingCart, MapPin, Receipt, FileText } from "lucide-react";
 import { getCart, getAutoDiscountPreview, CartOut } from "@/lib/services/cart";
 import { getGuestCart, clearGuestCart } from "@/lib/guestCart";
 import { getProduct } from "@/lib/services/products";
@@ -29,6 +29,25 @@ export default function CheckoutPage() {
 
   const [cart, setCart] = useState<CartOut | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Địa chỉ giao hàng mới
+  const [street, setStreet] = useState("");
+  const [province, setProvince] = useState("");
+  const [district, setDistrict] = useState("");
+  const [ward, setWard] = useState("");
+  
+  const [provinces, setProvinces] = useState<any[]>([]);
+  const [districts, setDistricts] = useState<any[]>([]);
+  const [wards, setWards] = useState<any[]>([]);
+
+  // Hóa đơn VAT
+  const [requireVAT, setRequireVAT] = useState(false);
+  const [vatCompany, setVatCompany] = useState("");
+  const [vatTaxCode, setVatTaxCode] = useState("");
+  const [vatAddress, setVatAddress] = useState("");
+  
+  // Các bước Checkout
+  const [step, setStep] = useState<1 | 2>(1);
   const [address, setAddress] = useState("");
   const [gateway, setGateway] = useState<"cod" | "vnpay">("cod");
   const [paymentMethod, setPaymentMethod] = useState<"full" | "installment">("full");
@@ -122,6 +141,46 @@ export default function CheckoutPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+
+  useEffect(() => {
+    fetch("https://provinces.open-api.vn/api/p/")
+      .then(res => res.json())
+      .then(data => setProvinces(data))
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (province) {
+      const code = provinces.find(p => p.name === province)?.code;
+      if (code) {
+        fetch(`https://provinces.open-api.vn/api/p/${code}?depth=2`)
+          .then(res => res.json())
+          .then(data => {
+            setDistricts(data.districts);
+            setDistrict("");
+            setWard("");
+            setWards([]);
+          })
+          .catch(console.error);
+      }
+    }
+  }, [province]);
+
+  useEffect(() => {
+    if (district) {
+      const code = districts.find(d => d.name === district)?.code;
+      if (code) {
+        fetch(`https://provinces.open-api.vn/api/d/${code}?depth=2`)
+          .then(res => res.json())
+          .then(data => {
+            setWards(data.wards);
+            setWard("");
+          })
+          .catch(console.error);
+      }
+    }
+  }, [district]);
+
   const subtotal = cart?.total_amount ?? 0;
   const finalTotal = Math.max(0, subtotal - autoDiscount - (appliedPromo?.discount ?? 0));
 
@@ -168,16 +227,36 @@ export default function CheckoutPage() {
     setPromoMessage(null);
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleNextStep(e: React.FormEvent) {
     e.preventDefault();
-    if (!address.trim()) {
-      setError("Vui lòng nhập địa chỉ giao hàng.");
+    if (!street.trim() || !province || !district || !ward) {
+      setError("Vui lòng điền đầy đủ địa chỉ giao hàng.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
     if (!loggedIn && (!guestName.trim() || !guestPhone.trim())) {
       setError("Vui lòng điền họ tên và số điện thoại để chúng tôi liên hệ giao hàng.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
+    if (requireVAT && (!vatCompany.trim() || !vatTaxCode.trim() || !vatAddress.trim())) {
+      setError("Vui lòng điền đầy đủ thông tin xuất hóa đơn VAT.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    
+    // Ghép địa chỉ
+    let fullAddress = `${street.trim()}, ${ward}, ${district}, ${province}`;
+    if (requireVAT) {
+      fullAddress += `\n[Yêu cầu VAT] Cty: ${vatCompany.trim()} - MST: ${vatTaxCode.trim()} - ĐC: ${vatAddress.trim()}`;
+    }
+    setAddress(fullAddress);
+    setError(null);
+    setStep(2);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function handleSubmit() {
     setSubmitting(true);
     setError(null);
     try {
@@ -246,8 +325,8 @@ export default function CheckoutPage() {
           <div className="flex items-center justify-center py-20 text-circuit-muted">
             <Loader2 className="animate-spin mr-2" size={18} /> Đang tải...
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
+        ) : step === 1 ? (
+          <form onSubmit={handleNextStep} className="space-y-6">
           {error && (
             <div className="rounded-md border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm text-red-300">
               {error}
@@ -412,17 +491,93 @@ export default function CheckoutPage() {
           )}
 
           {/* Địa chỉ giao hàng */}
-          <div className="rounded-2xl glass-panel p-6 border-t-4 border-t-circuit-copper/50">
-            <label className="block text-[11px] font-mono text-circuit-copperLight uppercase mb-4 tracking-widest font-semibold flex items-center gap-2">
-              <Truck size={16} /> Địa chỉ giao hàng *
+          <div className="rounded-2xl glass-panel p-6 border-t-4 border-t-circuit-copper/50 space-y-4">
+            <label className="block text-[11px] font-mono text-circuit-copperLight uppercase mb-2 tracking-widest font-semibold flex items-center gap-2">
+              <MapPin size={16} /> Địa chỉ giao hàng *
             </label>
-            <textarea
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <select
+                required
+                value={province}
+                onChange={(e) => setProvince(e.target.value)}
+                className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+              >
+                <option value="">-- Tỉnh / Thành phố --</option>
+                {provinces.map(p => <option key={p.code} value={p.name}>{p.name}</option>)}
+              </select>
+              <select
+                required
+                value={district}
+                onChange={(e) => setDistrict(e.target.value)}
+                disabled={!province}
+                className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper disabled:opacity-50"
+              >
+                <option value="">-- Quận / Huyện --</option>
+                {districts.map(d => <option key={d.code} value={d.name}>{d.name}</option>)}
+              </select>
+              <select
+                required
+                value={ward}
+                onChange={(e) => setWard(e.target.value)}
+                disabled={!district}
+                className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper disabled:opacity-50"
+              >
+                <option value="">-- Phường / Xã --</option>
+                {wards.map(w => <option key={w.code} value={w.name}>{w.name}</option>)}
+              </select>
+            </div>
+            <input
+              type="text"
               required
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành..."
-              className="w-full min-h-[100px] rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper transition-colors focus:shadow-[0_0_10px_rgba(200,127,69,0.15)] resize-y"
+              value={street}
+              onChange={(e) => setStreet(e.target.value)}
+              placeholder="Số nhà, tên đường..."
+              className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
             />
+            
+            {/* Hóa đơn VAT */}
+            <div className="pt-4 border-t border-circuit-line/50 mt-4">
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-circuit-text font-medium">
+                <input
+                  type="checkbox"
+                  checked={requireVAT}
+                  onChange={(e) => setRequireVAT(e.target.checked)}
+                  className="w-4 h-4 rounded border-circuit-line bg-circuit-bg text-circuit-copper focus:ring-circuit-copper"
+                />
+                Yêu cầu xuất hóa đơn VAT
+              </label>
+              
+              {requireVAT && (
+                <div className="mt-4 space-y-3 bg-circuit-bg/30 p-4 rounded-xl border border-circuit-line/40">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      required
+                      value={vatCompany}
+                      onChange={(e) => setVatCompany(e.target.value)}
+                      placeholder="Tên công ty"
+                      className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                    />
+                    <input
+                      type="text"
+                      required
+                      value={vatTaxCode}
+                      onChange={(e) => setVatTaxCode(e.target.value)}
+                      placeholder="Mã số thuế"
+                      className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    value={vatAddress}
+                    onChange={(e) => setVatAddress(e.target.value)}
+                    placeholder="Địa chỉ công ty"
+                    className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Cấu hình trả góp */}
@@ -632,10 +787,69 @@ export default function CheckoutPage() {
             disabled={submitting}
             className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-circuit-copper to-circuit-copperLight py-4 text-base font-bold text-circuit-bg hover:shadow-glow hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none mt-8"
           >
-            {submitting && <Loader2 size={20} className="animate-spin" />}
-            {paymentMethod === "full" && gateway === "vnpay" ? "TIẾN HÀNH THANH TOÁN (VNPAY)" : "XÁC NHẬN ĐẶT HÀNG"}
+            TIẾP TỤC BƯỚC XÁC NHẬN
           </button>
         </form>
+        ) : (
+          <div className="space-y-6">
+            {error && (
+              <div className="rounded-md border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm text-red-300">
+                {error}
+              </div>
+            )}
+            <div className="rounded-2xl glass-panel p-6 border-t-4 border-t-circuit-copper/50">
+              <h2 className="text-lg font-display text-circuit-copperLight mb-4 flex items-center gap-2">
+                <Check size={20} /> Xác nhận thông tin đơn hàng
+              </h2>
+              
+              <div className="space-y-4 text-sm">
+                <div className="bg-circuit-bg/50 p-4 rounded-xl border border-circuit-line/60">
+                  <p className="font-semibold text-circuit-text mb-2">Thông tin người nhận:</p>
+                  <p className="text-circuit-muted">{loggedIn ? "Thành viên (xem trong tài khoản)" : `${guestName} - ${guestPhone}`}</p>
+                </div>
+                
+                <div className="bg-circuit-bg/50 p-4 rounded-xl border border-circuit-line/60">
+                  <p className="font-semibold text-circuit-text mb-2">Địa chỉ giao hàng & Ghi chú:</p>
+                  <p className="text-circuit-muted whitespace-pre-wrap">{address}</p>
+                </div>
+
+                <div className="bg-circuit-bg/50 p-4 rounded-xl border border-circuit-line/60">
+                  <p className="font-semibold text-circuit-text mb-2">Phương thức thanh toán:</p>
+                  <p className="text-circuit-muted">
+                    {paymentMethod === "installment" 
+                      ? (installmentType === "credit_card" ? `Trả góp thẻ tín dụng (${selectedBank})` : `Trả góp công ty tài chính (${selectedFinanceCo})`)
+                      : (gateway === "vnpay" ? "Thanh toán qua VNPay" : "Thanh toán tiền mặt khi nhận hàng (COD)")}
+                  </p>
+                </div>
+
+                <div className="bg-circuit-bg/50 p-4 rounded-xl border border-circuit-line/60 flex justify-between font-display text-lg text-circuit-text">
+                  <span>Tổng tiền thanh toán:</span>
+                  <span className="text-circuit-signal">{formatVND(finalTotal)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                disabled={submitting}
+                className="w-1/3 flex items-center justify-center gap-2 rounded-xl bg-circuit-panel border border-circuit-line py-4 text-base font-bold text-circuit-text hover:bg-circuit-line/30 transition-all duration-300 disabled:opacity-50"
+              >
+                QUAY LẠI
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="w-2/3 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-circuit-copper to-circuit-copperLight py-4 text-base font-bold text-circuit-bg hover:shadow-glow hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+              >
+                {submitting && <Loader2 size={20} className="animate-spin" />}
+                {paymentMethod === "full" && gateway === "vnpay" ? "TIẾN HÀNH THANH TOÁN (VNPAY)" : "XÁC NHẬN ĐẶT HÀNG"}
+              </button>
+            </div>
+          </div>
+        
       )}
 
       </main>

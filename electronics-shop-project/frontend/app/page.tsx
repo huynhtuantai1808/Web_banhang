@@ -177,7 +177,7 @@ function HomePageContent() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="mb-6 rounded-xl border border-circuit-line bg-circuit-panel px-8 py-14 relative overflow-hidden"
+        className="mb-6 rounded-xl border border-circuit-line bg-circuit-panel px-6 py-8 relative overflow-hidden"
         style={
           settings.banner_image_url
             ? {
@@ -196,13 +196,13 @@ function HomePageContent() {
         >
           // {settings.hero_subtitle}
         </p>
-        <h1 className="font-display text-4xl md:text-5xl text-circuit-text max-w-2xl leading-tight">
+        <h1 className="font-display text-3xl md:text-4xl text-circuit-text max-w-2xl leading-tight">
           {settings.hero_title}
         </h1>
         <p className="text-circuit-muted mt-4 max-w-xl">{settings.hero_description}</p>
       </motion.section>
 
-      <QuickCategories />
+
 
       <div className="mb-8 flex flex-wrap items-center gap-3">
         <CategoryMenu />
@@ -222,6 +222,8 @@ function HomePageContent() {
         <>
           <BannerCarousel position="hero" className="mb-8" />
           <BannerCarousel position="promo" className="mb-8" />
+
+          <QuickCategories />
 
           <RecentlyViewed />
 
