@@ -308,14 +308,13 @@ setBanner(null);
                 </div>
                 <div className="flex-1 flex gap-2">
                   <input
-                    value={ql.name}
+                    value={ql.name || ""}
                     onChange={(e) => {
                       const newLinks = [...(settings.quick_links || [])];
                       newLinks[idx] = { ...newLinks[idx], name: e.target.value };
                       update("quick_links", newLinks);
                     }}
-                    className="input w-full"
-                    style={{ minWidth: "200px" }}
+                    className="input flex-1 min-w-[150px]"
                     placeholder="Tên danh mục (VD: iPhone 17)"
                   />
                   <select
@@ -325,18 +324,18 @@ setBanner(null);
                       newLinks[idx] = { ...newLinks[idx], icon: e.target.value };
                       update("quick_links", newLinks);
                     }}
-                    className="input w-48 cursor-pointer shrink-0"
+                    className="input w-40 cursor-pointer shrink-0"
                   >
-                  <option value="Smartphone">Điện thoại</option>
-                  <option value="Laptop">Laptop</option>
-                  <option value="Tablet">Tablet / iPad</option>
-                  <option value="Watch">Đồng hồ</option>
-                  <option value="Headphones">Tai nghe / Loa</option>
-                  <option value="Camera">Camera</option>
-                  <option value="HardDrive">Lưu trữ</option>
-                  <option value="Shell">Ốp lưng</option>
-                  <option value="Sparkles">Phụ kiện</option>
-                </select>
+                    <option value="Smartphone">Điện thoại</option>
+                    <option value="Laptop">Laptop</option>
+                    <option value="Tablet">Tablet / iPad</option>
+                    <option value="Watch">Đồng hồ</option>
+                    <option value="Headphones">Tai nghe / Loa</option>
+                    <option value="Camera">Camera</option>
+                    <option value="HardDrive">Lưu trữ</option>
+                    <option value="Shell">Ốp lưng</option>
+                    <option value="Sparkles">Phụ kiện</option>
+                  </select>
                 </div>
                 <button
                   type="button"

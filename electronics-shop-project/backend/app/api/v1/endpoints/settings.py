@@ -69,20 +69,26 @@ async def upload_general_image(
     _admin_id: str = Depends(require_admin),
 ):
     """Upload ảnh chung (ví dụ cho Quick Links) và trả về URL — chỉ Quản lý (admin)."""
-    image_url = await save_product_image("quick-links", file)
-    return {"url": image_url}
-
 
 @router.post("/logo-image", response_model=SiteSettingsOut)
 async def upload_logo_image(
-    file: UploadFile = File(..., description="Ảnh logo (JPEG/PNG/WEBP/GIF, tối đa 5MB)"),
+    file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     _admin_id: str = Depends(require_admin),
 ):
-    """Tải logo riêng cho shop — chỉ Quản lý (admin)."""
     settings_row = await _get_or_create_settings(db)
-    image_url = await save_product_image("site-logo", file)  # tái dùng thư mục uploads/products/site-logo
-    settings_row.logo_image_url = image_url
+    file_url = await save_product_image("site-logo", file)
+    settings_row.logo_image_url = file_url
     await db.commit()
     await db.refresh(settings_row)
     return settings_row
+
+
+@router.post("/upload-image")
+async def upload_general_image(
+    file: UploadFile = File(...),
+    _admin_id: str = Depends(require_admin),
+):
+    """API dùng chung để upload ảnh tuỳ ý (như icon/hình cho quick link)"""
+    file_url = await save_product_image("quick-links", file)
+    return {"url": file_url}
