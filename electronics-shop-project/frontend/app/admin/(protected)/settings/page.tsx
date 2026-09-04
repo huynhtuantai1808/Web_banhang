@@ -306,17 +306,18 @@ setBanner(null);
                     </label>
                   )}
                 </div>
-                <div className="flex-1 flex gap-2">
-                  <input
-                    value={ql.name || ""}
-                    onChange={(e) => {
-                      const newLinks = [...(settings.quick_links || [])];
-                      newLinks[idx] = { ...newLinks[idx], name: e.target.value };
-                      update("quick_links", newLinks);
-                    }}
-                    className="input flex-1 min-w-[150px]"
-                    placeholder="Tên danh mục (VD: iPhone 17)"
-                  />
+                <div className="flex-1 flex flex-col gap-2 w-full">
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      value={ql.name || ""}
+                      onChange={(e) => {
+                        const newLinks = [...(settings.quick_links || [])];
+                        newLinks[idx] = { ...newLinks[idx], name: e.target.value };
+                        update("quick_links", newLinks);
+                      }}
+                      className="input flex-1 min-w-[150px]"
+                      placeholder="Tên danh mục (VD: iPhone 17)"
+                    />
                   <select
                     value={ql.icon || "Smartphone"}
                     onChange={(e) => {
@@ -336,6 +337,19 @@ setBanner(null);
                     <option value="Shell">Ốp lưng</option>
                     <option value="Sparkles">Phụ kiện</option>
                   </select>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      value={ql.link || ""}
+                      onChange={(e) => {
+                        const newLinks = [...(settings.quick_links || [])];
+                        newLinks[idx] = { ...newLinks[idx], link: e.target.value };
+                        update("quick_links", newLinks);
+                      }}
+                      className="input flex-1 text-sm"
+                      placeholder="Link chuyển hướng (VD: /category/dien-thoai)"
+                    />
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -344,7 +358,7 @@ setBanner(null);
                     newLinks.splice(idx, 1);
                     update("quick_links", newLinks);
                   }}
-                  className="p-2 text-red-400 hover:bg-red-400/10 rounded-md transition-colors"
+                  className="p-2 text-red-400 hover:bg-red-400/10 rounded-md transition-colors shrink-0 self-start sm:self-center"
                   title="Xoá"
                 >
                   <Trash2 size={16} />

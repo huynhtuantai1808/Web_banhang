@@ -25,7 +25,7 @@ export default function QuickCategories() {
           return (
             <Link
               key={i}
-              href={`/category/all?keyword=${encodeURIComponent(item.name)}`}
+              href={item.link || `/category/all?keyword=${encodeURIComponent(item.name)}`}
               className="group flex flex-col items-center justify-center p-3 bg-white rounded-xl shadow-sm border border-transparent hover:border-circuit-copper/30 hover:shadow-md transition-all duration-300"
             >
               <div className="w-12 h-12 mb-2 rounded-full bg-gray-50 flex items-center justify-center text-circuit-copper group-hover:scale-110 transition-transform duration-300 overflow-hidden">
