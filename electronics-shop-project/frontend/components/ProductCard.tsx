@@ -123,7 +123,7 @@ export default function ProductCard({
       <Link href={`/products/${product.id}`} className="block relative z-10 flex-1">
         {/* Image gallery */}
         <div
-          className="aspect-square rounded-xl bg-circuit-bg/40 mb-4 flex items-center justify-center overflow-hidden relative border border-circuit-line/30 group-hover:border-circuit-copper/30 transition-colors"
+          className="aspect-square rounded-xl bg-gray-50 mb-4 flex items-center justify-center overflow-hidden relative border border-gray-200 group-hover:border-circuit-copper/40 transition-colors"
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
         >

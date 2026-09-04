@@ -14,19 +14,14 @@
 
 body {
   @apply bg-circuit-bg text-circuit-text font-body;
-  background-image:
-    linear-gradient(#f0f2f5 1px, transparent 1px),
-    linear-gradient(90deg, #f0f2f5 1px, transparent 1px);
-  background-size: 32px 32px;
-  background-attachment: fixed;
 }
 
 .glass-panel {
-  @apply bg-white/90 backdrop-blur-xl border border-circuit-line/60 shadow-glass;
+  @apply bg-white backdrop-blur-xl border border-gray-300 shadow-md;
 }
 
 .premium-card {
-  @apply bg-white relative overflow-hidden transition-all duration-300 border border-circuit-line/70 hover:border-circuit-copper/50 hover:shadow-glow;
+  @apply bg-white relative overflow-hidden transition-all duration-300 border border-gray-300 shadow-sm hover:border-circuit-copper/60 hover:shadow-lg;
 }
 
 /* Trace line chạy dọc theo cạnh card khi hover — chi tiết chữ ký của giao diện */
