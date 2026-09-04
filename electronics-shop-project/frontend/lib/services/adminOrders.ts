@@ -35,7 +35,7 @@ export interface AdminOrderOut {
   discount_amount: number;
   final_amount: number;
   payment_method: "full" | "installment";
-  payment_gateway: "cod" | "vnpay";
+  payment_gateway: "cod" | "vnpay" | "credit_card" | "finance";
   payment_status: "pending" | "paid" | "failed";
   status: string;
   shipping_address?: string | null;

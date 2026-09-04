@@ -14,7 +14,7 @@ export interface OrderOut {
   discount_amount: number;
   final_amount: number;
   payment_method: "full" | "installment";
-  payment_gateway: "cod" | "vnpay";
+  payment_gateway: "cod" | "vnpay" | "credit_card" | "finance";
   payment_status: "pending" | "paid" | "failed";
   status: string;
   shipping_address?: string | null;
@@ -31,7 +31,7 @@ export interface OrderCreateResponse {
 
 export interface CreateOrderInput {
   shippingAddress: string;
-  gateway?: "cod" | "vnpay";
+  gateway?: "cod" | "vnpay" | "credit_card" | "finance";
   paymentMethod?: "full" | "installment";
   installmentMonths?: number;
   installmentType?: "credit_card" | "finance";
@@ -66,7 +66,7 @@ export interface GuestOrderInput {
   phone: string;
   email?: string;
   shippingAddress: string;
-  gateway?: "cod" | "vnpay";
+  gateway?: "cod" | "vnpay" | "credit_card" | "finance";
   promoCode?: string;
   items: { productId: string; quantity: number }[];
 }
