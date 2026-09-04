@@ -1,4 +1,5 @@
 import pandas as pd
+import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -40,7 +41,14 @@ async def get_or_create_category(db: AsyncSession, name: str | None) -> int | No
     result = await db.execute(select(Category).where(Category.name == name))
     category = result.scalar_one_or_none()
     if not category:
-        slug = name.lower().replace(" ", "-")
+        base_slug = name.lower().replace(" ", "-")
+        slug = base_slug
+        
+        # Check if slug exists
+        existing_with_slug = await db.scalar(select(Category).where(Category.slug == slug))
+        if existing_with_slug:
+            slug = f"{base_slug}-{str(uuid.uuid4())[:6]}"
+            
         category = Category(name=name, slug=slug)
         db.add(category)
         await db.flush()
