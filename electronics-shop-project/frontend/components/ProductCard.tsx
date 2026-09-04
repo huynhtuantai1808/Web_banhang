@@ -109,13 +109,17 @@ export default function ProductCard({
     }
   }
 
+  const discountPercent = hasDiscount
+    ? Math.round(((product.price - product.discountPrice!) / product.price) * 100)
+    : 0;
+
   return (
     <motion.div
       onHoverStart={() => setHover(true)}
       onHoverEnd={() => setHover(false)}
       whileHover={{ y: -6 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      className="premium-card rounded-2xl p-5 flex flex-col h-full group"
+      className="premium-card rounded-2xl p-3 sm:p-5 flex flex-col h-full group"
     >
       {/* Background glow effect */}
       <div className="absolute inset-0 bg-premium-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
@@ -172,22 +176,27 @@ export default function ProductCard({
           )}
         </div>
 
-        <p className="text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest mt-4">
+        <p className="text-[10px] sm:text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest mt-3 sm:mt-4">
           {product.brand}
         </p>
-        <h3 className="font-display text-circuit-text text-base leading-snug mt-1.5 line-clamp-2 min-h-[2.75rem] group-hover:text-circuit-copperLight transition-colors">
+        <h3 className="font-display text-circuit-text text-sm sm:text-base leading-snug mt-1.5 line-clamp-2 min-h-[2.75rem] group-hover:text-circuit-copperLight transition-colors">
           {product.name}
         </h3>
         <p className="text-xs text-circuit-muted font-mono mt-1.5 line-clamp-1 min-h-[1.25rem]">{product.specHighlight}</p>
 
-        <div className="flex items-baseline gap-2 mt-4 min-h-[1.75rem]">
-          <span className="font-display text-lg font-semibold text-circuit-signal group-hover:text-circuit-signal/90 transition-colors">
+        <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2 mt-3 sm:mt-4 min-h-[1.75rem]">
+          <span className="font-display text-base sm:text-lg font-semibold text-circuit-signal group-hover:text-circuit-signal/90 transition-colors">
             {formatVND(hasDiscount ? product.discountPrice! : product.price)}
           </span>
           {hasDiscount && (
-            <span className="text-xs text-circuit-muted line-through opacity-70">
-              {formatVND(product.price)}
-            </span>
+            <>
+              <span className="text-xs sm:text-sm text-circuit-muted line-through">
+                {formatVND(product.price)}
+              </span>
+              <span className="px-1.5 py-0.5 rounded bg-red-500/10 text-red-500 font-bold text-[10px] sm:text-xs border border-red-500/20">
+                -{discountPercent}%
+              </span>
+            </>
           )}
         </div>
       </Link>
@@ -195,7 +204,7 @@ export default function ProductCard({
       <button
         onClick={handleAddToCart}
         disabled={adding}
-        className="relative z-10 mt-5 w-full flex items-center justify-center gap-2 rounded-xl border border-circuit-copper/30 bg-circuit-copper/5 py-2.5 text-sm font-medium text-circuit-copperLight hover:bg-circuit-copper hover:text-circuit-bg transition-all duration-300 disabled:opacity-50 disabled:hover:bg-transparent shadow-sm hover:shadow-glow"
+        className="relative z-10 mt-auto w-full flex items-center justify-center gap-2 rounded-xl border border-circuit-copper/30 bg-circuit-copper/5 py-2 sm:py-2.5 text-[13px] sm:text-sm font-medium text-circuit-copper hover:bg-circuit-copper hover:text-white transition-all duration-300 disabled:opacity-50 disabled:hover:bg-transparent shadow-sm hover:shadow-md"
       >
         {adding ? (
           <Loader2 size={16} className="animate-spin" />

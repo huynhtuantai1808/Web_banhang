@@ -169,7 +169,7 @@ export default function CategoryPage() {
             <div className="text-center py-20 text-circuit-muted">Chưa có sản phẩm nào trong danh mục này.</div>
           )}
           {!loading && !error && products.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
               {products.map((product, i) => (
                 <motion.div
                   key={product.id}

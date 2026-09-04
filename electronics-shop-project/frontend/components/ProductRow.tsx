@@ -125,7 +125,7 @@ export default function ProductRow({
         {/* Products scroll container */}
         <div
           ref={scrollRef}
-          className="flex gap-5 overflow-x-auto pb-2"
+          className="flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto pb-2"
           style={{ scrollbarWidth: "thin", scrollbarColor: "var(--accent-color) #e2e5ea" }}
         >
           {products.map((product, i) => (
@@ -135,7 +135,7 @@ export default function ProductRow({
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, delay: i * 0.05 }}
-              className="shrink-0 w-[260px]"
+              className="shrink-0 w-[160px] sm:w-[220px] md:w-[260px] h-full"
             >
               <ProductCard product={product} onAddToCart={onAddToCart} />
             </motion.div>
