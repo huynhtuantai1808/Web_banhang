@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Plus, Package, Search, PencilLine, Trash2, Upload, Loader2, RefreshCw, Camera,
+  Plus, Package, Search, PencilLine, Trash2, Upload, Loader2, RefreshCw, Camera, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import {
   listProducts, importProductsFile, deleteProduct, ProductOut,
@@ -21,6 +21,12 @@ export default function AdminProductsPage() {
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Pagination states
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [importing, setImporting] = useState(false);
   const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -30,22 +36,32 @@ export default function AdminProductsPage() {
 
   const importInputRef = useRef<HTMLInputElement>(null);
 
-  const fetchProducts = useCallback(async (kw?: string) => {
+  const fetchProducts = useCallback(async (kw?: string, p = page, pSize = pageSize) => {
     setLoading(true);
     setLoadError(null);
     try {
-      const data = await listProducts(kw ? { keyword: kw } : {});
+      const params: any = { page: p, page_size: pSize };
+      if (kw) params.keyword = kw;
+      
+      const data = await listProducts(params);
       setProducts(data.items);
+      setTotalItems(data.total || 0);
+      setTotalPages(data.total_pages || 1);
     } catch (err) {
       setLoadError(err instanceof ApiError ? err.message : "Không tải được danh sách sản phẩm");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, pageSize]);
 
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    fetchProducts(keyword, page, pageSize);
+  }, [fetchProducts, page, pageSize]); // Tự động load lại khi chuyển trang/đổi kích thước trang
+
+  function handleSearch(kw: string) {
+    setPage(1); // Reset page khi tìm kiếm
+    fetchProducts(kw, 1, pageSize);
+  }
 
   function openCreateModal() {
     setEditingProduct(null);
@@ -151,7 +167,7 @@ export default function AdminProductsPage() {
         <input
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && fetchProducts(keyword)}
+          onKeyDown={(e) => e.key === "Enter" && handleSearch(keyword)}
           placeholder="Tìm theo tên sản phẩm, nhấn Enter..."
           className="flex-1 bg-transparent outline-none text-sm placeholder:text-circuit-muted"
         />
@@ -201,6 +217,8 @@ export default function AdminProductsPage() {
                       <img
                         src={getMediaUrl(p.primary_image_url) || "/placeholder-product.png"}
                         alt={p.name}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover"
                         onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.png"; }}
                       />
@@ -259,6 +277,49 @@ export default function AdminProductsPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between mt-4 px-2">
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-circuit-muted">Hiển thị</span>
+          <select
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setPage(1);
+            }}
+            className="rounded-md border border-circuit-line/60 bg-circuit-bg/50 px-2 py-1.5 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+          >
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+          <span className="text-sm text-circuit-muted">sản phẩm / trang</span>
+          <span className="text-sm text-circuit-muted ml-4 border-l border-circuit-line pl-4">Tổng cộng: {totalItems} sản phẩm</span>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-circuit-muted">
+            Trang {page} / {totalPages}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="p-1.5 rounded-lg border border-circuit-line bg-circuit-bg text-circuit-muted hover:text-circuit-copperLight hover:border-circuit-copper disabled:opacity-50 disabled:hover:border-circuit-line transition-colors"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className="p-1.5 rounded-lg border border-circuit-line bg-circuit-bg text-circuit-muted hover:text-circuit-copperLight hover:border-circuit-copper disabled:opacity-50 disabled:hover:border-circuit-line transition-colors"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
       </div>
 
       <ProductFormModal
