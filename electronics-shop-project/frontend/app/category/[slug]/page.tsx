@@ -176,7 +176,7 @@ export default function CategoryPage() {
         </aside>
 
         <section className="md:col-span-3">
-          {loading && (
+          {loading && products.length === 0 && (
             <div className="flex items-center justify-center py-20 text-circuit-muted">
               <Loader2 className="animate-spin mr-2" size={18} /> Đang tải sản phẩm...
             </div>
@@ -189,8 +189,8 @@ export default function CategoryPage() {
           {!loading && !error && products.length === 0 && (
             <div className="text-center py-20 text-circuit-muted">Chưa có sản phẩm nào trong danh mục này.</div>
           )}
-          {!loading && !error && products.length > 0 && (
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
+          {!error && products.length > 0 && (
+            <div className={`grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 transition-opacity duration-200 ${loading ? "opacity-50 pointer-events-none" : ""}`}>
               {products.map((product, i) => (
                 <motion.div
                   key={product.id}

@@ -278,7 +278,7 @@ function HomePageContent() {
             </div>
           )}
 
-          {!loading && !error && products.length > 0 && (
+          {!error && products.length > 0 && (
             <>
               <div className={`grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 transition-opacity ${loading ? "opacity-50 pointer-events-none" : ""}`}>
                 {products.map((product, i) => (
