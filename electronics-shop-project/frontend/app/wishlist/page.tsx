@@ -181,7 +181,7 @@ export default function WishlistPage() {
                 <div className="w-20 h-20 rounded-md bg-circuit-bg/60 overflow-hidden flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={getMediaUrl(item.product_image_url) || "/placeholder-product.png"}
+                    src={getMediaUrl(item.product_image_url) || "/placeholder-product.svg"}
                     alt={item.product_name}
                     className="object-contain w-full h-full"
                   />

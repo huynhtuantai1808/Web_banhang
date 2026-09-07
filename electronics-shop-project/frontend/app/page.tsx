@@ -42,7 +42,7 @@ function toDisplayProduct(p: ProductOut): Product {
     brand: p.brand || "",
     price: p.price,
     discountPrice: p.discount_price ?? undefined,
-    imageUrl: getMediaUrl(p.primary_image_url) || "/placeholder-product.png",
+    imageUrl: getMediaUrl(p.primary_image_url) || "/placeholder-product.svg",
     specHighlight: spec || "—",
   };
 }

@@ -67,7 +67,7 @@ export default function RelatedProducts({ productId }: RelatedProductsProps) {
             <div className="aspect-square bg-circuit-bg/60 flex items-center justify-center overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={getMediaUrl(p.primary_image_url) || "/placeholder-product.png"}
+                src={getMediaUrl(p.primary_image_url) || "/placeholder-product.svg"}
                 alt={p.name}
                 className="object-contain h-full w-full group-hover:scale-105 transition-transform duration-300"
               />

@@ -390,7 +390,7 @@ export default function CheckoutPage() {
                     <div className="w-12 h-12 rounded-xl bg-circuit-bg/40 border border-circuit-line/30 overflow-hidden shrink-0 flex items-center justify-center p-1">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={getMediaUrl(item.product_image_url) || "/placeholder-product.png"}
+                        src={getMediaUrl(item.product_image_url) || "/placeholder-product.svg"}
                         alt=""
                         className="object-contain w-full h-full"
                       />

@@ -163,7 +163,7 @@ export default function CartPage() {
                 <div className="w-20 h-20 shrink-0 rounded-xl bg-circuit-bg/40 border border-circuit-line/30 overflow-hidden flex items-center justify-center p-2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={getMediaUrl(item.product_image_url) || "/placeholder-product.png"}
+                    src={getMediaUrl(item.product_image_url) || "/placeholder-product.svg"}
                     alt={item.product_name}
                     className="object-contain w-full h-full transition-transform duration-300 group-hover:scale-110"
                   />

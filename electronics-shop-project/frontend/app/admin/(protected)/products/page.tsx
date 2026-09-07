@@ -211,16 +211,18 @@ export default function AdminProductsPage() {
                   <td className="px-4 py-3">
                     <button
                       onClick={() => setImageManagerFor(p)}
-                      className="relative w-12 h-12 rounded-lg border border-circuit-line overflow-hidden bg-circuit-bg hover:border-circuit-copper transition-colors group"
+                      className="relative w-12 h-12 rounded-lg border border-circuit-line overflow-hidden bg-circuit-bg hover:border-circuit-copper transition-colors group shrink-0"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={getMediaUrl(p.primary_image_url) || "/placeholder-product.png"}
+                        src={getMediaUrl(p.primary_image_url) || "/placeholder-product.svg"}
                         alt={p.name}
+                        width={48}
+                        height={48}
                         loading="lazy"
                         decoding="async"
                         className="w-full h-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.png"; }}
+                        onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = "/placeholder-product.svg"; }}
                       />
                       {/* Camera overlay */}
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center">

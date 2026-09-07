@@ -258,7 +258,7 @@ export default function ProductDetailPage() {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={activeImageUrl || "/placeholder-product.png"}
+              src={activeImageUrl || "/placeholder-product.svg"}
               alt={product.name}
               className="object-contain h-[90%] w-[90%] transition-transform duration-500 ease-out group-hover:scale-105"
               onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
@@ -623,7 +623,7 @@ export default function ProductDetailPage() {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={getMediaUrl(allImages[lightboxIndex]?.url) || "/placeholder-product.png"}
+              src={getMediaUrl(allImages[lightboxIndex]?.url) || "/placeholder-product.svg"}
               alt={product.name}
               className="max-h-[80vh] w-full object-contain rounded-lg"
             />
