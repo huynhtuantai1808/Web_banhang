@@ -103,33 +103,34 @@ async def websocket_endpoint(
     try:
         while True:
             data = await websocket.receive_text()
-            # Parse data
-            # Data should be JSON {"sender_type": "customer", "sender_id": "...", "message": "..."}
-            import json
-            payload = json.loads(data)
-            sender_type = payload.get("sender_type")
-            sender_id = payload.get("sender_id")
-            message = payload.get("message")
-            
-            if message and sender_type and sender_id:
-                # Get DB session
-                async for session in get_db():
-                    msg = ChatMessage(
-                        room_id=room_id,
-                        sender_type=sender_type,
-                        sender_id=uuid.UUID(sender_id),
-                        message=message
-                    )
-                    session.add(msg)
-                    await session.commit()
-                    await session.refresh(msg)
-                    
-                    await manager.broadcast_to_room(room_id, {
-                        "id": str(msg.id),
-                        "sender_type": msg.sender_type,
-                        "message": msg.message,
-                        "created_at": msg.created_at.isoformat()
-                    })
-                    break # exit generator
+            try:
+                import json
+                payload = json.loads(data)
+                sender_type = payload.get("sender_type")
+                sender_id = payload.get("sender_id")
+                message = payload.get("message")
+                
+                if message and sender_type and sender_id:
+                    # Get DB session
+                    async for session in get_db():
+                        msg = ChatMessage(
+                            room_id=room_id,
+                            sender_type=sender_type,
+                            sender_id=uuid.UUID(sender_id),
+                            message=message
+                        )
+                        session.add(msg)
+                        await session.commit()
+                        await session.refresh(msg)
+                        
+                        await manager.broadcast_to_room(room_id, {
+                            "id": str(msg.id),
+                            "sender_type": msg.sender_type,
+                            "message": msg.message,
+                            "created_at": msg.created_at.isoformat()
+                        })
+                        break # exit generator
+            except Exception as e:
+                print(f"Error processing message: {e}")
     except WebSocketDisconnect:
         manager.disconnect(websocket, room_id)
