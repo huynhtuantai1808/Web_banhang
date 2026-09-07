@@ -37,6 +37,7 @@ export default function CategoryPage() {
 
   const [category, setCategory] = useState<CategoryOption | null>(null);
   const [parentCategory, setParentCategory] = useState<CategoryOption | null>(null);
+  const [allCategories, setAllCategories] = useState<CategoryOption[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [filters, setFilters] = useState<FilterState>({});
   const [loading, setLoading] = useState(true);
@@ -48,17 +49,19 @@ export default function CategoryPage() {
       setLoading(true);
       setError(null);
       try {
-        const allCategories = await listCategories();
+        const allCategoriesData = await listCategories();
+        setAllCategories(allCategoriesData);
         const decodedSlug = decodeURIComponent(params.slug);
-        const current = allCategories.find((c) => c.slug === decodedSlug);
+        const current = allCategoriesData.find((c) => c.slug === decodedSlug);
         if (!current) {
           setError("Không tìm thấy danh mục này.");
           setLoading(false);
           return;
         }
         setCategory(current);
-        const parent = current.parent_id ? allCategories.find((c) => c.id === current.parent_id) : null;
+        const parent = current.parent_id ? allCategoriesData.find((c) => c.id === current.parent_id) : null;
         setParentCategory(parent || null);
+        setFilters((prev) => ({ ...prev, category: current.name }));
 
         const data = await listProducts({ category_id: current.id, ...buildFilterParams(filters) });
         setProducts(data.items.map(toDisplayProduct));
@@ -71,6 +74,24 @@ export default function CategoryPage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.slug, filters]);
+
+  
+  function handleFilterChange(newFilters: FilterState) {
+    if (category && newFilters.category !== category.name) {
+      if (!newFilters.category) {
+        // Khách bỏ chọn danh mục -> về trang chủ
+        router.push("/");
+      } else {
+        // Khách chọn danh mục khác -> chuyển hướng sang trang danh mục đó
+        const targetCat = allCategories.find((c) => c.name === newFilters.category);
+        if (targetCat) {
+          router.push(`/category/${targetCat.slug}`);
+        }
+      }
+      return;
+    }
+    setFilters(newFilters);
+  }
 
   function buildFilterParams(f: FilterState) {
     const priceRanges: Record<string, { min_price?: number; max_price?: number }> = {
@@ -151,7 +172,7 @@ export default function CategoryPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         <aside className="md:col-span-1">
-          <FilterTabs value={filters} onChange={setFilters} />
+          <FilterTabs value={filters} onChange={handleFilterChange} />
         </aside>
 
         <section className="md:col-span-3">
