@@ -60,6 +60,8 @@ function HomePageContent() {
   const [filters, setFilters] = useState<FilterState>({ category: urlCat });
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [cartMessage, setCartMessage] = useState<string | null>(null);
 
@@ -74,16 +76,17 @@ function HomePageContent() {
   /** Ghép từ khoá tìm kiếm + toàn bộ lựa chọn ở FilterTabs (danh mục/hãng/giá/chức năng)
    * thành 1 lần gọi API duy nhất — đây là tính năng "lọc kết hợp nhiều điều kiện" được yêu cầu:
    * VD: keyword="điện thoại" + brand="Samsung" + priceLabel="< 10tr" + feature="Gaming". */
-  const loadProducts = useCallback(async (kw: string, f: FilterState) => {
+  const loadProducts = useCallback(async (kw: string, f: FilterState, p: number) => {
     setLoading(true);
     setError(null);
     try {
-      const params: ProductFilters = { keyword: kw || undefined, brand: f.brand, category: f.category, feature: f.feature, sort_by: f.sort_by };
+      const params: ProductFilters = { keyword: kw || undefined, brand: f.brand, category: f.category, feature: f.feature, sort_by: f.sort_by, page: p, page_size: 20 };
       const range = f.priceLabel ? PRICE_RANGES[f.priceLabel] : undefined;
       if (range) Object.assign(params, range);
 
       const data = await listProducts(params);
-      setProducts(data.items.map((p) => toDisplayProduct(p)));
+      setProducts(data.items.map((prod) => toDisplayProduct(prod)));
+      setTotalPages(data.total_pages || 1);
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -97,19 +100,21 @@ function HomePageContent() {
 
   const handleSearch = useCallback((kw: string) => {
     setKeyword(kw);
-    loadProducts(kw, filters);
+    setPage(1);
+    loadProducts(kw, filters, 1);
   }, [loadProducts, filters]);
 
   // React to URL changes (e.g. from QuickCategories)
   useEffect(() => {
     setKeyword(urlKw);
     setFilters((prev) => ({ ...prev, category: urlCat }));
+    setPage(1);
   }, [urlKw, urlCat]);
 
   useEffect(() => {
-    loadProducts(keyword, filters);
+    loadProducts(keyword, filters, page);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]); // đổi filter → tự động tải lại; đổi keyword thì chờ người dùng bấm Enter (xem SearchBar)
+  }, [filters, page]); // đổi filter hoặc page → tự động tải lại; đổi keyword thì chờ người dùng bấm Enter (xem SearchBar)
 
   // Tải nhóm "Đang giảm giá" + nhóm theo 3 danh mục cha đầu tiên — chỉ 1 lần lúc vào trang.
   useEffect(() => {
@@ -147,6 +152,7 @@ function HomePageContent() {
   }, []);
 
   function handleFilterChange(next: FilterState) {
+    setPage(1);
     setFilters(next);
   }
 
@@ -254,7 +260,7 @@ function HomePageContent() {
             <p className="text-sm text-circuit-muted mb-4">Kết quả lọc/tìm kiếm:</p>
           )}
 
-          {loading && (
+          {loading && products.length === 0 && (
             <div className="flex items-center justify-center py-20 text-circuit-muted">
               <Loader2 className="animate-spin mr-2" size={18} /> Đang tải sản phẩm từ máy chủ...
             </div>
@@ -273,19 +279,43 @@ function HomePageContent() {
           )}
 
           {!loading && !error && products.length > 0 && (
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
-              {products.map((product, i) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: i * 0.05 }}
-                  className="h-full"
-                >
-                  <ProductCard product={product} onAddToCart={handleAddToCart} />
-                </motion.div>
-              ))}
-            </div>
+            <>
+              <div className={`grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 transition-opacity ${loading ? "opacity-50 pointer-events-none" : ""}`}>
+                {products.map((product, i) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: i * 0.05 }}
+                    className="h-full"
+                  >
+                    <ProductCard product={product} onAddToCart={handleAddToCart} />
+                  </motion.div>
+                ))}
+              </div>
+              
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-2 mt-10">
+                  <button
+                    disabled={page <= 1}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    className="px-4 py-2 rounded-md border border-circuit-line disabled:opacity-50 text-sm hover:border-circuit-copper transition-colors"
+                  >
+                    Trang trước
+                  </button>
+                  <span className="text-sm font-mono text-circuit-copperLight px-4">
+                    {page} / {totalPages}
+                  </span>
+                  <button
+                    disabled={page >= totalPages}
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    className="px-4 py-2 rounded-md border border-circuit-line disabled:opacity-50 text-sm hover:border-circuit-copper transition-colors"
+                  >
+                    Trang sau
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </section>
       </div>

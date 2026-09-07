@@ -192,8 +192,8 @@ export default function AdminProductsPage() {
               <th className="text-right px-4 py-3">Thao tác</th>
             </tr>
           </thead>
-          <tbody>
-            {loading ? (
+          <tbody className={loading ? "opacity-50 pointer-events-none transition-opacity" : "transition-opacity"}>
+            {loading && products.length === 0 ? (
               <tr>
                 <td colSpan={9} className="px-4 py-10 text-center text-circuit-muted">
                   <Loader2 className="inline animate-spin mr-2" size={16} /> Đang tải dữ liệu từ Backend...
