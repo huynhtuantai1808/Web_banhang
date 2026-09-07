@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 
 from app.db.session import get_db
-from app.models.product import Brand, Category
+from app.models.product import Brand, Category, Product
 from app.core.security import require_permission
 from app.services.file_service import save_product_image
 
@@ -37,8 +37,20 @@ def _category_out(c: Category) -> dict:
 # ================= Brands =================
 
 @router.get("/brands")
-async def list_brands(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Brand).order_by(Brand.name))
+async def list_brands(category: str | None = None, db: AsyncSession = Depends(get_db)):
+    stmt = select(Brand).order_by(Brand.name)
+    if category:
+        # Find category and its children
+        cat_result = await db.execute(select(Category).where(Category.name.ilike(f"%{category}%")))
+        cat = cat_result.scalar_one_or_none()
+        if cat:
+            child_result = await db.execute(select(Category.id).where(Category.parent_id == cat.id))
+            child_ids = [r[0] for r in child_result.all()]
+            valid_cat_ids = [cat.id, *child_ids]
+            # Join with Product to only get brands that have products in these categories
+            stmt = stmt.join(Product, Product.brand_id == Brand.id).where(Product.category_id.in_(valid_cat_ids)).distinct()
+
+    result = await db.execute(stmt)
     return [{"id": b.id, "name": b.name} for b in result.scalars().all()]
 
 

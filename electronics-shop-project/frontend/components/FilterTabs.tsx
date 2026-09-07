@@ -57,14 +57,17 @@ export default function FilterTabs({ value, onChange }: FilterTabsProps) {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    Promise.all([listBrands(), listCategories()])
-      .then(([b, c]) => {
-        setBrands(b);
-        setCategories(c);
-      })
+    listCategories()
+      .then(setCategories)
       .catch(() => {})
       .finally(() => setLoaded(true));
   }, []);
+
+  useEffect(() => {
+    listBrands(value.category)
+      .then(setBrands)
+      .catch(() => {});
+  }, [value.category]);
 
   function select(key: keyof FilterState, option: string) {
     const next = value[key] === option ? undefined : option;

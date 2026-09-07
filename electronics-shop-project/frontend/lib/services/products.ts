@@ -183,8 +183,8 @@ export async function getRelatedProducts(productId: string, limit = 8): Promise<
 }
 
 /** Danh sách hãng hiện có — dùng để gợi ý (datalist) khi nhập sản phẩm mới. */
-export async function listBrands(): Promise<CatalogOption[]> {
-  const { data } = await apiClient.get<CatalogOption[]>("/brands");
+export async function listBrands(category?: string): Promise<CatalogOption[]> {
+  const { data } = await apiClient.get<CatalogOption[]>("/brands", { params: { category } });
   return data;
 }
 
