@@ -177,8 +177,10 @@ export default function CategoryPage() {
 
         <section className="md:col-span-3">
           {loading && products.length === 0 && (
-            <div className="flex items-center justify-center py-20 text-circuit-muted">
-              <Loader2 className="animate-spin mr-2" size={18} /> Đang tải sản phẩm...
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="bg-circuit-panel/50 animate-pulse rounded-xl border border-circuit-line h-[360px]" />
+              ))}
             </div>
           )}
           {!loading && error && (

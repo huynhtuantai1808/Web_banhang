@@ -8,5 +8,6 @@ import { API_ORIGIN } from "./config";
 export function getMediaUrl(path: string | null | undefined): string {
   if (!path) return "";
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  if (path.includes("placeholder-product")) return path;
   return `${API_ORIGIN}${path.startsWith("/") ? "" : "/"}${path}`;
 }
