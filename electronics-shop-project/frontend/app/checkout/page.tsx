@@ -282,6 +282,14 @@ export default function CheckoutPage() {
           window.location.href = result.payment_url;
           return;
         }
+        const orderInfo = {
+          items: cart?.items.map(i => ({ productId: i.product_id, quantity: i.quantity, name: i.product_name, price: i.product_discount_price ?? i.product_price, image: i.product_image_url })) || [],
+          total: finalTotal,
+          discount: appliedPromo?.discount ?? 0,
+          autoDiscount: autoDiscount
+        };
+        sessionStorage.setItem("lastOrderInfo", JSON.stringify(orderInfo));
+        
         router.push(`/orders/result?payment=cod&order_code=${result.order.order_code}`);
       } else {
         const guestItems = getGuestCart();
@@ -294,6 +302,14 @@ export default function CheckoutPage() {
           promoCode: promoInput.trim() || undefined,
           items: guestItems.map((i) => ({ productId: i.productId, quantity: i.quantity })),
         });
+        const orderInfo = {
+          items: guestItems,
+          total: finalTotal,
+          discount: appliedPromo?.discount ?? 0,
+          autoDiscount: autoDiscount
+        };
+        sessionStorage.setItem("lastOrderInfo", JSON.stringify(orderInfo));
+        
         clearGuestCart();
         if (gateway === "vnpay" && result.payment_url) {
           window.location.href = result.payment_url;
@@ -822,9 +838,32 @@ export default function CheckoutPage() {
                   </p>
                 </div>
 
-                <div className="bg-circuit-bg/50 p-4 rounded-xl border border-circuit-line/60 flex justify-between font-display text-lg text-circuit-text">
-                  <span>Tổng tiền thanh toán:</span>
-                  <span className="text-circuit-signal">{formatVND(finalTotal)}</span>
+                <div className="bg-circuit-bg/50 p-4 rounded-xl border border-circuit-line/60 space-y-2">
+                  <div className="flex justify-between text-circuit-muted">
+                    <span>Tạm tính:</span>
+                    <span>{formatVND(subtotal)}</span>
+                  </div>
+                  {autoDiscount > 0 && (
+                    <div className="flex justify-between text-circuit-signal">
+                      <span>Giảm giá tự động:</span>
+                      <span>-{formatVND(autoDiscount)}</span>
+                    </div>
+                  )}
+                  {appliedPromo && (
+                    <div className="flex justify-between text-circuit-signal">
+                      <span className="flex items-center gap-1.5"><Tag size={14} /> Mã KM ({appliedPromo.code}):</span>
+                      <span>-{formatVND(appliedPromo.discount)}</span>
+                    </div>
+                  )}
+                  {(!loggedIn && promoInput) && (
+                    <div className="text-xs text-circuit-muted italic text-right mt-1">
+                      (Mã khuyến mãi sẽ được áp dụng khi tạo đơn)
+                    </div>
+                  )}
+                  <div className="flex justify-between font-display text-lg text-circuit-text pt-2 border-t border-circuit-line/60">
+                    <span>Tổng tiền thanh toán:</span>
+                    <span className="text-circuit-signal">{formatVND(finalTotal)}</span>
+                  </div>
                 </div>
               </div>
             </div>

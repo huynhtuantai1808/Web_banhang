@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle2, XCircle, Truck, AlertTriangle } from "lucide-react";
@@ -50,11 +50,20 @@ function OrderResultContent() {
 
   const info = content[(payment as keyof typeof content) || "failed"] || content.failed;
 
+  const [orderInfo, setOrderInfo] = useState<any>(null);
+
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("lastOrderInfo");
+      if (stored) setOrderInfo(JSON.parse(stored));
+    } catch (e) {}
+  }, []);
+
   return (
     
     <div className="min-h-screen flex flex-col bg-circuit-bg text-circuit-text">
       <SiteHeader />
-      <main className="max-w-lg mx-auto px-6 py-16 text-center">
+      <main className="max-w-2xl mx-auto px-6 py-16 text-center">
 
       <div className="mt-10 flex flex-col items-center rounded-lg border border-circuit-line bg-circuit-panel p-10">
         {info.icon}
@@ -62,6 +71,33 @@ function OrderResultContent() {
         <p className="text-circuit-muted mt-2">{info.desc}</p>
         {orderCode && (
           <p className="font-mono text-sm text-circuit-copperLight mt-4">Mã đơn hàng: {orderCode}</p>
+        )}
+
+        {orderInfo && (
+          <div className="w-full mt-8 p-6 rounded-xl border border-circuit-line/60 bg-circuit-bg/30 text-left">
+            <h3 className="font-mono text-xs text-circuit-copperLight uppercase tracking-widest font-semibold mb-4">Chi tiết đơn hàng</h3>
+            <div className="space-y-3 border-b border-circuit-line/40 pb-4 mb-4">
+              {orderInfo.items?.map((item: any, idx: number) => (
+                <div key={idx} className="flex justify-between items-center text-sm">
+                  <span className="text-circuit-text font-medium pr-4">
+                    {item.name || item.product_name || "Sản phẩm"} <span className="text-circuit-muted font-mono ml-2">× {item.quantity}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-1.5 text-sm">
+              <div className="flex justify-between text-circuit-muted">
+                <span>Tổng tiền:</span>
+                <span className="font-mono">{(orderInfo.total).toLocaleString("vi-VN")}₫</span>
+              </div>
+              {orderInfo.discount > 0 && (
+                <div className="flex justify-between text-circuit-signal">
+                  <span>Khuyến mãi giảm:</span>
+                  <span className="font-mono">-{(orderInfo.discount).toLocaleString("vi-VN")}₫</span>
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
         <div className="flex gap-3 mt-8">

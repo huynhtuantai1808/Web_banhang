@@ -26,12 +26,17 @@ interface CategoryNode extends CategoryOption {
 function buildTree(flat: CategoryOption[]): CategoryNode[] {
   const nodes = new Map<number, CategoryNode>(flat.map((c) => [c.id, { ...c, children: [] }]));
   const roots: CategoryNode[] = [];
+  const seenNames = new Set<string>();
 
   for (const node of nodes.values()) {
     if (node.parent_id && nodes.has(node.parent_id)) {
       nodes.get(node.parent_id)!.children.push(node);
     } else {
-      roots.push(node);
+      const lowerName = node.name.toLowerCase().trim();
+      if (!seenNames.has(lowerName)) {
+        seenNames.add(lowerName);
+        roots.push(node);
+      }
     }
   }
   return roots;

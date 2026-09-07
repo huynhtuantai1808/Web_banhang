@@ -142,6 +142,7 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
             <p style="display: flex; justify-content: space-between;"><span>Tiền hàng (chưa VAT):</span> <strong>{format_vnd(total_before_tax)}</strong></p>
             <p style="display: flex; justify-content: space-between;"><span>Thuế GTGT (10%):</span> <strong>{format_vnd(tax_amount)}</strong></p>
             <p style="display: flex; justify-content: space-between;"><span>Phí vận chuyển:</span> <strong>0 ₫</strong></p>
+            {f'<p style="display: flex; justify-content: space-between; color: #d70018;"><span>Giảm giá:</span> <strong>-{format_vnd(order.discount_amount)}</strong></p>' if order.discount_amount > 0 else ""}
             <p style="display: flex; justify-content: space-between; border-top: 2px solid #333; padding-top: 10px; margin-top: 10px; font-size: 1.2em; color: #d70018;">
                 <span>Tổng tiền:</span> <strong>{format_vnd(order.final_amount)}</strong>
             </p>
