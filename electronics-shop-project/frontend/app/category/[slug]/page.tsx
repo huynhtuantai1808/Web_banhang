@@ -61,7 +61,10 @@ export default function CategoryPage() {
         setCategory(current);
         const parent = current.parent_id ? allCategoriesData.find((c) => c.id === current.parent_id) : null;
         setParentCategory(parent || null);
-        setFilters((prev) => ({ ...prev, category: current.name }));
+        setFilters((prev) => {
+          if (prev.category === current.name) return prev;
+          return { ...prev, category: current.name };
+        });
 
         const data = await listProducts({ category_id: current.id, ...buildFilterParams(filters) });
         setProducts(data.items.map(toDisplayProduct));
