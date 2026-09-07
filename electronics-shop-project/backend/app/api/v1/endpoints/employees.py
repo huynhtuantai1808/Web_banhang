@@ -1,6 +1,6 @@
 import uuid
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -10,6 +10,7 @@ from app.core.security import (
     hash_password, verify_password, create_access_token, create_refresh_token, require_admin,
 )
 from app.schemas.employee import EmployeeCreate, EmployeeUpdate, EmployeeOut, PermissionSet
+from app.core.security_middleware import limiter
 
 router = APIRouter(prefix="/employees", tags=["Employees (Nhân viên)"])
 
@@ -58,7 +59,8 @@ def _to_out(employee: Employee, role_name: str) -> EmployeeOut:
 
 
 @router.post("/login", response_model=TokenResponse)
-async def employee_login(payload: EmployeeLoginRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def employee_login(request: Request, payload: EmployeeLoginRequest, db: AsyncSession = Depends(get_db)):
     """Đăng nhập cho nhân viên quản lý (nội bộ) — không yêu cầu OTP.
 
     Tài khoản nhân viên được tạo bởi Quản lý (admin) qua `POST /employees`, không tự đăng ký công khai.

@@ -7,6 +7,9 @@ import os
 from app.core.config import settings
 from app.core.openapi_tags import TAGS_METADATA
 from app.api.v1.router import api_router
+from app.core.security_middleware import limiter, SecurityBlocklistMiddleware
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
 
 app = FastAPI(
     title="Electronics Shop API",
@@ -31,6 +34,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Apply Security Blocklist Middleware (runs first)
+app.add_middleware(SecurityBlocklistMiddleware)
+
+# Apply SlowAPI Rate Limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Mount static files sau khi app đã được tạo
 _UPLOADS_DIR = os.environ.get("UPLOADS_DIR", os.path.join(os.path.dirname(__file__), "..", "uploads"))

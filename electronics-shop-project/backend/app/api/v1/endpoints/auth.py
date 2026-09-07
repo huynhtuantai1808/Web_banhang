@@ -1,5 +1,5 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -10,6 +10,7 @@ from app.services.otp_service import generate_otp, verify_otp, send_otp_via_sms_
 from app.schemas.auth import (
     RegisterRequest, LoginRequest, LoginStepOneResponse, VerifyOtpRequest, TokenResponse,
 )
+from app.core.security_middleware import limiter
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -41,7 +42,8 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
 
 
 @router.post("/login", response_model=LoginStepOneResponse)
-async def login_step1(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def login_step1(request: Request, payload: LoginRequest, db: AsyncSession = Depends(get_db)):
     """Bước 1: xác thực mật khẩu bằng phone HOẶC email, sau đó gửi OTP."""
     if not payload.phone and not payload.email:
         raise HTTPException(status_code=422, detail="Cần cung cấp số điện thoại hoặc email")
@@ -68,7 +70,8 @@ async def login_step1(payload: LoginRequest, db: AsyncSession = Depends(get_db))
 
 
 @router.post("/login/verify-otp", response_model=TokenResponse)
-async def login_step2(payload: VerifyOtpRequest):
+@limiter.limit("5/minute")
+async def login_step2(request: Request, payload: VerifyOtpRequest):
     """Bước 2: xác thực OTP, cấp JWT nếu đúng."""
     user_id = await verify_otp(payload.otp_token, payload.otp_code)
     if user_id is None:
