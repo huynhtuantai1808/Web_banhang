@@ -63,10 +63,14 @@ export default function SiteFooter() {
           <p className="font-mono text-xs text-circuit-copperLight uppercase tracking-widest mb-3">
             Địa chỉ
           </p>
-          <p className="text-sm text-circuit-muted flex items-start gap-2">
-            <MapPin size={14} className="shrink-0 mt-0.5" />
-            Hệ thống showroom trên toàn quốc — liên hệ hotline để biết địa chỉ chi nhánh gần bạn nhất.
-          </p>
+          <ul className="text-sm text-circuit-muted space-y-2">
+            {BRANDING.contact.branches.map((branch, idx) => (
+              <li key={idx} className="flex items-start gap-2">
+                <MapPin size={14} className="shrink-0 mt-0.5" />
+                <span>{branch}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 

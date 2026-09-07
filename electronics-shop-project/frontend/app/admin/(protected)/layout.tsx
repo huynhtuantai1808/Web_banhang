@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, LogOut, Users, Package, Palette, Tag, UserCircle, ClipboardList, LayoutGrid, CalendarClock, FileText, PackageSearch, BarChart3, Settings, Megaphone, Newspaper } from "lucide-react";
+import { LayoutDashboard, LogOut, Users, Package, Palette, Tag, UserCircle, ClipboardList, LayoutGrid, CalendarClock, FileText, PackageSearch, BarChart3, Settings, Megaphone, Newspaper, MessageCircle } from "lucide-react";
 import { isEmployeeLoggedIn } from "@/lib/auth-storage";
 import { employeeLogout, isCurrentEmployeeAdmin } from "@/lib/services/employees";
 import Logo from "@/components/Logo";
@@ -50,6 +50,7 @@ export default function AdminProtectedLayout({ children }: { children: React.Rea
   const navItems = [
     { href: "/admin/orders", label: "Đơn hàng", icon: ClipboardList, adminOnly: false },
     { href: "/admin/invoices", label: "Hóa đơn", icon: FileText, adminOnly: false },
+    { href: "/admin/chat", label: "Chat Hỗ Trợ", icon: MessageCircle, adminOnly: false },
     { href: "/admin/products", label: "Sản phẩm", icon: Package, adminOnly: false },
     { href: "/admin/inventory", label: "Tồn kho", icon: PackageSearch, adminOnly: true },
     { href: "/admin/categories", label: "Phân loại", icon: LayoutGrid, adminOnly: false },

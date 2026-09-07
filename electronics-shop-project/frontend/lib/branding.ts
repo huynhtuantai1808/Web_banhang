@@ -24,5 +24,9 @@ export const BRANDING = {
     zaloLink: "https://zalo.me/1900123456",
     facebookLink: "https://facebook.com/techtrace.store",
     workingHours: "8:00 - 21:30, tất cả các ngày trong tuần",
+    branches: [
+      "123 Đường Cầu Giấy, Q. Cầu Giấy, Hà Nội",
+      "456 Đường Lê Lợi, Q. 1, TP. Hồ Chí Minh"
+    ],
   },
 };
