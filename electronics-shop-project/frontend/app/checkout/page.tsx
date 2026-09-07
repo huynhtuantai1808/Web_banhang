@@ -838,6 +838,22 @@ export default function CheckoutPage() {
                   </p>
                 </div>
 
+                <div className="bg-circuit-bg/50 p-4 rounded-xl border border-circuit-line/60">
+                  <p className="font-semibold text-circuit-text mb-3">Thông tin sản phẩm:</p>
+                  <div className="space-y-3">
+                    {cart?.items.map((item, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-sm">
+                        <span className="text-circuit-text font-medium pr-4">
+                          {item.product_name} <span className="text-circuit-muted font-mono ml-2">× {item.quantity}</span>
+                        </span>
+                        <span className="text-circuit-text font-mono font-semibold">
+                          {formatVND((item.product_discount_price ?? item.product_price) * item.quantity)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="bg-circuit-bg/50 p-4 rounded-xl border border-circuit-line/60 space-y-2">
                   <div className="flex justify-between text-circuit-muted">
                     <span>Tạm tính:</span>

@@ -370,7 +370,7 @@ async def send_order_email(
     ]
 
     if payload.email_type == "confirmation":
-        send_order_confirmation(order, user=customer, guest_email=guest_email)
+        send_order_confirmation(order, items, user=customer, guest_email=guest_email)
     elif payload.email_type == "invoice":
         send_electronic_invoice(order, items, user=customer, guest_email=guest_email)
     else:

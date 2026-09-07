@@ -48,10 +48,36 @@ def _send_email_smtp(subject: str, html_content: str, to_email: str):
         raise e
 
 
-def send_order_confirmation(order: Order, user: Customer = None, guest_email: str = None):
+def send_order_confirmation(order: Order, items: list = None, user: Customer = None, guest_email: str = None):
     to_email = user.email if user else guest_email
     if not to_email:
         return
+        
+    items_html = ""
+    if items:
+        items_html = """
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <thead>
+                <tr style="background-color: #f8f9fa;">
+                    <th style="padding: 10px; border-bottom: 2px solid #ddd; text-align: left;">Sản phẩm</th>
+                    <th style="padding: 10px; border-bottom: 2px solid #ddd; text-align: center;">SL</th>
+                    <th style="padding: 10px; border-bottom: 2px solid #ddd; text-align: right;">Đơn giá</th>
+                </tr>
+            </thead>
+            <tbody>
+        """
+        for item in items:
+            items_html += f"""
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">{item['product_name']}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: center;">{item['quantity']}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">{format_vnd(item['unit_price'])}</td>
+                </tr>
+            """
+        items_html += """
+            </tbody>
+        </table>
+        """
 
     html_content = f"""
     <html>
@@ -63,6 +89,7 @@ def send_order_confirmation(order: Order, user: Customer = None, guest_email: st
             <p style="margin: 0;"><strong>Đặt ngày:</strong> {format_date(order.created_at)}</p>
             <p style="margin: 0;"><strong>Trạng thái:</strong> {order.status.upper()}</p>
         </div>
+        {items_html}
         <p>Chúng tôi đang xử lý đơn hàng và sẽ liên hệ với bạn trong thời gian sớm nhất.</p>
         <p>Trân trọng,<br>Đội ngũ Electronics Shop</p>
     </body>

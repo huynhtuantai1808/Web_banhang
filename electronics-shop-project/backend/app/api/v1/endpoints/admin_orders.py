@@ -231,7 +231,7 @@ async def send_order_email_endpoint(
 
     try:
         if payload.email_type == "confirmation":
-            send_order_confirmation(order, user=customer, guest_email=customer.email)
+            send_order_confirmation(order, items, user=customer, guest_email=customer.email)
             msg = "Đã gửi email xác nhận"
         elif payload.email_type == "invoice":
             send_electronic_invoice(order, items, user=customer, guest_email=customer.email)
