@@ -65,6 +65,7 @@ async def import_products_from_file(db: AsyncSession, filename: str, content: by
                 existing_product.size_dimension = None if pd.isna(row.get("size_dimension")) else str(row.get("size_dimension"))
                 existing_product.price = float(row["price"])
                 existing_product.discount_price = None if pd.isna(row.get("discount_price")) else float(row.get("discount_price"))
+                existing_product.status = "active"
             else:
                 product = Product(
                     id=uuid.uuid4(),
