@@ -11,6 +11,7 @@ class SiteSettingsOut(BaseModel):
     logo_image_url: str | None = None
     accent_color: str
     quick_links: list = []
+    store_addresses: list = []
 
     class Config:
         from_attributes = True
@@ -24,3 +25,4 @@ class SiteSettingsUpdate(BaseModel):
     footer_intro: str | None = None
     accent_color: str | None = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
     quick_links: list | None = None
+    store_addresses: list | None = None

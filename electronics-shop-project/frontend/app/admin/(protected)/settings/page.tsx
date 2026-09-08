@@ -54,6 +54,7 @@ setBanner(null);
         footer_intro: settings.footer_intro ?? undefined,
         accent_color: settings.accent_color,
         quick_links: settings.quick_links,
+        store_addresses: settings.store_addresses,
       });
       setSettings(updated);
       await refresh();
@@ -262,6 +263,50 @@ setBanner(null);
               onChange={handleLogoUpload}
             />
           </div>
+        </div>
+
+        {/* Danh sách địa chỉ cửa hàng */}
+        <div className="pt-4 border-t border-circuit-line">
+          <span className="block text-xs font-mono text-circuit-muted uppercase mb-4">Danh sách địa chỉ cửa hàng</span>
+          <div className="space-y-3 mb-3">
+            {(settings.store_addresses || []).map((addr, idx) => (
+              <div key={idx} className="flex items-center gap-3">
+                <input
+                  value={addr}
+                  onChange={(e) => {
+                    const newAddrs = [...(settings.store_addresses || [])];
+                    newAddrs[idx] = e.target.value;
+                    update("store_addresses", newAddrs);
+                  }}
+                  className="input flex-1"
+                  placeholder="Nhập địa chỉ cửa hàng (VD: 123 Đường A, Quận 1, TP.HCM)"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newAddrs = [...(settings.store_addresses || [])];
+                    newAddrs.splice(idx, 1);
+                    update("store_addresses", newAddrs);
+                  }}
+                  className="p-2 text-red-400 hover:bg-red-400/10 rounded-md transition-colors shrink-0"
+                  title="Xoá"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const newAddrs = [...(settings.store_addresses || [])];
+              newAddrs.push("");
+              update("store_addresses", newAddrs);
+            }}
+            className="flex items-center gap-2 text-sm text-circuit-copper hover:text-circuit-copperLight transition-colors mt-2"
+          >
+            <Plus size={16} /> Thêm địa chỉ mới
+          </button>
         </div>
 
         {/* Quick Links */}

@@ -64,7 +64,10 @@ export default function SiteFooter() {
             Địa chỉ
           </p>
           <ul className="text-sm text-circuit-muted space-y-2">
-            {BRANDING.contact.branches.map((branch, idx) => (
+            {(settings.store_addresses && settings.store_addresses.length > 0 
+              ? settings.store_addresses 
+              : BRANDING.contact.branches
+            ).map((branch, idx) => (
               <li key={idx} className="flex items-start gap-2">
                 <MapPin size={14} className="shrink-0 mt-0.5" />
                 <span>{branch}</span>

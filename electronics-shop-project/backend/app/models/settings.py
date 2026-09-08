@@ -26,5 +26,8 @@ class SiteSettings(Base):
     # JSONB để lưu trữ danh sách Quick Links (ví dụ: [{"name": "iPhone", "icon": "Smartphone"}])
     quick_links: Mapped[list | None] = mapped_column(JSONB, default=list)
 
+    # JSONB để lưu trữ danh sách địa chỉ cửa hàng (ví dụ: ["123 Đường A", "456 Đường B"])
+    store_addresses: Mapped[list | None] = mapped_column(JSONB, default=list)
+
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

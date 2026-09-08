@@ -43,6 +43,8 @@ async def update_site_settings(
         setattr(settings_row, field, value)
         if field == "quick_links":
             flag_modified(settings_row, "quick_links")
+        elif field == "store_addresses":
+            flag_modified(settings_row, "store_addresses")
 
     await db.commit()
     await db.refresh(settings_row)
