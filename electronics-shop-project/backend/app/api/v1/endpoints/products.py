@@ -60,6 +60,7 @@ async def _row_to_out(
         specification=product.specification,
         price=float(product.price),
         discount_price=float(product.discount_price) if product.discount_price is not None else None,
+        stock_quantity=product.stock_quantity,
         is_installment_eligible=product.is_installment_eligible,
         status=product.status,
         primary_image_url=primary_image_url,
@@ -228,6 +229,7 @@ async def create_product(
         specification=payload.specification,
         price=payload.price,
         discount_price=payload.discount_price,
+        stock_quantity=payload.stock_quantity,
         is_installment_eligible=payload.is_installment_eligible,
     )
     db.add(product)
@@ -268,6 +270,7 @@ async def update_product(
     product.specification = payload.specification
     product.price = payload.price
     product.discount_price = payload.discount_price
+    product.stock_quantity = payload.stock_quantity
     product.is_installment_eligible = payload.is_installment_eligible
 
     await db.commit()
@@ -316,7 +319,7 @@ async def get_reviews(
 
     result = await db.execute(
         select(ProductReview, Customer)
-        .join(Customer, ProductReview.customer_id == Customer.id)
+        .outerjoin(Customer, ProductReview.customer_id == Customer.id)
         .where(ProductReview.product_id == product_id)
         .order_by(ProductReview.created_at.desc())
         .offset((page - 1) * page_size)

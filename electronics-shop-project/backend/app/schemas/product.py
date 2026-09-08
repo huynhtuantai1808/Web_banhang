@@ -18,6 +18,7 @@ class ProductCreate(BaseModel):
     specification: dict | None = None
     price: float
     discount_price: float | None = None
+    stock_quantity: int = 0
     is_installment_eligible: bool = True
 
 
@@ -36,6 +37,7 @@ class ProductOut(BaseModel):
     specification: dict | None = None
     price: float
     discount_price: float | None = None
+    stock_quantity: int
     is_installment_eligible: bool
     status: str
     primary_image_url: str | None = None

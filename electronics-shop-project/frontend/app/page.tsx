@@ -46,6 +46,7 @@ function toDisplayProduct(p: ProductOut): Product {
     specHighlight: spec || "—",
     averageRating: p.average_rating ?? undefined,
     reviewCount: p.review_count ?? undefined,
+    stockQuantity: p.stock_quantity ?? 0,
   };
 }
 

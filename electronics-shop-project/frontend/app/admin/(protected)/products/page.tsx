@@ -188,6 +188,7 @@ export default function AdminProductsPage() {
               <th className="text-left px-4 py-3">Danh mục</th>
               <th className="text-right px-4 py-3">Giá</th>
               <th className="text-right px-4 py-3">Giá KM</th>
+              <th className="text-right px-4 py-3">Tồn kho</th>
               <th className="text-left px-4 py-3">Trạng thái</th>
               <th className="text-right px-4 py-3">Thao tác</th>
             </tr>
@@ -201,7 +202,7 @@ export default function AdminProductsPage() {
               </tr>
             ) : products.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-10 text-center text-circuit-muted">
+                <td colSpan={10} className="px-4 py-10 text-center text-circuit-muted">
                   Chưa có sản phẩm nào. Bấm "Thêm sản phẩm" hoặc "Nhập file Excel/CSV" để bắt đầu.
                 </td>
               </tr>
@@ -237,6 +238,11 @@ export default function AdminProductsPage() {
                   <td className="px-4 py-3 text-right">{formatVND(p.price)}</td>
                   <td className="px-4 py-3 text-right text-circuit-signal">
                     {p.discount_price ? formatVND(p.discount_price) : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <span className={p.stock_quantity <= 0 ? "text-red-400 font-bold" : "text-circuit-text"}>
+                      {p.stock_quantity ?? 0}
+                    </span>
                   </td>
                   <td className="px-4 py-3">
                     <span

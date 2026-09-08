@@ -40,6 +40,7 @@ class Product(Base):
     specification: Mapped[dict | None] = mapped_column(JSONB)   # RAM, CPU, ổ cứng, màn hình...
     price: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
     discount_price: Mapped[float | None] = mapped_column(Numeric(14, 2))
+    stock_quantity: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     is_installment_eligible: Mapped[bool] = mapped_column(Boolean, default=True)
     status: Mapped[str] = mapped_column(String(20), default="active")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

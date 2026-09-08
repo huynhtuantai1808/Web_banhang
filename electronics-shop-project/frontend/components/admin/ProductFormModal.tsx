@@ -28,6 +28,7 @@ const EMPTY_FORM: ProductInput = {
   specification: undefined,
   price: 0,
   discount_price: undefined,
+  stock_quantity: 0,
   is_installment_eligible: true,
 };
 
@@ -112,6 +113,7 @@ export default function ProductFormModal({
         specification: undefined,
         price: editingProduct.price,
         discount_price: editingProduct.discount_price ?? undefined,
+        stock_quantity: editingProduct.stock_quantity ?? 0,
         is_installment_eligible: editingProduct.is_installment_eligible,
       });
 
@@ -418,7 +420,7 @@ export default function ProductFormModal({
               </div>
             </Field>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-4">
               <Field label="Giá bán *">
                 <input required type="number" min={0} value={form.price || ""}
                   onChange={(e) => update("price", Number(e.target.value))} className="input" />
@@ -426,6 +428,11 @@ export default function ProductFormModal({
               <Field label="Giá khuyến mãi">
                 <input type="number" min={0} value={form.discount_price ?? ""}
                   onChange={(e) => update("discount_price", e.target.value ? Number(e.target.value) : undefined)}
+                  className="input" />
+              </Field>
+              <Field label="Tồn kho *">
+                <input type="number" min={0} value={form.stock_quantity ?? 0}
+                  onChange={(e) => update("stock_quantity", Number(e.target.value))}
                   className="input" />
               </Field>
             </div>

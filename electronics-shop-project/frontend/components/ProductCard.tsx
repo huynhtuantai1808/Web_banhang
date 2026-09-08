@@ -22,6 +22,7 @@ export interface Product {
   specHighlight: string; // vd: "16GB RAM / 512GB SSD"
   averageRating?: number;
   reviewCount?: number;
+  stockQuantity?: number;
 }
 
 function formatVND(value: number) {
@@ -145,6 +146,15 @@ export default function ProductCard({
             }}
           />
 
+          {/* Out of Stock Overlay */}
+          {product.stockQuantity !== undefined && product.stockQuantity <= 0 && (
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center z-10">
+              <span className="px-3 py-1.5 bg-red-500 text-white font-bold text-xs rounded-full shadow-lg border border-red-400">
+                HẾT HÀNG
+              </span>
+            </div>
+          )}
+
           {/* Wishlist button */}
           <button
             onClick={handleWishlistToggle}
@@ -224,8 +234,8 @@ export default function ProductCard({
 
       <button
         onClick={handleAddToCart}
-        disabled={adding}
-        className="relative z-10 mt-auto w-full flex items-center justify-center gap-2 rounded-xl border border-circuit-copper/30 bg-circuit-copper/5 py-2 sm:py-2.5 text-[13px] sm:text-sm font-medium text-circuit-copper hover:bg-circuit-copper hover:text-white transition-all duration-300 disabled:opacity-50 disabled:hover:bg-transparent shadow-sm hover:shadow-md"
+        disabled={adding || (product.stockQuantity !== undefined && product.stockQuantity <= 0)}
+        className="relative z-10 mt-auto w-full flex items-center justify-center gap-2 rounded-xl border border-circuit-copper/30 bg-circuit-copper/5 py-2 sm:py-2.5 text-[13px] sm:text-sm font-medium text-circuit-copper hover:bg-circuit-copper hover:text-white transition-all duration-300 disabled:opacity-50 disabled:hover:bg-transparent disabled:cursor-not-allowed shadow-sm hover:shadow-md"
       >
         {adding ? (
           <Loader2 size={16} className="animate-spin" />
@@ -234,7 +244,7 @@ export default function ProductCard({
         ) : (
           <ShoppingCart size={16} />
         )}
-        {added ? "Đã thêm vào giỏ" : "Thêm vào giỏ"}
+        {(product.stockQuantity !== undefined && product.stockQuantity <= 0) ? "Hết hàng" : added ? "Đã thêm vào giỏ" : "Thêm vào giỏ"}
       </button>
     </motion.div>
   );

@@ -11,7 +11,7 @@ from app.services.catalog_service import get_or_create_brand, get_or_create_cate
 REQUIRED_COLUMNS = ["product_code", "name", "price"]
 OPTIONAL_COLUMNS = [
     "description", "brand", "category", "color", "material",
-    "size_dimension", "discount_price",
+    "size_dimension", "discount_price", "stock_quantity"
 ]
 
 
@@ -65,6 +65,7 @@ async def import_products_from_file(db: AsyncSession, filename: str, content: by
                 existing_product.size_dimension = None if pd.isna(row.get("size_dimension")) else str(row.get("size_dimension"))
                 existing_product.price = float(row["price"])
                 existing_product.discount_price = None if pd.isna(row.get("discount_price")) else float(row.get("discount_price"))
+                existing_product.stock_quantity = 0 if pd.isna(row.get("stock_quantity")) else int(row.get("stock_quantity"))
                 existing_product.status = "active"
             else:
                 product = Product(
@@ -79,6 +80,7 @@ async def import_products_from_file(db: AsyncSession, filename: str, content: by
                     size_dimension=None if pd.isna(row.get("size_dimension")) else str(row.get("size_dimension")),
                     price=float(row["price"]),
                     discount_price=None if pd.isna(row.get("discount_price")) else float(row.get("discount_price")),
+                    stock_quantity=0 if pd.isna(row.get("stock_quantity")) else int(row.get("stock_quantity")),
                     status="active",
                 )
                 db.add(product)

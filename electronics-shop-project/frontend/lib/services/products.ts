@@ -20,6 +20,7 @@ export interface ProductOut {
   primary_image_url?: string | null;
   average_rating?: number | null;
   review_count?: number | null;
+  stock_quantity?: number | null;
 }
 
 export interface ProductInput {
