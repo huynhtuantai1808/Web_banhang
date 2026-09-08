@@ -34,7 +34,7 @@ async def get_rooms(
             "customer": {
                 "id": str(customer.id),
                 "full_name": customer.full_name,
-                "phone_number": customer.phone_number
+                "phone_number": customer.phone
             }
         })
     return rooms

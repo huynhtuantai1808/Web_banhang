@@ -16,11 +16,13 @@ export default function AdminChatPage() {
     fetchRooms();
   }, []);
 
+  const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
+
   const fetchRooms = async () => {
     try {
       const token = getEmployeeToken();
       if (!token) return;
-      const res = await fetch("http://localhost:8000/api/v1/admin/chat/rooms", {
+      const res = await fetch(`${API_URL}/admin/chat/rooms`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -45,7 +47,7 @@ export default function AdminChatPage() {
       
       // If room is waiting, claim it
       if (status === "waiting") {
-        await fetch(`http://localhost:8000/api/v1/admin/chat/rooms/${roomId}/claim`, {
+        await fetch(`${API_URL}/admin/chat/rooms/${roomId}/claim`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -53,14 +55,15 @@ export default function AdminChatPage() {
       }
 
       // Fetch messages
-      const res = await fetch(`http://localhost:8000/api/v1/admin/chat/rooms/${roomId}/messages`, {
+      const res = await fetch(`${API_URL}/admin/chat/rooms/${roomId}/messages`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
       setMessages(data);
 
       // Connect WS
-      const socket = new WebSocket(`ws://localhost:8000/api/v1/chat/ws/${roomId}?token=${token}`);
+      const WS_URL = API_URL.replace("http", "ws");
+      const socket = new WebSocket(`${WS_URL}/chat/ws/${roomId}?token=${token}`);
       socket.onmessage = (event) => {
         const msg = JSON.parse(event.data);
         setMessages(prev => [...prev, msg]);
