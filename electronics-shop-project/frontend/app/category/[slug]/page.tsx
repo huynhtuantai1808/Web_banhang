@@ -28,8 +28,8 @@ function toDisplayProduct(p: ProductOut): Product {
     discountPrice: p.discount_price ?? undefined,
     imageUrl: getMediaUrl(p.primary_image_url) || "/placeholder-product.svg",
     specHighlight: spec || "—",
-    averageRating: p.average_rating,
-    reviewCount: p.review_count,
+    averageRating: p.average_rating ?? undefined,
+    reviewCount: p.review_count ?? undefined,
   };
 }
 
