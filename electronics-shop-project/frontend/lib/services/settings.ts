@@ -11,6 +11,7 @@ export interface SiteSettingsOut {
   accent_color: string;
   quick_links?: { name: string; icon?: string; image_url?: string; link?: string }[];
   store_addresses?: (string | StoreAddress)[];
+  category_brands?: Record<string, string[]>;
 }
 
 export interface StoreAddress {
@@ -27,6 +28,7 @@ export interface SiteSettingsUpdateInput {
   accent_color?: string;
   quick_links?: { name: string; icon?: string; image_url?: string; link?: string }[];
   store_addresses?: (string | StoreAddress)[];
+  category_brands?: Record<string, string[]>;
 }
 
 /** Đọc cấu hình hiển thị hiện tại — API công khai, không cần đăng nhập. */

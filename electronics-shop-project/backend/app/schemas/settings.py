@@ -12,6 +12,7 @@ class SiteSettingsOut(BaseModel):
     accent_color: str
     quick_links: list = []
     store_addresses: list = []
+    category_brands: dict = {}
 
     class Config:
         from_attributes = True
@@ -26,3 +27,4 @@ class SiteSettingsUpdate(BaseModel):
     accent_color: str | None = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
     quick_links: list | None = None
     store_addresses: list | None = None
+    category_brands: dict | None = None

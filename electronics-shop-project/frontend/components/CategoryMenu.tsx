@@ -42,6 +42,8 @@ function buildTree(flat: CategoryOption[]): CategoryNode[] {
   return roots;
 }
 
+import { useSiteSettings } from "@/components/SiteSettingsProvider";
+
 /** Menu danh mục dạng hamburger (☰) — mở ra danh sách danh mục cha, hover/click vào 1 danh mục
  * cha sẽ hiện thêm danh mục con (">"). Tách biệt hoàn toàn với <FilterTabs> ở sidebar — đây là
  * điều hướng theo cây danh mục (điều hướng sang trang riêng), còn FilterTabs là lọc tại chỗ trên
@@ -50,6 +52,7 @@ export default function CategoryMenu() {
   const [open, setOpen] = useState(false);
   const [categories, setCategories] = useState<CategoryNode[]>([]);
   const [activeParent, setActiveParent] = useState<number | null>(null);
+  const { settings } = useSiteSettings();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -185,23 +188,30 @@ export default function CategoryMenu() {
                       </div>
                     )}
 
-                    {/* Cột 3: Thương hiệu (Tĩnh) */}
-                    <div>
-                      <h3 className="font-semibold text-circuit-copperLight mb-4 text-sm uppercase tracking-wider">Thương hiệu nổi bật</h3>
-                      <ul className="space-y-3">
-                        {["ACER", "ASUS", "DELL", "LENOVO", "MSI", "APPLE"].map((brand) => (
-                          <li key={brand}>
-                            <Link 
-                              href={`/category/${parent.slug}?brand=${brand}`} 
-                              onClick={() => setOpen(false)} 
-                              className="text-sm text-circuit-text hover:text-red-400 transition-colors"
-                            >
-                              {brand}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                    {/* Cột 3: Thương hiệu (Động từ Settings) */}
+                    {(() => {
+                      const brands = (settings?.category_brands || {})[parent.slug] || [];
+                      if (brands.length === 0) return null;
+                      
+                      return (
+                        <div>
+                          <h3 className="font-semibold text-circuit-copperLight mb-4 text-sm uppercase tracking-wider">Thương hiệu nổi bật</h3>
+                          <ul className="space-y-3">
+                            {brands.map((brand) => (
+                              <li key={brand}>
+                                <Link 
+                                  href={`/category/${parent.slug}?brand=${brand}`} 
+                                  onClick={() => setOpen(false)} 
+                                  className="text-sm text-circuit-text hover:text-red-400 transition-colors"
+                                >
+                                  {brand}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               );

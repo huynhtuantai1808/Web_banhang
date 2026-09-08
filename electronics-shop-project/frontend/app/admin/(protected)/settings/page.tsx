@@ -8,6 +8,7 @@ import {
 import { useSiteSettings } from "@/components/SiteSettingsProvider";
 import { getMediaUrl } from "@/lib/media";
 import { ApiError } from "@/lib/apiClient";
+import { listCategories, CategoryOption } from "@/lib/services/products";
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<SiteSettingsOut | null>(null);
@@ -17,6 +18,7 @@ export default function AdminSettingsPage() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingQuickLinkIdx, setUploadingQuickLinkIdx] = useState<number | null>(null);
   const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
   const { refresh } = useSiteSettings();
 
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -25,10 +27,14 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     async function load() {
       try {
-        const data = await getSiteSettings();
+        const [data, cats] = await Promise.all([
+          getSiteSettings(),
+          listCategories()
+        ]);
         setSettings(data);
+        setCategories(cats.filter(c => c.parent_id === null)); // Only root categories
       } catch (err: any) {
-        setBanner({ type: "error", text: err instanceof ApiError ? String(err.message) : (err?.message ? String(err.message) : "Không tải được cấu hình") });
+        setBanner({ type: "error", text: err instanceof ApiError ? String(err.message) : (err?.message ? String(err.message) : "Không tải được dữ liệu") });
       } finally {
         setLoading(false);
       }
@@ -55,6 +61,7 @@ setBanner(null);
         accent_color: settings.accent_color,
         quick_links: settings.quick_links,
         store_addresses: settings.store_addresses,
+        category_brands: settings.category_brands,
       });
       setSettings(updated);
       await refresh();
@@ -329,6 +336,51 @@ setBanner(null);
           >
             <Plus size={16} /> Thêm địa chỉ mới
           </button>
+        </div>
+
+        {/* Tùy chỉnh Thương hiệu (Brands) theo Danh mục */}
+        <div className="pt-4 border-t border-circuit-line">
+          <span className="block text-xs font-mono text-circuit-muted uppercase mb-4">Cấu hình Hãng theo Danh mục (Mega Menu)</span>
+          <div className="space-y-3 mb-3">
+            {categories.map((cat) => {
+              const brandsArr = (settings.category_brands || {})[cat.slug] || [];
+              const brandsStr = brandsArr.join(", ");
+              return (
+                <div key={cat.id} className="flex flex-col sm:flex-row sm:items-center gap-3 bg-circuit-panel p-3 rounded-md border border-circuit-line">
+                  <div className="sm:w-48 font-medium text-circuit-text shrink-0">{cat.name}</div>
+                  <input
+                    value={brandsStr}
+                    onChange={(e) => {
+                      const newBrands = e.target.value.split(",").map(s => s.trim()).filter(s => s !== "");
+                      // Allow empty strings while typing, only filter when they actually save. 
+                      // Actually, if we filter, we can't type "Acer, " (it drops the trailing comma).
+                      // We should just store the raw string in state and parse on blur or let them type.
+                      // To make it simple, we can just split and store, but that might make typing commas weird.
+                      // Let's store the raw string in a local state if needed... Or just split/join, it's fine for simple lists.
+                      // Let's improve: just update it. If they type a comma, it becomes an empty string at the end which is dropped.
+                      // If they want to type "Acer, ", it immediately drops the comma.
+                      // So we should just use the raw string directly!
+                      update("category_brands", {
+                        ...(settings.category_brands || {}),
+                        [cat.slug]: e.target.value.split(",").map(s => s.trim()) // don't filter out empty yet so they can type commas
+                      });
+                    }}
+                    onBlur={(e) => {
+                      // Cleanup empty elements on blur
+                      const newBrands = e.target.value.split(",").map(s => s.trim()).filter(s => s !== "");
+                      update("category_brands", {
+                        ...(settings.category_brands || {}),
+                        [cat.slug]: newBrands
+                      });
+                    }}
+                    className="input flex-1"
+                    placeholder="VD: Acer, ASUS, MSI (cách nhau bởi dấu phẩy)"
+                  />
+                </div>
+              );
+            })}
+            {categories.length === 0 && <p className="text-sm text-circuit-muted">Không có danh mục nào.</p>}
+          </div>
         </div>
 
         {/* Quick Links */}
