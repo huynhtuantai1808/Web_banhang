@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ChevronRight, Loader2 } from "lucide-react";
@@ -33,15 +33,19 @@ function toDisplayProduct(p: ProductOut): Product {
   };
 }
 
-export default function CategoryPage() {
+function CategoryPageContent() {
   const params = useParams<{ slug: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [category, setCategory] = useState<CategoryOption | null>(null);
   const [parentCategory, setParentCategory] = useState<CategoryOption | null>(null);
   const [allCategories, setAllCategories] = useState<CategoryOption[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [filters, setFilters] = useState<FilterState>({});
+  const [filters, setFilters] = useState<FilterState>({
+    brand: searchParams?.get("brand") || undefined,
+    priceLabel: searchParams?.get("priceLabel") || undefined,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cartMessage, setCartMessage] = useState<string | null>(null);
@@ -84,10 +88,8 @@ export default function CategoryPage() {
   function handleFilterChange(newFilters: FilterState) {
     if (category && newFilters.category !== category.name) {
       if (!newFilters.category) {
-        // Khách bỏ chọn danh mục -> về trang chủ
         router.push("/");
       } else {
-        // Khách chọn danh mục khác -> chuyển hướng sang trang danh mục đó
         const targetCat = allCategories.find((c) => c.name === newFilters.category);
         if (targetCat) {
           router.push(`/category/${targetCat.slug}`);
@@ -130,7 +132,6 @@ export default function CategoryPage() {
       <SiteHeader />
       <main className="max-w-7xl mx-auto px-6 pb-10">
 
-      {/* Breadcrumb kiểu "Laptop > Gaming Laptop" */}
       <div className="flex items-center gap-1.5 text-sm text-circuit-muted mb-6">
         <Link href="/" className="hover:text-circuit-copperLight">Trang chủ</Link>
         {parentCategory && (
@@ -144,12 +145,43 @@ export default function CategoryPage() {
         {category && (
           <>
             <ChevronRight size={14} />
-            <span className="text-circuit-text">{category.name}</span>
+            <span className="text-circuit-copper">{category.name}</span>
           </>
         )}
       </div>
 
-      {category?.banner_image_url && (
+      <div className="flex flex-col md:flex-row gap-8">
+        <div className="w-full md:w-64 shrink-0">
+          <FilterTabs filters={filters} onFilterChange={handleFilterChange} />
+        </div>
+
+        <div className="flex-1">
+          {error ? (
+            <div className="text-center py-20 text-red-500">
+              <p>{error}</p>
+              <Link href="/" className="text-circuit-copper mt-4 inline-block hover:underline">Về trang chủ</Link>
+            </div>
+          ) : loading ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader2 className="animate-spin text-circuit-copper" size={32} />
+            </div>
+          ) : products.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {products.map((p) => (
+                <ProductCard key={p.id} product={p} onAddToCart={() => handleAddToCart(p.id)} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 text-circuit-muted">
+              <p>Không có sản phẩm nào phù hợp với bộ lọc.</p>
+            </div>
+          )}
+        </div>
+      </div>
+      </main>
+      <SiteFooter />
+
+      {cartMessage && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
