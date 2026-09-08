@@ -1,9 +1,9 @@
 import asyncio
-from app.db.session import async_session_maker
+from app.db.session import AsyncSessionLocal
 from sqlalchemy import text
 
 async def main():
-    async with async_session_maker() as db:
+    async with AsyncSessionLocal() as db:
         try:
             await db.execute(text("ALTER TABLE site_settings ADD COLUMN store_addresses JSONB DEFAULT '[]'::jsonb;"))
             await db.commit()
