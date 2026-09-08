@@ -131,121 +131,89 @@ function CategoryPageContent() {
     <div className="min-h-screen flex flex-col bg-circuit-bg text-circuit-text">
       <SiteHeader />
       <main className="max-w-7xl mx-auto px-6 pb-10">
-
-      <div className="flex items-center gap-1.5 text-sm text-circuit-muted mb-6">
-        <Link href="/" className="hover:text-circuit-copperLight">Trang chủ</Link>
-        {parentCategory && (
-          <>
-            <ChevronRight size={14} />
-            <Link href={`/category/${parentCategory.slug}`} className="hover:text-circuit-copperLight">
-              {parentCategory.name}
-            </Link>
-          </>
-        )}
-        {category && (
-          <>
-            <ChevronRight size={14} />
-            <span className="text-circuit-copper">{category.name}</span>
-          </>
-        )}
-      </div>
-
-      <div className="flex flex-col md:flex-row gap-8">
-        <div className="w-full md:w-64 shrink-0">
-          <FilterTabs filters={filters} onFilterChange={handleFilterChange} />
-        </div>
-
-        <div className="flex-1">
-          {error ? (
-            <div className="text-center py-20 text-red-500">
-              <p>{error}</p>
-              <Link href="/" className="text-circuit-copper mt-4 inline-block hover:underline">Về trang chủ</Link>
-            </div>
-          ) : loading ? (
-            <div className="flex justify-center items-center h-64">
-              <Loader2 className="animate-spin text-circuit-copper" size={32} />
-            </div>
-          ) : products.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((p) => (
-                <ProductCard key={p.id} product={p} onAddToCart={() => handleAddToCart(p.id)} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-20 text-circuit-muted">
-              <p>Không có sản phẩm nào phù hợp với bộ lọc.</p>
-            </div>
+        {/* Breadcrumb kiểu "Laptop > Gaming Laptop" */}
+        <div className="flex items-center gap-1.5 text-sm text-circuit-muted mb-6">
+          <Link href="/" className="hover:text-circuit-copperLight">Trang chủ</Link>
+          {parentCategory && (
+            <>
+              <ChevronRight size={14} />
+              <Link href={`/category/${parentCategory.slug}`} className="hover:text-circuit-copperLight">
+                {parentCategory.name}
+              </Link>
+            </>
+          )}
+          {category && (
+            <>
+              <ChevronRight size={14} />
+              <span className="text-circuit-copper">{category.name}</span>
+            </>
           )}
         </div>
-      </div>
-      </main>
-      <SiteFooter />
 
-      {cartMessage && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mb-8 rounded-xl border border-circuit-line overflow-hidden h-40 relative"
-          style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.75)), url(${getMediaUrl(category.banner_image_url)})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
-          <div className="absolute inset-0 flex items-center px-8">
-            <h1 className="font-display text-3xl text-white">{category.name}</h1>
+        {category?.banner_image_url && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mb-8 rounded-xl border border-circuit-line overflow-hidden h-40 relative"
+            style={{
+              backgroundImage: `linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.75)), url(${getMediaUrl(category.banner_image_url)})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          >
+            <div className="absolute inset-0 flex items-center px-8">
+              <h1 className="font-display text-3xl text-circuit-text">{category.name}</h1>
+            </div>
+          </motion.div>
+        )}
+        {category && !category.banner_image_url && (
+          <h1 className="font-display text-2xl text-circuit-text mb-6">{category.name}</h1>
+        )}
+
+        {cartMessage && (
+          <div className="mb-6 rounded-md border border-circuit-line bg-circuit-panel px-4 py-3 text-sm text-circuit-signal">
+            {cartMessage}
           </div>
-        </motion.div>
-      )}
-      {category && !category.banner_image_url && (
-        <h1 className="font-display text-2xl text-circuit-text mb-6">{category.name}</h1>
-      )}
+        )}
 
-      {cartMessage && (
-        <div className="mb-6 rounded-md border border-circuit-line bg-circuit-panel px-4 py-3 text-sm text-circuit-signal">
-          {cartMessage}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <aside className="md:col-span-1">
+            <FilterTabs value={filters} onChange={handleFilterChange} />
+          </aside>
+
+          <section className="md:col-span-3">
+            {loading && products.length === 0 && (
+              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="bg-circuit-panel/50 animate-pulse rounded-xl border border-circuit-line h-[360px]" />
+                ))}
+              </div>
+            )}
+            {!loading && error && (
+              <div className="rounded-md border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm text-red-300">
+                {error}
+              </div>
+            )}
+            {!loading && !error && products.length === 0 && (
+              <div className="text-center py-20 text-circuit-muted">Chưa có sản phẩm nào trong danh mục này.</div>
+            )}
+            {!error && products.length > 0 && (
+              <div className={`grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 transition-opacity duration-200 ${loading ? "opacity-50 pointer-events-none" : ""}`}>
+                {products.map((product, i) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: i * 0.05 }}
+                    className="h-full"
+                  >
+                    <ProductCard product={product} onAddToCart={() => handleAddToCart(product.id)} />
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <aside className="md:col-span-1">
-          <FilterTabs value={filters} onChange={handleFilterChange} />
-        </aside>
-
-        <section className="md:col-span-3">
-          {loading && products.length === 0 && (
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="bg-circuit-panel/50 animate-pulse rounded-xl border border-circuit-line h-[360px]" />
-              ))}
-            </div>
-          )}
-          {!loading && error && (
-            <div className="rounded-md border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm text-red-300">
-              {error}
-            </div>
-          )}
-          {!loading && !error && products.length === 0 && (
-            <div className="text-center py-20 text-circuit-muted">Chưa có sản phẩm nào trong danh mục này.</div>
-          )}
-          {!error && products.length > 0 && (
-            <div className={`grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 transition-opacity duration-200 ${loading ? "opacity-50 pointer-events-none" : ""}`}>
-              {products.map((product, i) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: i * 0.05 }}
-                  className="h-full"
-                >
-                  <ProductCard product={product} onAddToCart={handleAddToCart} />
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
-
       </main>
       <SiteFooter />
     </div>
