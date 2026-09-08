@@ -226,13 +226,15 @@ export default function ProductDetailPage() {
 
   if (error || !product) {
     return (
-      <main className="max-w-5xl mx-auto px-6 py-10">
+      <div className="min-h-screen flex flex-col bg-circuit-bg text-circuit-text">
         <SiteHeader />
-        <div className="rounded-md border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm text-red-300">
-          {error ?? "Không tìm thấy sản phẩm"}
-        </div>
+        <main className="max-w-5xl mx-auto px-6 py-10 flex-grow w-full">
+          <div className="rounded-md border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm text-red-300">
+            {error ?? "Không tìm thấy sản phẩm"}
+          </div>
+        </main>
         <SiteFooter />
-      </main>
+      </div>
     );
   }
 
@@ -600,8 +602,6 @@ export default function ProductDetailPage() {
 
       {/* ── SECTION 4: Sản phẩm liên quan ── */}
       <RelatedProducts productId={product.id} />
-
-      <SiteFooter />
 
       {/* ── Lightbox ── */}
       {lightboxOpen && product && (
