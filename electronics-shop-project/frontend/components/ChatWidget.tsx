@@ -46,18 +46,42 @@ export default function ChatWidget() {
 
   const initLiveChat = async () => {
     try {
+      console.log("initLiveChat: Starting...");
       const token = getCustomerToken();
-      if (!token) return;
+      if (!token) {
+        console.warn("initLiveChat: No token found");
+        return;
+      }
       
-      const res = await fetch("http://localhost:8000/api/v1/chat/rooms", {
+      console.log("initLiveChat: Calling POST /api/v1/chat/rooms");
+      const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
+      const res = await fetch(`${API_URL}/chat/rooms`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      console.log(`initLiveChat: Response status ${res.status}`);
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("initLiveChat: Failed to create room:", errText);
+        return;
+      }
+      
       const data = await res.json();
+      console.log("initLiveChat: Room data:", data);
       if (data.id) {
         setRoomId(data.id);
-        const socket = new WebSocket(`ws://localhost:8000/api/v1/chat/ws/${data.id}?token=${token}`);
+        const WS_URL = API_URL.replace("http", "ws");
+        const wsUrl = `${WS_URL}/chat/ws/${data.id}?token=${token}`;
+        console.log("initLiveChat: Connecting to WebSocket at", wsUrl);
+        const socket = new WebSocket(wsUrl);
+        
+        socket.onopen = () => console.log("WebSocket connected");
+        socket.onclose = () => console.log("WebSocket disconnected");
+        socket.onerror = (e) => console.error("WebSocket error", e);
+        
         socket.onmessage = (event) => {
+          console.log("WebSocket message received:", event.data);
           const msg = JSON.parse(event.data);
           setMessages(prev => [...prev, {
             id: msg.id,
@@ -69,7 +93,7 @@ export default function ChatWidget() {
         setMessages([{ id: "live_welcome", role: "employee", text: "Xin chào! Bạn cần hỗ trợ gì từ nhân viên chúng tôi?" }]);
       }
     } catch (e) {
-      console.error(e);
+      console.error("initLiveChat: Error", e);
     }
   };
 
