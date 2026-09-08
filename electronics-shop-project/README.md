@@ -9,20 +9,13 @@ docker run -d --name shop-postgres -e POSTGRES_PASSWORD=your_password -e POSTGRE
 docker run -d --name shop-redis -p 6379:6379 redis:7
 ```
 
-Import schema:
-```bash
-psql -h localhost -U postgres -d electronics_shop -f database/schema.sql
-```
+Khởi tạo Database và dữ liệu mẫu:
+Dự án đã được cung cấp một script Python tổng hợp (`init_db.py`) để tự động tạo toàn bộ cấu trúc bảng mới nhất (bao gồm cả các bản cập nhật) dựa trên Models hiện hành và tạo luôn tài khoản admin/khách hàng mẫu.
 
-### 1.1. Tạo tài khoản admin và khách hàng mẫu
-
-Sau khi backend đã cài đặt xong (bước 2) và đã import schema, chạy script seed để có ngay
-1 tài khoản admin và 1 tài khoản khách hàng dùng thử — chạy lại nhiều lần vẫn an toàn (tự bỏ qua
-nếu tài khoản đã tồn tại):
-
+Chỉ cần chạy lệnh sau từ thư mục `backend/` (Lưu ý: phải chạy sau khi đã cài đặt và activate môi trường backend ở Bước 2):
 ```bash
 cd backend
-python -m scripts.seed_users
+python -m scripts.init_db
 ```
 
 Tài khoản được tạo:
@@ -624,3 +617,28 @@ Cần bổ sung tiếp:
 - Cân nhắc dùng object storage (S3/MinIO) thay vì lưu ảnh trên đĩa cục bộ khi lên production
 - Cân nhắc chuyển permissions từ nhúng trong JWT sang tra cứu DB mỗi request nếu cần cập nhật quyền tức thời
 - Trang admin tuỳ chỉnh giao diện (`/admin/settings`) mới áp dụng cho trang chủ — mở rộng thêm sang tuỳ chỉnh trang danh mục/trang sản phẩm nếu cần (hiện danh mục đã có banner riêng, nhưng nội dung khác như màu sắc/bố cục thì chưa)
+
+
+## 7. Cấu hình & Lệnh Mới Thêm Gần Đây
+
+### 7.1 Cấu hình Site Settings
+- Bảng site_settings trong PostgreSQL nay đóng vai trò quản lý cấu hình giao diện. 
+- Mọi thay đổi về Giao diện (Category Brands, Màu sắc, Text) hiện đều được quản lý tại trang /admin/settings và được load động.
+- Để sử dụng, API GET /api/v1/settings trả về JSON, Frontend inject thông qua SiteSettingsProvider.
+
+### 7.2 Lệnh & Script Hữu Ích
+- Quét/Kiểm tra lỗi trùng lặp dữ liệu: Dự án đã được bổ sung các script độc lập (chạy trên Python) để kiểm tra tính toàn vẹn dữ liệu (VD: dọn dẹp dữ liệu danh mục lỗi/duplicate).
+
+## 8. Lịch Sử Cập Nhật & Sửa Lỗi (Changelog Gần Nhất)
+- **Tối ưu Admin UI (Cấu hình Hãng)**: Bổ sung form quản lý category_brands bằng JSON tại trang Settings để gắn thương hiệu tương ứng với từng danh mục sản phẩm (VD: Máy ảnh -> Canon; Laptop -> Asus).
+- **Trang Danh mục (Category Page)**: 
+  - Khắc phục lỗi Unexpected token div (Lỗi Syntax Error khi build Next.js).
+  - Tối ưu URL Params với useSearchParams để lấy tham số rand và priceLabel an toàn qua thẻ Suspense.
+  - Hiển thị danh sách các Hãng (Brand) động dựa vào config ở Site Settings thay vì hardcode.
+  - Chức năng lọc khi click vào Thương hiệu (Brand) để lọc sản phẩm ngay tại danh mục tương ứng.
+- **Thanh Tìm Kiếm (SearchBar)**: Tự động dropdown gợi ý sản phẩm liên quan ngay khi khách hàng đang gõ từ khoá.
+- **Tính Năng Đánh Giá (Reviews)**:
+  - Cho phép người dùng đánh giá sản phẩm không cần đăng nhập (ẩn danh). Các đánh giá này lưu tên ẩn danh ngẫu nhiên (hoặc input).
+  - Hiển thị UI sao đánh giá linh hoạt dựa trên dữ liệu thật.
+  - Thêm chức năng cho Admin ẩn/hiện (is_hidden) bình luận.
+- **Dọn Dẹp Workspace**: Đã dọn dẹp các tệp .md tạm nhằm giữ gọn thư mục project (Tin gọn Workspace).

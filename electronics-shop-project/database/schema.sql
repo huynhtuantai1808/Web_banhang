@@ -1,3 +1,7 @@
+-- C?NH B¡O: File schema.sql n‡y KH‘NG C“N du?c s? d?ng d? kh?i t?o Database m?i.
+-- H„y s? d?ng script Python t?ng h?p m?i: python -m scripts.init_db
+-- Script init_db s? t? d?ng generate c?u tr˙c d?ng d?a trÍn SQLAlchemy models m?i nh?t.
+
 -- =========================================================
 -- SCHEMA CSDL - WEBSITE B√ÅN ƒê·ªí ƒêI·ªÜN T·ª¨ (PostgreSQL)
 -- =========================================================

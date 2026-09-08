@@ -244,3 +244,11 @@ Hai cấp phân quyền:
 | 10 | Tin tức / Khuyến mãi + Chỉnh sửa KH/NV | ✅ Hoàn thành |
 
 *(Tài liệu này đi kèm toàn bộ code đã triển khai đầy đủ qua các đợt cập nhật.)*
+
+
+## 7. Cập nhật & Tối ưu Gần Đây (Mới bổ sung)
+
+- **Site Settings (JSONB)**: Chuyển cấu hình giao diện động (Category Brands) vào cơ sở dữ liệu (bảng site_settings). Backend cung cấp endpoint để lấy và cập nhật cấu hình.
+- **Frontend SiteSettingsProvider**: Inject cấu hình site_settings ở cấp độ gốc của Frontend để mọi Component có thể dùng mà không cần query lại.
+- **Lọc Sản Phẩm Động (Dynamic Search/Filter)**: Bọc Suspense ở các page sử dụng useSearchParams (Next.js App Router yêu cầu) để xử lý URL query cho lọc Hãng, lọc Giá, Tìm kiếm sản phẩm.
+- **Review/Đánh giá (Khách vãng lai)**: Hỗ trợ đánh giá ẩn danh (nullable customer_id), giao diện 5 sao linh động, Admin có quyền ẩn/hiện đánh giá.
