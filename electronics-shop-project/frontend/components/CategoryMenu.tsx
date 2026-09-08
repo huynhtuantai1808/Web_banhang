@@ -77,57 +77,134 @@ export default function CategoryMenu() {
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full mt-2 z-40 w-[280px] sm:w-[520px] rounded-lg border border-circuit-line bg-circuit-panel shadow-2xl flex overflow-hidden">
+        <div className="absolute left-0 top-full mt-2 z-40 w-[280px] sm:w-[850px] rounded-lg border border-circuit-line bg-circuit-panel shadow-2xl flex overflow-hidden">
           {/* Cột danh mục cha */}
-          <div className="w-full sm:w-1/2 border-r border-circuit-line py-2">
+          <div className="w-full sm:w-[260px] border-r border-circuit-line py-2 flex-shrink-0 bg-circuit-panel/50">
             {categories.length === 0 && (
               <p className="px-4 py-3 text-sm text-circuit-muted">Chưa có danh mục nào.</p>
             )}
             {categories.map((cat) => {
               const Icon = iconFor(cat.name);
               const hasChildren = cat.children.length > 0;
+              const isActive = activeParent === cat.id;
               return (
                 <div
                   key={cat.id}
                   onMouseEnter={() => setActiveParent(cat.id)}
-                  className={`flex items-center justify-between px-4 py-2.5 cursor-pointer text-sm ${
-                    activeParent === cat.id ? "bg-circuit-bg/60 text-circuit-copperLight" : "text-circuit-text hover:bg-circuit-bg/40"
+                  className={`flex items-center justify-between px-4 py-2.5 cursor-pointer text-sm border-l-4 transition-colors ${
+                    isActive 
+                      ? "border-red-500 bg-red-500/10 text-red-500" 
+                      : "border-transparent text-circuit-text hover:bg-circuit-bg/40 hover:text-red-400"
                   }`}
                 >
                   <Link
                     href={`/category/${cat.slug}`}
                     onClick={() => setOpen(false)}
-                    className="flex items-center gap-2 flex-1 text-left"
+                    className="flex items-center gap-3 flex-1 text-left font-medium"
                   >
-                    <Icon size={16} /> {cat.name}
+                    <Icon size={18} className={isActive ? "text-red-500" : "text-circuit-muted"} /> 
+                    {cat.name}
                   </Link>
-                  {hasChildren && <ChevronRight size={14} className="text-circuit-muted" />}
+                  {hasChildren && <ChevronRight size={14} className={isActive ? "text-red-500" : "text-circuit-muted"} />}
                 </div>
               );
             })}
           </div>
 
-          {/* Cột danh mục con — hiện khi hover vào 1 danh mục cha có con */}
-          <div className="hidden sm:block w-1/2 py-2">
+          {/* Cột Mega Menu — hiện khi hover vào 1 danh mục cha */}
+          <div className="hidden sm:block flex-1 p-6 bg-circuit-bg/20 min-h-[400px]">
             {(() => {
               const parent = categories.find((c) => c.id === activeParent);
-              if (!parent || parent.children.length === 0) {
+              if (!parent) {
                 return (
-                  <p className="px-4 py-3 text-sm text-circuit-muted">
-                    {parent ? "Không có danh mục con." : "Di chuột vào 1 danh mục để xem thêm."}
-                  </p>
+                  <div className="h-full flex items-center justify-center text-circuit-muted text-sm">
+                    Di chuột vào danh mục bên trái để xem chi tiết.
+                  </div>
                 );
               }
-              return parent.children.map((child) => (
-                <Link
-                  key={child.id}
-                  href={`/category/${child.slug}`}
-                  onClick={() => setOpen(false)}
-                  className="block px-4 py-2.5 text-sm text-circuit-muted hover:text-circuit-copperLight hover:bg-circuit-bg/40"
-                >
-                  {parent.name} <ChevronRight size={12} className="inline mx-1" /> {child.name}
-                </Link>
-              ));
+              return (
+                <div className="animate-in fade-in slide-in-from-left-2 duration-300">
+                  {/* Header Mega Panel */}
+                  <div className="flex items-center justify-between mb-6 pb-2 border-b border-circuit-line/50">
+                    <h2 className="text-xl font-bold text-circuit-text">{parent.name}</h2>
+                    <Link
+                      href={`/category/${parent.slug}`}
+                      onClick={() => setOpen(false)}
+                      className="text-sm font-medium text-red-500 hover:text-red-400 transition-colors flex items-center gap-1"
+                    >
+                      Xem tất cả <ChevronRight size={14} />
+                    </Link>
+                  </div>
+
+                  {/* Columns */}
+                  <div className="grid grid-cols-3 gap-8">
+                    {/* Cột 1: Giá bán */}
+                    <div>
+                      <h3 className="font-semibold text-circuit-copperLight mb-4 text-sm uppercase tracking-wider">Giá bán</h3>
+                      <ul className="space-y-3">
+                        <li>
+                          <Link href={`/category/${parent.slug}?priceLabel=< 10tr`} onClick={() => setOpen(false)} className="text-sm text-circuit-text hover:text-red-400 transition-colors">
+                            Dưới 10 triệu
+                          </Link>
+                        </li>
+                        <li>
+                          <Link href={`/category/${parent.slug}?priceLabel=10-20tr`} onClick={() => setOpen(false)} className="text-sm text-circuit-text hover:text-red-400 transition-colors">
+                            Từ 10 đến 20 triệu
+                          </Link>
+                        </li>
+                        <li>
+                          <Link href={`/category/${parent.slug}?priceLabel=20-40tr`} onClick={() => setOpen(false)} className="text-sm text-circuit-text hover:text-red-400 transition-colors">
+                            Từ 20 đến 40 triệu
+                          </Link>
+                        </li>
+                        <li>
+                          <Link href={`/category/${parent.slug}?priceLabel=> 40tr`} onClick={() => setOpen(false)} className="text-sm text-circuit-text hover:text-red-400 transition-colors">
+                            Trên 40 triệu
+                          </Link>
+                        </li>
+                      </ul>
+                    </div>
+
+                    {/* Cột 2: Danh mục con */}
+                    {parent.children.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold text-circuit-copperLight mb-4 text-sm uppercase tracking-wider">Danh mục con</h3>
+                        <ul className="space-y-3">
+                          {parent.children.map((child) => (
+                            <li key={child.id}>
+                              <Link
+                                href={`/category/${child.slug}`}
+                                onClick={() => setOpen(false)}
+                                className="text-sm text-circuit-text hover:text-red-400 transition-colors"
+                              >
+                                {child.name}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Cột 3: Thương hiệu (Tĩnh) */}
+                    <div>
+                      <h3 className="font-semibold text-circuit-copperLight mb-4 text-sm uppercase tracking-wider">Thương hiệu nổi bật</h3>
+                      <ul className="space-y-3">
+                        {["ACER", "ASUS", "DELL", "LENOVO", "MSI", "APPLE"].map((brand) => (
+                          <li key={brand}>
+                            <Link 
+                              href={`/category/${parent.slug}?brand=${brand}`} 
+                              onClick={() => setOpen(false)} 
+                              className="text-sm text-circuit-text hover:text-red-400 transition-colors"
+                            >
+                              {brand}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              );
             })()}
           </div>
         </div>
