@@ -383,6 +383,22 @@ async def create_review(
     )
 
 
+@router.delete("/{product_id}/reviews/{review_id}", status_code=204)
+async def delete_review(
+    product_id: uuid.UUID,
+    review_id: int,
+    db: AsyncSession = Depends(get_db),
+    _employee_id: str = Depends(require_permission("can_delete")),
+):
+    """Admin xóa bình luận (yêu cầu quyền can_delete)."""
+    review = await db.get(ProductReview, review_id)
+    if not review or str(review.product_id) != str(product_id):
+        raise HTTPException(status_code=404, detail="Không tìm thấy đánh giá")
+    
+    await db.delete(review)
+    await db.commit()
+
+
 # ---- Sản phẩm liên quan ----
 
 @router.get("/{product_id}/related", response_model=list[ProductOut])

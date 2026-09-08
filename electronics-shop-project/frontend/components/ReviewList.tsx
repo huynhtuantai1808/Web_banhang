@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Star, ThumbsUp, Loader2 } from "lucide-react";
-import { ReviewOut, submitReview } from "@/lib/services/products";
-import { isCustomerLoggedIn } from "@/lib/auth-storage";
+import { ReviewOut, submitReview, deleteReview } from "@/lib/services/products";
+import { isCustomerLoggedIn, isEmployeeLoggedIn } from "@/lib/auth-storage";
 import { ApiError } from "@/lib/apiClient";
 
 interface ReviewListProps {
@@ -27,8 +27,14 @@ function StarRating({ value, max = 5 }: { value: number; max?: number }) {
   );
 }
 
-function RatingSummary({ average, count }: { average: number | null | undefined; count: number | null | undefined }) {
+function RatingSummary({ average, count, reviews }: { average: number | null | undefined; count: number | null | undefined; reviews: ReviewOut[] }) {
   if (!count) return null;
+
+  const distribution = [0, 0, 0, 0, 0, 0];
+  reviews.forEach(r => {
+    if (r.rating >= 1 && r.rating <= 5) distribution[r.rating]++;
+  });
+
   return (
     <div className="flex items-center gap-4 mb-4">
       <div className="flex flex-col items-center">
@@ -38,17 +44,20 @@ function RatingSummary({ average, count }: { average: number | null | undefined;
       </div>
       {/* Bar chart */}
       <div className="flex-1 space-y-1">
-        {[5, 4, 3, 2, 1].map((star) => (
-          <div key={star} className="flex items-center gap-2 text-xs">
-            <span className="w-3 text-circuit-muted">{star}</span>
-            <div className="flex-1 h-2 rounded bg-circuit-line overflow-hidden">
-              <div
-                className="h-full bg-yellow-400 rounded"
-                style={{ width: `${count ? 70 : 0}%` }}
-              />
+        {[5, 4, 3, 2, 1].map((star) => {
+          const percentage = count > 0 ? (distribution[star] / count) * 100 : 0;
+          return (
+            <div key={star} className="flex items-center gap-2 text-xs">
+              <span className="w-3 text-circuit-muted">{star}</span>
+              <div className="flex-1 h-2 rounded bg-circuit-line overflow-hidden">
+                <div
+                  className="h-full bg-yellow-400 rounded transition-all duration-500"
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -154,7 +163,7 @@ export default function ReviewList({ reviews, productId, averageRating, reviewCo
         )}
       </div>
 
-      <RatingSummary average={averageRating} count={reviewCount} />
+      <RatingSummary average={averageRating} count={reviewCount} reviews={allReviews} />
 
       {showForm && (
         <ReviewForm productId={productId} onSubmitted={handleSubmitted} />
@@ -179,6 +188,23 @@ export default function ReviewList({ reviews, productId, averageRating, reviewCo
                 <span className="text-xs text-circuit-muted">
                   {new Date(r.created_at).toLocaleDateString("vi-VN")}
                 </span>
+                {isEmployeeLoggedIn() && (
+                  <button
+                    onClick={async () => {
+                      if (!confirm("Bạn có chắc chắn muốn xóa đánh giá này?")) return;
+                      try {
+                        await deleteReview(productId, r.id);
+                        setLocalReviews((prev) => prev.filter((rev) => rev.id !== r.id));
+                        setAllReviews((prev) => prev.filter((rev) => rev.id !== r.id));
+                      } catch (err) {
+                        alert("Không thể xóa đánh giá lúc này.");
+                      }
+                    }}
+                    className="text-xs text-red-500 hover:text-red-600 transition-colors ml-2 font-medium"
+                  >
+                    Xóa
+                  </button>
+                )}
               </div>
             </div>
             {r.comment && (

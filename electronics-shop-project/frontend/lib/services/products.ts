@@ -238,3 +238,7 @@ export async function uploadCategoryBanner(id: number, file: File): Promise<Cate
   });
   return data;
 }
+
+export async function deleteReview(productId: string, reviewId: number): Promise<void> {
+  await apiClient.delete(`/products/${productId}/reviews/${reviewId}`);
+}
