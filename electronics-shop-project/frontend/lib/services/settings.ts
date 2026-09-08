@@ -10,7 +10,12 @@ export interface SiteSettingsOut {
   logo_image_url?: string | null;
   accent_color: string;
   quick_links?: { name: string; icon?: string; image_url?: string; link?: string }[];
-  store_addresses?: string[];
+  store_addresses?: (string | StoreAddress)[];
+}
+
+export interface StoreAddress {
+  address: string;
+  map_link?: string;
 }
 
 export interface SiteSettingsUpdateInput {
@@ -21,7 +26,7 @@ export interface SiteSettingsUpdateInput {
   footer_intro?: string;
   accent_color?: string;
   quick_links?: { name: string; icon?: string; image_url?: string; link?: string }[];
-  store_addresses?: string[];
+  store_addresses?: (string | StoreAddress)[];
 }
 
 /** Đọc cấu hình hiển thị hiện tại — API công khai, không cần đăng nhập. */

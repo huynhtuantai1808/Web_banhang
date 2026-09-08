@@ -271,16 +271,38 @@ setBanner(null);
           <div className="space-y-3 mb-3">
             {(settings.store_addresses || []).map((addr, idx) => (
               <div key={idx} className="flex items-center gap-3">
-                <input
-                  value={addr}
-                  onChange={(e) => {
-                    const newAddrs = [...(settings.store_addresses || [])];
-                    newAddrs[idx] = e.target.value;
-                    update("store_addresses", newAddrs);
-                  }}
-                  className="input flex-1"
-                  placeholder="Nhập địa chỉ cửa hàng (VD: 123 Đường A, Quận 1, TP.HCM)"
-                />
+                <div className="flex-1 flex flex-col gap-2">
+                  <input
+                    value={typeof addr === 'string' ? addr : (addr as any).address}
+                    onChange={(e) => {
+                      const newAddrs = [...(settings.store_addresses || [])];
+                      const oldAddr = newAddrs[idx];
+                      if (typeof oldAddr === 'string') {
+                         newAddrs[idx] = { address: e.target.value, map_link: "" } as any;
+                      } else {
+                         newAddrs[idx] = { ...(oldAddr as any), address: e.target.value };
+                      }
+                      update("store_addresses", newAddrs);
+                    }}
+                    className="input"
+                    placeholder="Nhập địa chỉ cửa hàng (VD: 123 Đường A, Quận 1, TP.HCM)"
+                  />
+                  <input
+                    value={typeof addr === 'string' ? "" : ((addr as any).map_link || "")}
+                    onChange={(e) => {
+                      const newAddrs = [...(settings.store_addresses || [])];
+                      const oldAddr = newAddrs[idx];
+                      if (typeof oldAddr === 'string') {
+                         newAddrs[idx] = { address: oldAddr, map_link: e.target.value } as any;
+                      } else {
+                         newAddrs[idx] = { ...(oldAddr as any), map_link: e.target.value };
+                      }
+                      update("store_addresses", newAddrs);
+                    }}
+                    className="input text-sm text-circuit-copperLight"
+                    placeholder="Link Google Maps (tuỳ chọn - nếu bỏ trống sẽ tự động tìm kiếm trên Map)"
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={() => {

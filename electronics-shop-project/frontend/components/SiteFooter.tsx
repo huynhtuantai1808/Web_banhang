@@ -67,12 +67,21 @@ export default function SiteFooter() {
             {(settings.store_addresses && settings.store_addresses.length > 0 
               ? settings.store_addresses 
               : BRANDING.contact.branches
-            ).map((branch, idx) => (
-              <li key={idx} className="flex items-start gap-2">
-                <MapPin size={14} className="shrink-0 mt-0.5" />
-                <span>{branch}</span>
-              </li>
-            ))}
+            ).map((branch: any, idx: number) => {
+              const addressText = typeof branch === 'string' ? branch : branch.address;
+              const mapLink = typeof branch === 'string' 
+                ? `https://maps.google.com/?q=${encodeURIComponent(branch)}`
+                : (branch.map_link || `https://maps.google.com/?q=${encodeURIComponent(branch.address)}`);
+
+              return (
+                <li key={idx} className="flex items-start gap-2">
+                  <MapPin size={14} className="shrink-0 mt-0.5" />
+                  <a href={mapLink} target="_blank" rel="noopener noreferrer" className="hover:text-circuit-copperLight transition-colors">
+                    {addressText}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>
