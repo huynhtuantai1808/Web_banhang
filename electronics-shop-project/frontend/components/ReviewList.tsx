@@ -153,7 +153,7 @@ export default function ReviewList({ reviews, productId, averageRating, reviewCo
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="font-display text-xl text-circuit-text">Đánh giá sản phẩm</h3>
-        {isCustomerLoggedIn() && !showForm && (
+        {(!showForm) && (
           <button
             onClick={() => setShowForm(true)}
             className="text-sm text-circuit-copperLight hover:text-circuit-copper transition-colors"

@@ -90,6 +90,21 @@ async def require_customer(
         )
 
 
+async def optional_customer(
+    credentials: HTTPAuthorizationCredentials | None = Depends(HTTPBearer(auto_error=False)),
+) -> str | None:
+    """Dependency tùy chọn: nếu có token thì trả về customer_id, nếu không có hoặc không hợp lệ thì trả về None."""
+    if not credentials:
+        return None
+    try:
+        payload = decode_token(credentials.credentials)
+        if payload.get("role") == "customer":
+            return payload.get("sub")
+    except (JWTError, ValueError):
+        pass
+    return None
+
+
 async def require_admin(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
 ) -> str:

@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Loader2, ShoppingCart, Check, Heart } from "lucide-react";
+import { Loader2, ShoppingCart, Check, Heart, Star } from "lucide-react";
 import { toggleGuestWishlist, isInGuestWishlist } from "@/lib/wishlist";
 import { isCustomerLoggedIn } from "@/lib/auth-storage";
 import { addToWishlist, removeFromWishlist } from "@/lib/services/wishlist";
@@ -20,6 +20,8 @@ export interface Product {
   imageUrl: string;
   images?: string[]; // thêm images để ProductCard không phải gọi API riêng
   specHighlight: string; // vd: "16GB RAM / 512GB SSD"
+  averageRating?: number;
+  reviewCount?: number;
 }
 
 function formatVND(value: number) {
@@ -182,6 +184,25 @@ export default function ProductCard({
         <h3 className="font-display text-circuit-text text-sm sm:text-base leading-snug mt-1.5 line-clamp-2 min-h-[2.75rem] group-hover:text-circuit-copperLight transition-colors">
           {product.name}
         </h3>
+
+        {/* Star Rating */}
+        {(product.averageRating || product.reviewCount) ? (
+          <div className="flex items-center gap-1.5 mt-1.5 min-h-[1.25rem]">
+            <div className="flex gap-0.5">
+              {[1, 2, 3, 4, 5].map((s) => (
+                <Star
+                  key={s}
+                  size={10}
+                  className={s <= Math.round(product.averageRating || 0) ? "text-yellow-400 fill-yellow-400" : "text-circuit-line"}
+                />
+              ))}
+            </div>
+            <span className="text-[10px] text-circuit-muted">({product.reviewCount})</span>
+          </div>
+        ) : (
+          <div className="mt-1.5 min-h-[1.25rem]"></div>
+        )}
+
         <p className="text-xs text-circuit-muted font-mono mt-1.5 line-clamp-1 min-h-[1.25rem]">{product.specHighlight}</p>
 
         <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2 mt-3 sm:mt-4 min-h-[1.75rem]">

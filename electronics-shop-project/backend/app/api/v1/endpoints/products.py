@@ -8,7 +8,7 @@ from app.models.product import Product, Brand, Category, ProductImage
 from app.models.review import ProductReview
 from app.models.customer import Customer
 from app.schemas.product import ProductCreate, ProductOut, ReviewCreate, ReviewOut
-from app.core.security import require_permission, require_customer
+from app.core.security import require_permission, require_customer, optional_customer
 from app.services.catalog_service import (
     get_or_create_brand, get_or_create_category, get_brand_name, get_category_name,
 )
@@ -327,8 +327,8 @@ async def get_reviews(
         ReviewOut(
             id=r.id,
             product_id=str(r.product_id),
-            customer_id=str(r.customer_id),
-            customer_name=c.full_name,
+            customer_id=str(r.customer_id) if r.customer_id else "",
+            customer_name=c.full_name if c else r.guest_name,
             rating=r.rating,
             comment=r.comment,
             created_at=r.created_at.isoformat() if r.created_at else "",
@@ -341,30 +341,40 @@ async def get_reviews(
 async def create_review(
     product_id: uuid.UUID,
     payload: ReviewCreate,
-    customer_id: str = Depends(require_customer),
+    customer_id: str | None = Depends(optional_customer),
     db: AsyncSession = Depends(get_db),
 ):
-    """Gửi đánh giá sản phẩm — yêu cầu đăng nhập. Mỗi khách chỉ đánh giá 1 lần cho 1 sản phẩm."""
+    """Gửi đánh giá sản phẩm. Nếu đăng nhập, liên kết với customer. Nếu không, gán tên ẩn danh."""
     product = await db.get(Product, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm")
     if not (1 <= payload.rating <= 5):
         raise HTTPException(status_code=400, detail="Rating phải từ 1 đến 5 sao")
 
-    customer_uuid = uuid.UUID(customer_id)
-    existing = await db.execute(
-        select(ProductReview).where(
-            ProductReview.product_id == product_id,
-            ProductReview.customer_id == customer_uuid,
-        )
-    )
-    if existing.scalar_one_or_none():
-        raise HTTPException(status_code=409, detail="Bạn đã đánh giá sản phẩm này rồi")
+    customer = None
+    customer_uuid = None
+    guest_name = None
 
-    customer = await db.get(Customer, customer_uuid)
+    if customer_id:
+        import random
+        customer_uuid = uuid.UUID(customer_id)
+        existing = await db.execute(
+            select(ProductReview).where(
+                ProductReview.product_id == product_id,
+                ProductReview.customer_id == customer_uuid,
+            )
+        )
+        if existing.scalar_one_or_none():
+            raise HTTPException(status_code=409, detail="Bạn đã đánh giá sản phẩm này rồi")
+        customer = await db.get(Customer, customer_uuid)
+    else:
+        import random
+        guest_name = f"Khách ẩn danh {random.randint(1000, 9999)}"
+
     review = ProductReview(
         product_id=product_id,
         customer_id=customer_uuid,
+        guest_name=guest_name,
         rating=payload.rating,
         comment=payload.comment,
     )
@@ -375,8 +385,8 @@ async def create_review(
     return ReviewOut(
         id=review.id,
         product_id=str(review.product_id),
-        customer_id=str(review.customer_id),
-        customer_name=customer.full_name if customer else None,
+        customer_id=str(review.customer_id) if review.customer_id else "",
+        customer_name=customer.full_name if customer else guest_name,
         rating=review.rating,
         comment=review.comment,
         created_at=review.created_at.isoformat() if review.created_at else "",
