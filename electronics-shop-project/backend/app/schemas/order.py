@@ -10,6 +10,7 @@ class OrderCreate(BaseModel):
     installment_months: int | None = None  # bắt buộc nếu payment_method="installment"
     installment_type: str | None = None  # "credit_card" | "finance" — mặc định "credit_card"
     promo_code: str | None = None      # mã khuyến mãi (tuỳ chọn)
+    down_payment: float = 0.0          # Số tiền trả trước
 
 
 class OrderItemOut(BaseModel):

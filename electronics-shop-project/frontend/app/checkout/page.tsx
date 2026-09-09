@@ -10,8 +10,8 @@ import { getProduct } from "@/lib/services/products";
 import { createOrder, createGuestOrder } from "@/lib/services/orders";
 import { validatePromoCode, listMyPromotions, PromotionOut } from "@/lib/services/promotions";
 import {
-  getInstallmentOptions, InstallmentOption, InstallmentType,
-  CREDIT_CARD_MONTHS, FINANCE_MONTHS,
+  InstallmentOption, InstallmentType, getInstallmentOptions,
+  getInstallmentInfo, InstallmentInfo, calculateInstallmentOptionsLocal
 } from "@/lib/services/installment";
 import { getMediaUrl } from "@/lib/media";
 import { ApiError } from "@/lib/apiClient";
@@ -54,6 +54,7 @@ export default function CheckoutPage() {
   const [installmentType, setInstallmentType] = useState<InstallmentType>("credit_card");
   const [installmentMonths, setInstallmentMonths] = useState<number>(12);
   const [installmentOptions, setInstallmentOptions] = useState<InstallmentOption[]>([]);
+  const [installmentInfo, setInstallmentInfo] = useState<InstallmentInfo | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,6 +66,7 @@ export default function CheckoutPage() {
   const [selectedCardType, setSelectedCardType] = useState(CARD_TYPES[0]);
   const [selectedFinanceCo, setSelectedFinanceCo] = useState(FINANCE_COMPANIES[0]);
   const [financeDownPaymentPct, setFinanceDownPaymentPct] = useState(0.2);
+  const [creditDownPaymentPct, setCreditDownPaymentPct] = useState(0.0);
 
   // Thông tin khách vãng lai (chỉ hiện khi chưa đăng nhập)
   const [guestName, setGuestName] = useState("");
@@ -93,6 +95,8 @@ export default function CheckoutPage() {
 
     async function load() {
       try {
+        const info = await getInstallmentInfo();
+        setInstallmentInfo(info);
         if (loggedIn) {
           const data = await getCart();
           if (data.items.length === 0) {
@@ -189,16 +193,13 @@ export default function CheckoutPage() {
   const allEligibleForInstallment = loggedIn && cart ? cart.items.every((i) => i.is_installment_eligible) : false;
 
   useEffect(() => {
-    if (paymentMethod !== "installment" || !allEligibleForInstallment) {
+    if (paymentMethod !== "installment" || !allEligibleForInstallment || !installmentInfo) {
       setInstallmentOptions([]);
       return;
     }
-    let cancelled = false;
-    getInstallmentOptions(finalTotal, installmentType, installmentType === "finance" ? financeDownPaymentPct : undefined)
-      .then((res) => { if (!cancelled) setInstallmentOptions(res.options); })
-      .catch(() => { if (!cancelled) setInstallmentOptions([]); });
-    return () => { cancelled = true; };
-  }, [paymentMethod, allEligibleForInstallment, finalTotal, installmentType, financeDownPaymentPct]);
+    const pct = installmentType === "finance" ? financeDownPaymentPct : creditDownPaymentPct;
+    setInstallmentOptions(calculateInstallmentOptionsLocal(finalTotal, installmentType, installmentInfo, pct));
+  }, [paymentMethod, allEligibleForInstallment, finalTotal, installmentType, financeDownPaymentPct, creditDownPaymentPct, installmentInfo]);
 
   async function handleApplyPromo() {
     if (!promoInput.trim() || !loggedIn) return; // xem trước mã KM chỉ khả dụng khi đã đăng nhập
@@ -261,6 +262,7 @@ export default function CheckoutPage() {
     setError(null);
     try {
       let finalAddress = address.trim();
+      const down_payment = installmentOptions.find(o => o.months === installmentMonths)?.down_payment_amount ?? 0;
       if (paymentMethod === "installment") {
         if (installmentType === "credit_card") {
           finalAddress += `\n[Trả góp: Ngân hàng ${selectedBank} - Thẻ ${selectedCardType}]`;
@@ -277,6 +279,7 @@ export default function CheckoutPage() {
           installmentMonths: paymentMethod === "installment" ? installmentMonths : undefined,
           installmentType: paymentMethod === "installment" ? installmentType : undefined,
           promoCode: appliedPromo?.code,
+          downPayment: down_payment
         });
         if (paymentMethod === "full" && gateway === "vnpay" && result.payment_url) {
           window.location.href = result.payment_url;
@@ -628,6 +631,20 @@ export default function CheckoutPage() {
                       </select>
                     </div>
                   </div>
+                  <div>
+                    <label className="block text-xs font-medium text-circuit-muted mb-1.5">Tỷ lệ trả trước (Thẻ tín dụng)</label>
+                    <select
+                      value={creditDownPaymentPct}
+                      onChange={(e) => setCreditDownPaymentPct(Number(e.target.value))}
+                      className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                    >
+                      <option value={0.0}>0%</option>
+                      <option value={0.2}>20%</option>
+                      <option value={0.3}>30%</option>
+                      <option value={0.4}>40%</option>
+                      <option value={0.5}>50%</option>
+                    </select>
+                  </div>
                 </div>
               )}
 
@@ -677,10 +694,12 @@ export default function CheckoutPage() {
                             </>
                           ) : (
                             <>
+                              <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Trả trước ({(creditDownPaymentPct * 100).toFixed(0)}%)</th>
+                              <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Khoản vay</th>
                               <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Phí (%)</th>
-                              <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Số tiền phí</th>
                             </>
                           )}
+                          <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Số tiền phí</th>
                           <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Tổng cộng</th>
                           <th className="py-1.5 text-right text-circuit-copperLight font-mono uppercase">Mỗi tháng</th>
                         </tr>
@@ -711,12 +730,18 @@ export default function CheckoutPage() {
                               </>
                             ) : (
                               <>
-                                <td className="py-1.5 text-right text-circuit-muted">{opt.conversion_fee}%</td>
                                 <td className="py-1.5 text-right text-circuit-muted">
-                                  {opt.fee_amount != null ? formatVND(opt.fee_amount) : "—"}
+                                  {opt.down_payment_amount != null && opt.down_payment_amount > 0 ? formatVND(opt.down_payment_amount) : "0₫"}
                                 </td>
+                                <td className="py-1.5 text-right text-circuit-muted">
+                                  {opt.loan_amount != null ? formatVND(opt.loan_amount) : "—"}
+                                </td>
+                                <td className="py-1.5 text-right text-circuit-muted">{opt.conversion_fee}%</td>
                               </>
                             )}
+                            <td className="py-1.5 text-right text-circuit-muted">
+                              {opt.fee_amount != null ? formatVND(opt.fee_amount) : (opt.total_interest != null ? formatVND(opt.total_interest) : "—")}
+                            </td>
                             <td className="py-1.5 text-right text-circuit-text font-medium">{formatVND(opt.total_amount)}</td>
                             <td className="py-1.5 text-right font-bold text-circuit-copperLight">
                               {formatVND(opt.monthly_payment ?? opt.monthly_amount)}
@@ -737,7 +762,7 @@ export default function CheckoutPage() {
                       <CalendarClock size={12} />
                       <span>
                         Tổng cộng: <strong className="text-circuit-text">{formatVND(sel.total_amount)}</strong>
-                        {installmentType === "finance" && sel.down_payment_amount != null && (
+                        {sel.down_payment_amount != null && sel.down_payment_amount > 0 && (
                           <> · Trả trước <strong className="text-circuit-text">{formatVND(sel.down_payment_amount)}</strong></>
                         )}
                         {" "}— mỗi tháng{" "}

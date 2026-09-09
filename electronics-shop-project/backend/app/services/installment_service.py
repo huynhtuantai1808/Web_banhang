@@ -57,18 +57,26 @@ def get_conversion_fee(months: int) -> float:
     return CONVERSION_FEE[months]
 
 
-def calculate_credit_card(amount: float, months: int) -> dict:
+def calculate_credit_card(amount: float, months: int, down_payment_pct: float = 0.0) -> dict:
     """Tính trả góp thẻ tín dụng (0% lãi, có phí chuyển đổi)."""
+    down_payment_amount = round(amount * down_payment_pct, 2)
+    loan_amount = round(amount - down_payment_amount, 2)
+    
     fee_pct = get_conversion_fee(months)
-    fee_amount = round(amount * fee_pct / 100, 2)
-    total_amount = round(amount + fee_amount, 2)
-    monthly_amount = round(total_amount / months, 2)
+    fee_amount = round(loan_amount * fee_pct / 100, 2)
+    
+    total_loan_with_fee = round(loan_amount + fee_amount, 2)
+    monthly_amount = round(total_loan_with_fee / months, 2)
+    
     return {
         "type": "credit_card",
         "months": months,
         "conversion_fee": fee_pct,
         "fee_amount": fee_amount,
-        "total_amount": total_amount,
+        "down_payment_pct": down_payment_pct * 100,
+        "down_payment_amount": down_payment_amount,
+        "loan_amount": loan_amount,
+        "total_amount": total_loan_with_fee,
         "monthly_amount": monthly_amount,
     }
 
@@ -120,16 +128,18 @@ def calculate_finance(amount: float, months: int, down_payment_pct: float = None
 # ── Tổng hợp ──────────────────────────────────────────────────
 
 def calculate_installment(amount: float, months: int, inst_type: str = "credit_card", down_payment_pct: float = None) -> dict:
+    pct = down_payment_pct if down_payment_pct is not None else (0.2 if inst_type == "finance" else 0.0)
     if inst_type == "finance":
-        return calculate_finance(amount, months, down_payment_pct)
-    return calculate_credit_card(amount, months)
+        return calculate_finance(amount, months, pct)
+    return calculate_credit_card(amount, months, pct)
 
 
 def calculate_installment_options(amount: float, inst_type: str = "credit_card", down_payment_pct: float = None) -> list[dict]:
     """Trả về bảng tất cả phương án trả góp cho một loại."""
+    pct = down_payment_pct if down_payment_pct is not None else (0.2 if inst_type == "finance" else 0.0)
     if inst_type == "finance":
-        return [calculate_finance(amount, m, down_payment_pct) for m in FINANCE_TENURES]
-    return [calculate_credit_card(amount, m) for m in CREDIT_CARD_MONTHS]
+        return [calculate_finance(amount, m, pct) for m in FINANCE_TENURES]
+    return [calculate_credit_card(amount, m, pct) for m in CREDIT_CARD_MONTHS]
 
 
 # Giữ tên cũ để tương thích ngược
@@ -155,8 +165,9 @@ async def create_installment_plan(
         monthly = result["monthly_payment"]
         interest_rate = result["annual_interest_rate"]  # lưu vào DB để admin xem
     else:
-        result = calculate_credit_card(total_amount, months)
-        loan_amount = result["total_amount"]
+        down_payment_pct = down_payment / total_amount if total_amount > 0 else 0
+        result = calculate_credit_card(total_amount, months, down_payment_pct)
+        loan_amount = result["loan_amount"]
         monthly = result["monthly_amount"]
         interest_rate = result["conversion_fee"]  # phí chuyển đổi
 

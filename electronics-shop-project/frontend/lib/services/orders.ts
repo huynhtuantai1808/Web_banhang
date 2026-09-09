@@ -36,6 +36,7 @@ export interface CreateOrderInput {
   installmentMonths?: number;
   installmentType?: "credit_card" | "finance";
   promoCode?: string;
+  downPayment?: number;
 }
 
 /** Tạo đơn hàng từ giỏ hàng hiện tại. */
@@ -47,6 +48,7 @@ export async function createOrder(input: CreateOrderInput): Promise<OrderCreateR
     installment_months: input.installmentMonths,
     installment_type: input.installmentType,
     promo_code: input.promoCode || undefined,
+    down_payment: input.downPayment,
   });
   return data;
 }

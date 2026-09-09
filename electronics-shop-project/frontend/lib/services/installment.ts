@@ -113,6 +113,72 @@ export async function getInstallmentPlan(orderId: string): Promise<InstallmentPl
   return data;
 }
 
+// ---- Local Calculation for speed ----
+export function calculateInstallmentOptionsLocal(
+  amount: number,
+  type: InstallmentType,
+  info: InstallmentInfo,
+  downPaymentPct: number = 0
+): InstallmentOption[] {
+  if (type === "finance") {
+    const pct = downPaymentPct || (info.finance.down_payment_pct / 100);
+    const downPaymentAmount = Math.round(amount * pct);
+    const loanAmount = amount - downPaymentAmount;
+    const monthlyRate = info.finance.monthly_interest_rate / 100;
+
+    return info.finance.tenures.map(months => {
+      let monthlyPayment = 0;
+      if (monthlyRate === 0) {
+        monthlyPayment = Math.round(loanAmount / months);
+      } else {
+        const factor = Math.pow(1 + monthlyRate, months);
+        monthlyPayment = Math.round((loanAmount * monthlyRate * factor) / (factor - 1));
+      }
+      const totalInterest = Math.round(monthlyPayment * months - loanAmount);
+      const totalAmount = loanAmount + totalInterest;
+
+      return {
+        type: "finance",
+        months,
+        down_payment_pct: pct * 100,
+        down_payment_amount: downPaymentAmount,
+        loan_amount: loanAmount,
+        annual_interest_rate: info.finance.annual_interest_rate,
+        monthly_interest_rate: info.finance.monthly_interest_rate,
+        total_interest: totalInterest,
+        total_amount: totalAmount,
+        monthly_amount: monthlyPayment,
+        monthly_payment: monthlyPayment
+      };
+    });
+  } else {
+    // Credit card
+    const pct = downPaymentPct || 0;
+    const downPaymentAmount = Math.round(amount * pct);
+    const loanAmount = amount - downPaymentAmount;
+
+    return info.credit_card.tenures.map(months => {
+      const feePct = info.credit_card.fees[String(months)] || 0;
+      const feeAmount = Math.round((loanAmount * feePct) / 100);
+      const totalLoanWithFee = loanAmount + feeAmount;
+      const monthlyAmount = Math.round(totalLoanWithFee / months);
+
+      return {
+        type: "credit_card",
+        months,
+        conversion_fee: feePct,
+        fee_amount: feeAmount,
+        down_payment_pct: pct * 100,
+        down_payment_amount: downPaymentAmount,
+        loan_amount: loanAmount,
+        total_amount: totalLoanWithFee,
+        monthly_amount: monthlyAmount,
+        monthly_payment: monthlyAmount
+      };
+    });
+  }
+}
+
 // ---- Admin ----
 export async function listInstallmentPlansAdmin(): Promise<InstallmentPlanAdminOut[]> {
   const { data } = await apiClient.get<InstallmentPlanAdminOut[]>("/admin/installment-plans");

@@ -181,7 +181,7 @@ async def _create_order_core(
     if payload.payment_method == "installment":
         inst_type = payload.installment_type or "credit_card"
         await create_installment_plan(
-            db, order.id, final_amount, payload.installment_months, inst_type,
+            db, order.id, final_amount, payload.installment_months, inst_type, payload.down_payment
         )
 
     if promotion:
