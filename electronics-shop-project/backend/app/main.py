@@ -3,11 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.utils import get_openapi
 import os
+import asyncio
 
 from app.core.config import settings
 from app.core.openapi_tags import TAGS_METADATA
 from app.api.v1.router import api_router
-from app.core.security_middleware import limiter, SecurityBlocklistMiddleware
+from app.core.security_middleware import limiter, SecurityBlocklistMiddleware, periodic_cleanup
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 
@@ -26,6 +27,10 @@ app = FastAPI(
     redoc_url="/redoc",     # ReDoc
     openapi_url="/openapi.json",
 )
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(periodic_cleanup())
 
 app.add_middleware(
     CORSMiddleware,

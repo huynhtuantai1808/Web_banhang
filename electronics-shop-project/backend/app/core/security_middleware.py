@@ -1,10 +1,13 @@
-import logging
+import time
+import asyncio
+from collections import defaultdict
 from typing import Callable
 from fastapi import Request, Response
+from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-import re
+import logging
 
 logger = logging.getLogger("security")
 logger.setLevel(logging.WARNING)
@@ -16,29 +19,79 @@ logger.addHandler(handler)
 # SlowAPI Limiter for Rate Limiting
 limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
 
-# Danh sách các pattern URL nguy hiểm cần block ngay lập tức
-BLOCKLIST_PATTERNS = [
-    r"\.env.*",
-    r"\.git.*",
-    r"\.config.*",
-    r"wp-admin",
-    r"wp-login\.php",
-    r".*\.php$",
-    r"\.\./",
-    r"\.\.%2f"
+# ---- Config ----
+BAN_THRESHOLD = 5        # bao nhiêu lần vi phạm thì ban
+BAN_DURATION = 3600      # ban bao lâu (giây) - 1 tiếng
+CLEANUP_INTERVAL = 300   # dọn dẹp bộ nhớ mỗi 5 phút
+
+# ---- State (dùng Redis nếu multi-worker) ----
+violation_count: dict[str, int] = defaultdict(int)
+banned_ips: dict[str, float] = {}  # ip -> thời điểm hết ban
+
+SUSPICIOUS_PATTERNS = [
+    # PHP attacks
+    "eval-stdin.php", "phpunit", "php://input",
+    "allow_url_include", "auto_prepend_file",
+    # File probing
+    ".env", "wp-config", "actuator/", "_ignition",
+    "laravel.log", ".git/", ".htaccess",
+    # Shells & backdoors
+    "shell.php", "c99.php", "r57.php", "webshell",
+    "/etc/passwd", "../../",
 ]
 
-BLOCKLIST_REGEX = re.compile("|".join(BLOCKLIST_PATTERNS), re.IGNORECASE)
+def is_suspicious(path: str, query: str) -> bool:
+    combined = (path + "?" + query).lower()
+    return any(p.lower() in combined for p in SUSPICIOUS_PATTERNS)
+
+async def periodic_cleanup():
+    """Dọn dẹp IP hết hạn ban định kỳ"""
+    while True:
+        await asyncio.sleep(CLEANUP_INTERVAL)
+        now = time.time()
+        expired = [ip for ip, exp in banned_ips.items() if now > exp]
+        for ip in expired:
+            del banned_ips[ip]
+            violation_count.pop(ip, None)
+        if expired:
+            logger.info(f"Unbanned {len(expired)} IPs after ban duration")
 
 class SecurityBlocklistMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        ip = request.client.host if request.client else "Unknown IP"
         path = request.url.path
-        
-        if BLOCKLIST_REGEX.search(path):
-            ip = request.client.host if request.client else "Unknown IP"
-            logger.warning(f"Blocked malicious request from {ip} targeting {path}")
-            # Trả về 403 Forbidden thay vì chạy tiếp vào ứng dụng
-            return Response(content="Forbidden", status_code=403)
-            
-        response = await call_next(request)
-        return response
+        query = request.url.query or ""
+        now = time.time()
+
+        # 1. Kiểm tra IP đang bị ban
+        if ip in banned_ips:
+            if now < banned_ips[ip]:
+                return JSONResponse(
+                    status_code=403,
+                    content={"detail": "Forbidden"},
+                    headers={"Retry-After": str(int(banned_ips[ip] - now))}
+                )
+            else:
+                # Hết hạn ban — cho qua, reset
+                del banned_ips[ip]
+                violation_count[ip] = 0
+
+        # 2. Kiểm tra request có suspicious không
+        if is_suspicious(path, query):
+            violation_count[ip] += 1
+            count = violation_count[ip]
+
+            logger.warning(
+                f"[{count}/{BAN_THRESHOLD}] - Blocked malicious request from {ip} targeting {path}"
+            )
+
+            # 3. Đủ ngưỡng → BAN
+            if count >= BAN_THRESHOLD:
+                banned_ips[ip] = now + BAN_DURATION
+                logger.error(
+                    f"🚫 AUTO-BANNED {ip} for {BAN_DURATION//60} minutes after {count} violations"
+                )
+
+            return JSONResponse(status_code=403, content={"detail": "Forbidden"})
+
+        return await call_next(request)
