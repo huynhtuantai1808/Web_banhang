@@ -157,28 +157,25 @@ async def create_installment_plan(
     inst_type: str = "credit_card",
     down_payment: float = 0,
 ) -> InstallmentPlan:
+    down_payment_pct = down_payment / total_amount if total_amount > 0 else 0
     if inst_type == "finance":
-        # Note: We reverse calculate down_payment_pct from down_payment and total_amount
-        down_payment_pct = down_payment / total_amount if total_amount > 0 else 0
         result = calculate_finance(total_amount, months, down_payment_pct)
         loan_amount = result["loan_amount"]
         monthly = result["monthly_payment"]
         interest_rate = result["annual_interest_rate"]  # lưu vào DB để admin xem
+        total_loan_with_fee = result["total_amount"] # Tổng số tiền gốc + lãi phải trả
     else:
-        down_payment_pct = down_payment / total_amount if total_amount > 0 else 0
         result = calculate_credit_card(total_amount, months, down_payment_pct)
         loan_amount = result["loan_amount"]
         monthly = result["monthly_amount"]
         interest_rate = result["conversion_fee"]  # phí chuyển đổi
-
-    remaining = loan_amount - down_payment
-    first_payment = round(remaining / months, 2)
+        total_loan_with_fee = result["total_amount"]
 
     plan = InstallmentPlan(
         id=uuid.uuid4(),
         order_id=order_id,
         total_months=months,
-        monthly_amount=first_payment,
+        monthly_amount=monthly,
         interest_rate=interest_rate,
         down_payment=down_payment,
         status="active",
@@ -189,7 +186,7 @@ async def create_installment_plan(
     today = date.today()
     accumulated = 0.0
     for period in range(1, months + 1):
-        amount = round(remaining - accumulated, 2) if period == months else first_payment
+        amount = round(total_loan_with_fee - accumulated, 2) if period == months else monthly
         accumulated += amount
         due_date = date(today.year + (today.month + period - 1) // 12,
                         (today.month + period - 1) % 12 + 1, 1)

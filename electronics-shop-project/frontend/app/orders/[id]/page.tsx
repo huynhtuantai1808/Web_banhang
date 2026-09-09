@@ -186,7 +186,12 @@ export default function OrderDetailPage() {
                 <span className="tracking-wide">{PAYMENT_STATUS_META[order.payment_status]?.label || order.payment_status}</span>
               </div>
               <p className="text-sm text-circuit-muted mt-2">
-                Phương thức: <strong className="text-circuit-text font-medium">{order.payment_gateway === "vnpay" ? "VNPay" : "Tiền mặt (COD)"}</strong>
+                Phương thức: <strong className="text-circuit-text font-medium">
+                  {order.payment_gateway === "vnpay" ? "VNPay" : 
+                   order.payment_gateway === "credit_card" ? "Trả góp (Thẻ tín dụng)" : 
+                   order.payment_gateway === "finance" ? "Trả góp (Công ty tài chính)" : 
+                   "Tiền mặt (COD)"}
+                </strong>
               </p>
             </div>
             <div className="rounded-2xl glass-panel p-6">

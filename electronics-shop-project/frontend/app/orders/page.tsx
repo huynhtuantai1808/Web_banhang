@@ -127,7 +127,10 @@ export default function MyOrdersPage() {
                     {PAYMENT_STATUS_LABEL[order.payment_status] || order.payment_status}
                   </p>
                   <p className="text-[11px] text-circuit-muted mt-1 uppercase tracking-wide">
-                    {order.payment_gateway === "vnpay" ? "VNPay" : "Tiền mặt (COD)"}
+                    {order.payment_gateway === "vnpay" ? "VNPay" : 
+                     order.payment_gateway === "credit_card" ? "Trả góp (Thẻ tín dụng)" : 
+                     order.payment_gateway === "finance" ? "Trả góp (Công ty tài chính)" : 
+                     "Tiền mặt (COD)"}
                   </p>
                 </div>
                 <div className="w-8 h-8 rounded-full bg-circuit-line/30 flex items-center justify-center group-hover:bg-circuit-copper/20 group-hover:text-circuit-copperLight transition-colors">
