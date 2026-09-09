@@ -240,7 +240,7 @@ export default function AdminProductsPage() {
                     {p.discount_price ? formatVND(p.discount_price) : "—"}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <span className={p.stock_quantity <= 0 ? "text-red-400 font-bold" : "text-circuit-text"}>
+                    <span className={(p.stock_quantity ?? 0) <= 0 ? "text-red-400 font-bold" : "text-circuit-text"}>
                       {p.stock_quantity ?? 0}
                     </span>
                   </td>
