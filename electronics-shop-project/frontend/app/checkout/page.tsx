@@ -286,12 +286,29 @@ export default function CheckoutPage() {
           window.location.href = result.payment_url;
           return;
         }
-        const orderInfo = {
+        const orderInfo: any = {
           items: cart?.items.map(i => ({ productId: i.product_id, quantity: i.quantity, name: i.product_name, price: i.product_discount_price ?? i.product_price, image: i.product_image_url })) || [],
           total: finalTotal,
           discount: appliedPromo?.discount ?? 0,
-          autoDiscount: autoDiscount
+          autoDiscount: autoDiscount,
+          paymentMethod: paymentMethod,
         };
+        if (paymentMethod === "installment") {
+          const opt = installmentOptions.find(o => o.months === installmentMonths);
+          if (opt) {
+            orderInfo.installment = {
+              type: installmentType,
+              months: opt.months,
+              downPaymentAmount: opt.down_payment_amount ?? 0,
+              loanAmount: opt.loan_amount ?? 0,
+              monthlyPayment: opt.monthly_amount ?? 0,
+              totalAmount: opt.total_amount ?? 0,
+              bank: installmentType === "credit_card" ? selectedBank : null,
+              cardType: installmentType === "credit_card" ? selectedCardType : null,
+              financeCo: installmentType === "finance" ? selectedFinanceCo : null,
+            };
+          }
+        }
         sessionStorage.setItem("lastOrderInfo", JSON.stringify(orderInfo));
         
         router.push(`/orders/result?payment=cod&order_code=${result.order.order_code}`);

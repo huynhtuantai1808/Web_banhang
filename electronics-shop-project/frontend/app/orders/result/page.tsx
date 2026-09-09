@@ -97,6 +97,51 @@ function OrderResultContent() {
                 </div>
               )}
             </div>
+            
+            {orderInfo.paymentMethod === "installment" && orderInfo.installment && (
+              <div className="mt-4 pt-4 border-t border-circuit-line/40 space-y-2 text-sm">
+                <h4 className="font-mono text-xs text-circuit-copperLight uppercase tracking-widest font-semibold mb-3">Thông tin trả góp</h4>
+                <div className="flex justify-between text-circuit-muted">
+                  <span>Hình thức:</span>
+                  <span className="font-medium text-circuit-text">
+                    {orderInfo.installment.type === "credit_card" ? "Thẻ tín dụng" : "Công ty tài chính"}
+                  </span>
+                </div>
+                {orderInfo.installment.type === "credit_card" ? (
+                  <>
+                    <div className="flex justify-between text-circuit-muted">
+                      <span>Ngân hàng:</span>
+                      <span className="font-medium text-circuit-text">{orderInfo.installment.bank}</span>
+                    </div>
+                    <div className="flex justify-between text-circuit-muted">
+                      <span>Loại thẻ:</span>
+                      <span className="font-medium text-circuit-text">{orderInfo.installment.cardType}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex justify-between text-circuit-muted">
+                    <span>Công ty tài chính:</span>
+                    <span className="font-medium text-circuit-text">{orderInfo.installment.financeCo}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-circuit-muted">
+                  <span>Kỳ hạn:</span>
+                  <span className="font-medium text-circuit-text">{orderInfo.installment.months} tháng</span>
+                </div>
+                <div className="flex justify-between text-circuit-muted mt-2 pt-2 border-t border-circuit-line/20">
+                  <span>Số tiền trả trước:</span>
+                  <span className="font-mono font-medium text-circuit-text">{(orderInfo.installment.downPaymentAmount || 0).toLocaleString("vi-VN")}₫</span>
+                </div>
+                <div className="flex justify-between text-circuit-muted">
+                  <span>Số tiền vay:</span>
+                  <span className="font-mono font-medium text-circuit-text">{(orderInfo.installment.loanAmount || 0).toLocaleString("vi-VN")}₫</span>
+                </div>
+                <div className="flex justify-between text-circuit-muted">
+                  <span>Góp mỗi tháng:</span>
+                  <span className="font-mono font-medium text-circuit-copperLight">{(orderInfo.installment.monthlyPayment || 0).toLocaleString("vi-VN")}₫</span>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
