@@ -45,17 +45,6 @@ async def list_inventory(
     """
     Danh sách toàn bộ tồn kho — tên sản phẩm, danh mục, hãng, giá, tổng tồn kho, đã bán.
     """
-    # Subquery: đếm số lượng unit trong kho
-    units_subq = (
-        select(
-            ProductUnit.product_id,
-            func.count(ProductUnit.id).filter(ProductUnit.status == "in_stock").label("in_stock"),
-            func.count(ProductUnit.id).label("total_units")
-        )
-        .group_by(ProductUnit.product_id)
-        .subquery()
-    )
-
     # Subquery: đếm số lượng đã bán
     from app.models.order import OrderItem
     sold_subq = (
@@ -77,13 +66,11 @@ async def list_inventory(
             Product.discount_price,
             Category.name.label("category"),
             Brand.name.label("brand"),
-            func.coalesce(units_subq.c.in_stock, 0).label("in_stock"),
+            func.coalesce(Product.stock_quantity, 0).label("in_stock"),
             func.coalesce(sold_subq.c.sold, 0).label("sold"),
-            func.coalesce(units_subq.c.total_units, 0).label("total_units"),
         )
         .outerjoin(Category, Product.category_id == Category.id)
         .outerjoin(Brand, Product.brand_id == Brand.id)
-        .outerjoin(units_subq, Product.id == units_subq.c.product_id)
         .outerjoin(sold_subq, Product.id == sold_subq.c.product_id)
         .where(Product.status == "active")
         .order_by(Product.name)
@@ -127,7 +114,7 @@ async def list_inventory(
             discount_price=float(row.discount_price) if row.discount_price else None,
             in_stock=in_stock,
             sold=sold,
-            total_units=int(row.total_units),
+            total_units=in_stock + sold,
         ))
 
     return items
