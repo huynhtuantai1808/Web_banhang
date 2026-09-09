@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Package, Truck, CreditCard, CheckCircle2, Clock, XCircle, Tag, CalendarClock } from "lucide-react";
+import { ArrowLeft, Loader2, Package, Truck, CreditCard, CheckCircle2, Clock, XCircle, Tag, CalendarClock, FileText } from "lucide-react";
 import { getOrder, sendOrderEmail, OrderOut } from "@/lib/services/orders";
 import { getInstallmentPlan, InstallmentPlanOut } from "@/lib/services/installment";
 import { getMyShipment, ShipmentOut, SHIPMENT_STATUS_LABEL } from "@/lib/services/shipments";
@@ -109,8 +109,14 @@ export default function OrderDetailPage() {
       )}
 
       {!loading && error && (
-        <div className="rounded-md border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-md border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm text-red-300 mb-6">
           {error}
+        </div>
+      )}
+
+      {!loading && emailSuccess && (
+        <div className="rounded-md border border-circuit-signal/40 bg-circuit-signal/10 px-4 py-3 text-sm text-circuit-signal mb-6">
+          {emailSuccess}
         </div>
       )}
 
@@ -128,17 +134,29 @@ export default function OrderDetailPage() {
                   Đặt lúc {new Date(order.created_at).toLocaleString("vi-VN")}
                 </p>
               </div>
-              {order.status === "cancelled" ? (
-                <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase bg-red-400/15 text-red-400 border border-red-400/30">
-                  Đã huỷ
-                </span>
-              ) : (
-                <span className={`px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase border ${
-                  order.status === 'completed' ? 'border-circuit-signal bg-circuit-signal/15 text-circuit-signal' : 'border-circuit-copper/50 bg-circuit-copper/15 text-circuit-copperLight'
-                }`}>
-                  {STATUS_STEPS.find((s) => s.key === order.status)?.label || order.status}
-                </span>
-              )}
+              <div className="flex items-center gap-3">
+                {order.status === "cancelled" ? (
+                  <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase bg-red-400/15 text-red-400 border border-red-400/30">
+                    Đã huỷ
+                  </span>
+                ) : (
+                  <span className={`px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase border ${
+                    order.status === 'completed' ? 'border-circuit-signal bg-circuit-signal/15 text-circuit-signal' : 'border-circuit-copper/50 bg-circuit-copper/15 text-circuit-copperLight'
+                  }`}>
+                    {STATUS_STEPS.find((s) => s.key === order.status)?.label || order.status}
+                  </span>
+                )}
+                
+                <button
+                  onClick={() => handleSendEmail("invoice")}
+                  disabled={emailLoading !== null}
+                  className="px-3 py-1.5 rounded-md text-xs font-medium border border-circuit-copper/30 text-circuit-copperLight hover:bg-circuit-copper/10 disabled:opacity-50 transition-colors flex items-center gap-1.5"
+                  title="Gửi hoá đơn điện tử qua email"
+                >
+                  {emailLoading === "invoice" ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
+                  Hoá đơn điện tử
+                </button>
+              </div>
             </div>
 
             {/* Thanh tiến trình trạng thái đơn hàng */}

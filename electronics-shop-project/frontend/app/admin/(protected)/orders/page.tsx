@@ -161,7 +161,12 @@ export default function AdminOrdersPage() {
                       <p className={`text-xs font-semibold uppercase tracking-wider ${o.payment_status === "paid" ? "text-circuit-signal" : o.payment_status === "failed" ? "text-red-400" : "text-amber-400"}`}>
                         {o.payment_status === "paid" ? "Đã TT" : o.payment_status === "failed" ? "Thất bại" : "Chờ TT"}
                       </p>
-                      <p className="text-[10px] text-circuit-muted uppercase tracking-widest mt-1">{o.payment_gateway === "vnpay" ? "VNPay" : "COD"}</p>
+                      <p className="text-[10px] text-circuit-muted uppercase tracking-widest mt-1">
+                        {o.payment_gateway === "vnpay" ? "VNPay" :
+                         o.payment_gateway === "credit_card" ? "Trả góp (Thẻ tín dụng)" :
+                         o.payment_gateway === "finance" ? "Trả góp (Cty tài chính)" :
+                         "COD"}
+                      </p>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1.5 rounded-full text-[10px] font-semibold uppercase tracking-widest border ${
