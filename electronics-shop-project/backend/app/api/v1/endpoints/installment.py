@@ -22,6 +22,22 @@ from app.services.installment_service import (
 
 router = APIRouter(tags=["Installment (Trả góp)"])
 
+@router.get("/installment-info")
+async def get_installment_info():
+    """Trả về cấu hình trả góp (kỳ hạn, lãi suất, phí) để frontend tự tính."""
+    return {
+        "credit_card": {
+            "tenures": CREDIT_CARD_MONTHS,
+            "fees": CONVERSION_FEE
+        },
+        "finance": {
+            "tenures": FINANCE_TENURES,
+            "down_payment_pct": FINANCE_CONFIG["down_payment_pct"] * 100,
+            "annual_interest_rate": FINANCE_CONFIG["annual_interest_rate"] * 100,
+            "monthly_interest_rate": (FINANCE_CONFIG["annual_interest_rate"] / 12) * 100
+        }
+    }
+
 
 def _build_payments_out(payments: list[InstallmentPayment]) -> list[InstallmentPaymentOut]:
     return [
