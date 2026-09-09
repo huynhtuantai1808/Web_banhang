@@ -82,7 +82,6 @@ export default function CheckoutPage() {
   const [autoDiscount, setAutoDiscount] = useState(0);
 
   useEffect(() => {
-    // Determine payment type from URL
     const params = new URLSearchParams(window.location.search);
     const type = params.get("type");
     if (type === "credit") {
@@ -131,9 +130,11 @@ export default function CheckoutPage() {
             });
           }
           setCart({ items, total_amount: total });
-          // Mã khuyến mãi/chiết khấu tự động yêu cầu đăng nhập để xem trước — với khách vãng lai,
-          // hệ thống vẫn TÍNH ĐÚNG lúc đặt hàng thật (POST /orders/guest hỗ trợ promo_code), chỉ
-          // là không hiển thị số xem trước ở đây.
+          
+          if (type === "credit" || type === "finance") {
+            router.replace(`/login?redirect=/checkout?type=${type}`);
+            return;
+          }
         }
       } catch (err) {
         setError(err instanceof ApiError ? err.message : "Không tải được giỏ hàng");
@@ -143,7 +144,7 @@ export default function CheckoutPage() {
     }
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loggedIn]);
 
 
   useEffect(() => {
