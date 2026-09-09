@@ -64,7 +64,7 @@ export default function CheckoutPage() {
   const [selectedBank, setSelectedBank] = useState(CREDIT_BANKS[0]);
   const [selectedCardType, setSelectedCardType] = useState(CARD_TYPES[0]);
   const [selectedFinanceCo, setSelectedFinanceCo] = useState(FINANCE_COMPANIES[0]);
-  const [creditDownPayment, setCreditDownPayment] = useState(0);
+  const [financeDownPaymentPct, setFinanceDownPaymentPct] = useState(0.2);
 
   // Thông tin khách vãng lai (chỉ hiện khi chưa đăng nhập)
   const [guestName, setGuestName] = useState("");
@@ -194,11 +194,11 @@ export default function CheckoutPage() {
       return;
     }
     let cancelled = false;
-    getInstallmentOptions(finalTotal, installmentType)
+    getInstallmentOptions(finalTotal, installmentType, installmentType === "finance" ? financeDownPaymentPct : undefined)
       .then((res) => { if (!cancelled) setInstallmentOptions(res.options); })
       .catch(() => { if (!cancelled) setInstallmentOptions([]); });
     return () => { cancelled = true; };
-  }, [paymentMethod, allEligibleForInstallment, finalTotal, installmentType]);
+  }, [paymentMethod, allEligibleForInstallment, finalTotal, installmentType, financeDownPaymentPct]);
 
   async function handleApplyPromo() {
     if (!promoInput.trim() || !loggedIn) return; // xem trước mã KM chỉ khả dụng khi đã đăng nhập
@@ -606,17 +606,17 @@ export default function CheckoutPage() {
 
               {installmentType === "credit_card" && (
                 <div className="mb-6 space-y-4">
-                  <div>
-                    <label className="block text-xs font-medium text-circuit-muted mb-1.5">Chọn ngân hàng trả góp</label>
-                    <select
-                      value={selectedBank}
-                      onChange={(e) => setSelectedBank(e.target.value)}
-                      className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
-                    >
-                      {CREDIT_BANKS.map((b) => <option key={b} value={b}>{b}</option>)}
-                    </select>
-                  </div>
                   <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-circuit-muted mb-1.5">Ngân hàng</label>
+                      <select
+                        value={selectedBank}
+                        onChange={(e) => setSelectedBank(e.target.value)}
+                        className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                      >
+                        {CREDIT_BANKS.map((b) => <option key={b} value={b}>{b}</option>)}
+                      </select>
+                    </div>
                     <div>
                       <label className="block text-xs font-medium text-circuit-muted mb-1.5">Loại thẻ</label>
                       <select
@@ -627,16 +627,6 @@ export default function CheckoutPage() {
                         {CARD_TYPES.map((c) => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </div>
-                    <div>
-                      <label className="block text-xs font-medium text-circuit-muted mb-1.5">Số tiền trả trước (VNĐ)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={creditDownPayment}
-                        onChange={(e) => setCreditDownPayment(Number(e.target.value))}
-                        className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
-                      />
-                    </div>
                   </div>
                 </div>
               )}
@@ -644,13 +634,28 @@ export default function CheckoutPage() {
               {installmentType === "finance" && (
                 <div className="mb-6 space-y-4">
                   <div>
-                    <label className="block text-xs font-medium text-circuit-muted mb-1.5">Công ty tài chính</label>
+                    <label className="block text-xs font-medium text-circuit-muted mb-1.5">Công ty hỗ trợ</label>
                     <select
                       value={selectedFinanceCo}
                       onChange={(e) => setSelectedFinanceCo(e.target.value)}
                       className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
                     >
                       {FINANCE_COMPANIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-circuit-muted mb-1.5">Tỷ lệ trả trước</label>
+                    <select
+                      value={financeDownPaymentPct}
+                      onChange={(e) => setFinanceDownPaymentPct(Number(e.target.value))}
+                      className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                    >
+                      <option value={0.2}>20%</option>
+                      <option value={0.3}>30%</option>
+                      <option value={0.4}>40%</option>
+                      <option value={0.5}>50%</option>
+                      <option value={0.6}>60%</option>
+                      <option value={0.7}>70%</option>
                     </select>
                   </div>
                 </div>
@@ -666,7 +671,7 @@ export default function CheckoutPage() {
                           <th className="py-1.5 text-left text-circuit-muted font-mono uppercase">Kỳ hạn</th>
                           {installmentType === "finance" ? (
                             <>
-                              <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Trả trước (20%)</th>
+                              <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Trả trước ({(financeDownPaymentPct * 100).toFixed(0)}%)</th>
                               <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Khoản vay</th>
                               <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Lãi suất</th>
                             </>
@@ -747,7 +752,7 @@ export default function CheckoutPage() {
                 <p className="text-[10px] text-circuit-muted mt-3 border-t border-circuit-line pt-2">
                   {installmentType === "credit_card"
                     ? "* Phí chuyển đổi trả góp do ngân hàng/phát hành thẻ tín dụng áp dụng."
-                    : "* Lãi suất 1.5%/tháng (18%/năm) trên dư nợ giảm dần. Phí xử lý do công ty tài chính quy định."}
+                    : "* Lãi suất 1.5%/tháng (18%/năm) trên dư nợ giảm dần. Phí xử lý do công ty cho vay trả góp quy định."}
                 </p>
               </div>
             </div>
@@ -833,7 +838,7 @@ export default function CheckoutPage() {
                   <p className="font-semibold text-circuit-text mb-2">Phương thức thanh toán:</p>
                   <p className="text-circuit-muted">
                     {paymentMethod === "installment" 
-                      ? (installmentType === "credit_card" ? `Trả góp thẻ tín dụng (${selectedBank})` : `Trả góp công ty tài chính (${selectedFinanceCo})`)
+                      ? (installmentType === "credit_card" ? `Trả góp thẻ tín dụng (${selectedBank})` : `Mua Trả góp (${selectedFinanceCo})`)
                       : (gateway === "vnpay" ? "Thanh toán qua VNPay" : "Thanh toán tiền mặt khi nhận hàng (COD)")}
                   </p>
                 </div>

@@ -52,7 +52,7 @@ export default function InstallmentTable({ amount, selectedType, selectedMonths,
             <th className="py-2 text-left text-circuit-muted font-mono uppercase">Kỳ hạn</th>
             {isFinance ? (
               <>
-                <th className="py-2 text-right text-circuit-muted font-mono uppercase">Trả trước (20%)</th>
+                <th className="py-2 text-right text-circuit-muted font-mono uppercase">Trả trước ({(selectedType === "finance" ? (options[0]?.down_payment_pct ?? 20) : 20).toFixed(0)}%)</th>
                 <th className="py-2 text-right text-circuit-muted font-mono uppercase">Khoản vay</th>
                 <th className="py-2 text-right text-circuit-muted font-mono uppercase">Lãi suất</th>
               </>
@@ -138,18 +138,34 @@ export function CreditCardInstallment({ amount }: InstallmentBlockProps) {
 }
 
 export function FinanceInstallment({ amount }: InstallmentBlockProps) {
+  const [downPaymentPct, setDownPaymentPct] = useState(0.2);
+  
   return (
     <div className="rounded-lg border border-circuit-line bg-circuit-panel/50 p-4">
       <div className="flex items-center gap-2 mb-3">
         <Building2 size={16} className="text-circuit-copper" />
-        <div>
-          <p className="text-sm font-medium text-circuit-copperLight">Công ty tài chính</p>
-          <p className="text-xs text-circuit-muted">Trả trước 20% · Lãi suất trên dư nợ giảm dần</p>
+        <div className="flex-1 flex justify-between items-center">
+          <div>
+            <p className="text-sm font-medium text-circuit-copperLight">Mua Trả góp</p>
+            <p className="text-xs text-circuit-muted">Lãi suất trên dư nợ giảm dần</p>
+          </div>
+          <select 
+            value={downPaymentPct}
+            onChange={(e) => setDownPaymentPct(Number(e.target.value))}
+            className="rounded border border-circuit-line/60 bg-circuit-bg/50 px-2 py-1 text-xs text-circuit-text outline-none focus:border-circuit-copper"
+          >
+            <option value={0.2}>Trả trước 20%</option>
+            <option value={0.3}>Trả trước 30%</option>
+            <option value={0.4}>Trả trước 40%</option>
+            <option value={0.5}>Trả trước 50%</option>
+            <option value={0.6}>Trả trước 60%</option>
+            <option value={0.7}>Trả trước 70%</option>
+          </select>
         </div>
       </div>
-      <FinanceTable amount={amount} />
+      <FinanceTable amount={amount} downPaymentPct={downPaymentPct} />
       <p className="text-[10px] text-circuit-muted mt-2">
-        * Lãi suất 1.5%/tháng (18%/năm) trên dư nợ giảm dần. Phí xử lý do công ty tài chính quy định.
+        * Lãi suất 1.5%/tháng (18%/năm) trên dư nợ giảm dần. Phí xử lý do công ty cho vay trả góp quy định.
       </p>
     </div>
   );
@@ -198,17 +214,17 @@ function CreditCardTable({ amount }: { amount: number }) {
   );
 }
 
-function FinanceTable({ amount }: { amount: number }) {
+function FinanceTable({ amount, downPaymentPct = 0.2 }: { amount: number, downPaymentPct?: number }) {
   const [options, setOptions] = useState<InstallmentOption[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    getInstallmentOptions(amount, "finance")
+    getInstallmentOptions(amount, "finance", downPaymentPct)
       .then((res) => { if (!cancelled) setOptions(res.options); })
       .catch(() => {})
       .finally(() => { if (!cancelled) setLoading(false); });
-  }, [amount]);
+  }, [amount, downPaymentPct]);
 
   if (loading) return <div className="py-4 text-center text-sm text-circuit-muted"><Loader2 size={14} className="animate-spin inline mr-1" /> Đang tính...</div>;
   if (!options.length) return null;
@@ -219,7 +235,7 @@ function FinanceTable({ amount }: { amount: number }) {
         <thead>
           <tr className="border-b border-circuit-line">
             <th className="py-1.5 text-left text-circuit-muted font-mono uppercase">Kỳ hạn</th>
-            <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Trả trước</th>
+            <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Trả trước ({(downPaymentPct * 100).toFixed(0)}%)</th>
             <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Vay</th>
             <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Lãi</th>
             <th className="py-1.5 text-right text-circuit-copperLight font-mono uppercase">/tháng</th>

@@ -75,7 +75,7 @@ def calculate_credit_card(amount: float, months: int) -> dict:
 
 # ── Công ty tài chính ─────────────────────────────────────────
 
-def calculate_finance(amount: float, months: int) -> dict:
+def calculate_finance(amount: float, months: int, down_payment_pct: float = None) -> dict:
     """Tính trả góp qua công ty tài chính (lãi suất trên dư nợ giảm dần).
 
     Công thức tính đều hàng tháng (constant payment):
@@ -88,7 +88,8 @@ def calculate_finance(amount: float, months: int) -> dict:
         raise ValueError(f"Kỳ hạn công ty tài chính không hợp lệ: {months}")
 
     cfg = FINANCE_CONFIG
-    down_payment_amount = round(amount * cfg["down_payment_pct"], 2)
+    pct = down_payment_pct if down_payment_pct is not None else cfg["down_payment_pct"]
+    down_payment_amount = round(amount * pct, 2)
     loan_amount = round(amount - down_payment_amount, 2)
     annual_rate = cfg["annual_interest_rate"]
     monthly_rate = annual_rate / 12
@@ -105,7 +106,7 @@ def calculate_finance(amount: float, months: int) -> dict:
     return {
         "type": "finance",
         "months": months,
-        "down_payment_pct": cfg["down_payment_pct"] * 100,
+        "down_payment_pct": pct * 100,
         "down_payment_amount": down_payment_amount,
         "loan_amount": loan_amount,
         "annual_interest_rate": annual_rate * 100,
@@ -118,16 +119,16 @@ def calculate_finance(amount: float, months: int) -> dict:
 
 # ── Tổng hợp ──────────────────────────────────────────────────
 
-def calculate_installment(amount: float, months: int, inst_type: str = "credit_card") -> dict:
+def calculate_installment(amount: float, months: int, inst_type: str = "credit_card", down_payment_pct: float = None) -> dict:
     if inst_type == "finance":
-        return calculate_finance(amount, months)
+        return calculate_finance(amount, months, down_payment_pct)
     return calculate_credit_card(amount, months)
 
 
-def calculate_installment_options(amount: float, inst_type: str = "credit_card") -> list[dict]:
+def calculate_installment_options(amount: float, inst_type: str = "credit_card", down_payment_pct: float = None) -> list[dict]:
     """Trả về bảng tất cả phương án trả góp cho một loại."""
     if inst_type == "finance":
-        return [calculate_finance(amount, m) for m in FINANCE_TENURES]
+        return [calculate_finance(amount, m, down_payment_pct) for m in FINANCE_TENURES]
     return [calculate_credit_card(amount, m) for m in CREDIT_CARD_MONTHS]
 
 
@@ -147,7 +148,9 @@ async def create_installment_plan(
     down_payment: float = 0,
 ) -> InstallmentPlan:
     if inst_type == "finance":
-        result = calculate_finance(total_amount, months)
+        # Note: We reverse calculate down_payment_pct from down_payment and total_amount
+        down_payment_pct = down_payment / total_amount if total_amount > 0 else 0
+        result = calculate_finance(total_amount, months, down_payment_pct)
         loan_amount = result["loan_amount"]
         monthly = result["monthly_payment"]
         interest_rate = result["annual_interest_rate"]  # lưu vào DB để admin xem

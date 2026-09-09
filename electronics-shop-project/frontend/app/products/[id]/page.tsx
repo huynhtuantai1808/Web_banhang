@@ -480,7 +480,7 @@ export default function ProductDetailPage() {
                   disabled={adding}
                   className="flex-1 flex flex-col items-center justify-center rounded-lg bg-[#2f80ed] text-white py-2 transition-colors hover:bg-blue-600 shadow-md disabled:opacity-60"
                 >
-                  <span className="font-bold text-sm uppercase">Công ty tài chính</span>
+                  <span className="font-bold text-sm uppercase">Mua Trả góp</span>
                   <span className="text-[11px] font-normal mt-0.5">Duyệt hồ sơ online</span>
                 </button>
               </div>

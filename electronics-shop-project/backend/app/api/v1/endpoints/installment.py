@@ -36,15 +36,16 @@ def _build_payments_out(payments: list[InstallmentPayment]) -> list[InstallmentP
 async def get_installment_options(
     amount: float = Query(..., gt=0, description="Giá trị đơn hàng (VNĐ)"),
     inst_type: Annotated[str, Query(description="Loại trả góp: credit_card | finance")] = "credit_card",
+    down_payment_pct: Annotated[float | None, Query(description="Phần trăm trả trước (ví dụ 0.2 cho 20%)")] = None,
 ):
     """Trả về bảng tất cả phương án trả góp cho một loại cụ thể.
     - credit_card: 0% lãi suất, có phí chuyển đổi trả góp (3/6/9/12/18/24 tháng).
-    - finance: lãi suất trên dư nợ giảm dần, trả trước 20% (6/12/18/24/36 tháng).
+    - finance: lãi suất trên dư nợ giảm dần, trả trước 20% - 70% (6/12/18/24/36 tháng).
     """
     if inst_type not in ("credit_card", "finance"):
         raise HTTPException(status_code=400, detail="inst_type phải là 'credit_card' hoặc 'finance'")
 
-    options = calculate_installment_options(amount, inst_type)
+    options = calculate_installment_options(amount, inst_type, down_payment_pct)
     return InstallmentOptionsResponse(amount=amount, options=options)
 
 
@@ -53,10 +54,11 @@ async def installment_calculator(
     amount: float = Query(..., gt=0, description="Giá trị đơn hàng (VNĐ)"),
     months: int = Query(..., description="Số tháng trả góp"),
     inst_type: Annotated[str, Query(description="Loại: credit_card | finance")] = "credit_card",
+    down_payment_pct: Annotated[float | None, Query(description="Phần trăm trả trước")] = None,
 ):
     """Máy tính trả góp cho một phương án cụ thể (dùng khi khách đã chọn kỳ hạn)."""
     try:
-        result = calculate_installment(amount, months, inst_type)
+        result = calculate_installment(amount, months, inst_type, down_payment_pct)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

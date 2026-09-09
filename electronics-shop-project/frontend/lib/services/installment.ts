@@ -81,9 +81,10 @@ export const FINANCE_MONTHS = [6, 12, 18, 24, 36] as const;
 export async function getInstallmentOptions(
   amount: number,
   type: InstallmentType = "credit_card",
+  downPaymentPct?: number,
 ): Promise<InstallmentOptionsResponse> {
   const { data } = await apiClient.get<InstallmentOptionsResponse>("/installment-options", {
-    params: { amount, inst_type: type },
+    params: { amount, inst_type: type, down_payment_pct: downPaymentPct },
   });
   return data;
 }
@@ -99,9 +100,10 @@ export async function calculateInstallment(
   amount: number,
   months: number,
   type: InstallmentType = "credit_card",
+  downPaymentPct?: number,
 ): Promise<InstallmentCalculatorResponse> {
   const { data } = await apiClient.get<InstallmentCalculatorResponse>("/installment-calculator", {
-    params: { amount, months, inst_type: type },
+    params: { amount, months, inst_type: type, down_payment_pct: downPaymentPct },
   });
   return data;
 }
