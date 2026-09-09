@@ -122,6 +122,31 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
         </tr>
         """
 
+    # Xác định trạng thái thanh toán hiển thị
+    if order.payment_method == "installment" or order.payment_gateway in ["credit_card", "finance"]:
+        payment_status_text = "Thanh toán theo kỳ hạn"
+    elif order.payment_status == "paid":
+        payment_status_text = "Đã thanh toán"
+    elif order.payment_gateway == "cod":
+        payment_status_text = "Chờ thanh toán"
+    else:
+        status_map = {
+            "paid": "Đã thanh toán",
+            "pending": "Chờ thanh toán",
+            "overdue": "Quá hạn",
+            "refunded": "Đã hoàn tiền"
+        }
+        payment_status_text = status_map.get(order.payment_status, order.payment_status.upper())
+
+    # Xác định phương thức thanh toán hiển thị
+    gateway_map = {
+        "vnpay": "VNPay",
+        "cod": "Tiền mặt (COD)",
+        "credit_card": "Trả góp (Thẻ tín dụng)",
+        "finance": "Trả góp (Công ty tài chính)"
+    }
+    payment_method_text = gateway_map.get(order.payment_gateway, order.payment_gateway.upper())
+
     html_content = f"""
     <html>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
@@ -147,8 +172,8 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
 
         <div style="margin-bottom: 20px;">
             <p><strong>Mã đơn hàng:</strong> {order.order_code}</p>
-            <p><strong>Trạng thái thanh toán:</strong> {order.payment_status.upper()}</p>
-            <p><strong>Phương thức:</strong> {order.payment_method.upper()} ({order.payment_gateway.upper()})</p>
+            <p><strong>Trạng thái thanh toán:</strong> {payment_status_text}</p>
+            <p><strong>Phương thức:</strong> {payment_method_text}</p>
         </div>
 
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
