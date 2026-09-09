@@ -148,7 +148,7 @@ Các API cần đăng nhập (mọi API trừ nhóm `Auth`, `Employees` login v�
   (`customer_token` vs `employee_token`).
 - Đã build thử `npm run build` + `tsc --noEmit` — thành công, không lỗi.
 
-## 9. Cập nhật mới nhất (đợt 2)
+## 9. Cập nhật mới nhất 
 
 **a) Sửa lỗi crash "NotFoundError: insertBefore" khi lọc danh mục**
 - Nguyên nhân: `FilterTabs.tsx` (bản cũ) dùng `motion.span layoutId` để tạo hiệu ứng pill trượt
@@ -214,7 +214,7 @@ Các API cần đăng nhập (mọi API trừ nhóm `Auth`, `Employees` login v�
 Đã build thử `npm run build` (FE, toàn bộ route mới lên đúng: `/admin/users`, `/cart`,
 `/products/[id]`...) và import `app.main` (BE, 31 routes) — không lỗi.
 
-## 11. Cập nhật mới nhất (đợt 3) — Thanh toán & Tuỳ chỉnh giao diện
+## 11. Cập nhật mới nhất  — Thanh toán & Tuỳ chỉnh giao diện
 
 **a) Thanh toán + Cổng thanh toán VNPay**
 - Backend: `Order` giờ có `payment_gateway` (`cod`|`vnpay`), `payment_status` (`pending`|`paid`|`failed`),
@@ -258,7 +258,7 @@ Các API cần đăng nhập (mọi API trừ nhóm `Auth`, `Employees` login v�
 `/orders/result`, `/admin/settings`...) và import `app.main` (BE, 39 routes) — không lỗi. Đã test
 riêng logic ký/xác thực VNPay bằng script độc lập — hoạt động đúng cả trường hợp hợp lệ và giả mạo.
 
-## 13. Cập nhật mới nhất (đợt 4) — IPN VNPay & Trang chi tiết đơn hàng
+## 13. Cập nhật mới nhất  — IPN VNPay & Trang chi tiết đơn hàng
 
 **a) IPN (Instant Payment Notification) — kênh xác nhận thanh toán đáng tin cậy hơn Return URL**
 - Vấn đề với chỉ dùng Return URL: nó chạy qua trình duyệt của khách hàng — nếu khách đóng tab,
@@ -297,7 +297,7 @@ riêng logic ký/xác thực VNPay bằng script độc lập — hoạt động
 Đã build thử `npm run build` (FE, 14 routes tĩnh/động, bao gồm `/orders/[id]` mới) và import
 `app.main` (BE, 40 routes) — không lỗi.
 
-## 15. Cập nhật mới nhất (đợt 5) — Khuyến mãi, Trả góp, Quản lý khách hàng, OTP Email thật
+## 15. Cập nhật mới nhất  — Khuyến mãi, Trả góp, Quản lý khách hàng, OTP Email thật
 
 Các bảng `promotions`, `promotion_customer`, `discount_rules`, `installment_plans`,
 `installment_payments` đã có sẵn trong `database/schema.sql` từ bản scaffold đầu tiên nhưng chưa
@@ -359,7 +359,7 @@ migration DB mới**.
 
 Đã build thử `npm run build` (FE, 16 routes) và import `app.main` (BE, 52 routes) — không lỗi.
 
-## 17. Cập nhật mới nhất (đợt 6) — Quản lý đơn hàng, Vận chuyển, Phân loại, Chatbot & Liên hệ
+## 17. Cập nhật mới nhất  — Quản lý đơn hàng, Vận chuyển, Phân loại, Chatbot & Liên hệ
 
 **a) Quản lý đơn hàng cho admin**
 - `endpoints/admin_orders.py` — `GET /admin/orders` (toàn bộ đơn của mọi khách hàng, lọc theo
@@ -415,7 +415,7 @@ migration DB mới**.
 shipment↔order (picked_up/in_transit → shipping, delivered → completed + tự paid nếu COD, trạng
 thái không hợp lệ bị từ chối, lịch sử ghi log đầy đủ) — tất cả pass.
 
-## 19. Cập nhật mới nhất (đợt 7) — Dọn TODO cũ + Chiết khấu tự động + Thu tiền trả góp
+## 19. Cập nhật mới nhất  — Dọn TODO cũ + Chiết khấu tự động + Thu tiền trả góp
 
 **a) Dọn comment TODO lỗi thời trong `router.py`**
 - Comment TODO liệt kê `customers, employees, cart, orders, installment, promotions` là còn sót
@@ -463,7 +463,7 @@ thái không hợp lệ bị từ chối, lịch sử ghi log đầy đủ) — 
 
 Đã build thử `npm run build` (FE, 20 routes) và import `app.main` (BE, 74 routes) — không lỗi.
 
-## 21. Cập nhật mới nhất (đợt 9) — Tin tức, Khuyến mãi & Chỉnh sửa hồ sơ
+## 21. Cập nhật mới nhất  — Tin tức, Khuyến mãi & Chỉnh sửa hồ sơ
 
 **a) Trang Tin tức & Chương trình khuyến mãi**
 - Bảng mới `blog_posts` (id, title, slug, summary, content HTML, image_url, category, is_published,
@@ -507,7 +507,7 @@ Hoặc chạy SQL trong `database/migrate.py` trực tiếp vào PostgreSQL.
 `/promotions`, `/promotions/[slug]`, `/admin/posts`, `/admin/customers/[id]/edit`,
 `/admin/users/[id]/edit`) — không lỗi.
 
-## 20. Cập nhật mới nhất (đợt 8) — Footer, Menu danh mục, Guest Checkout, Tối ưu Admin
+## 20. Cập nhật mới nhất  — Footer, Menu danh mục, Guest Checkout, Tối ưu Admin
 
 **a) Footer hiển thị thông tin cửa hàng**
 - `components/SiteFooter.tsx` — logo, mô tả shop, liên hệ (hotline/Zalo/Facebook/giờ mở cửa), link
@@ -619,17 +619,17 @@ Cần bổ sung tiếp:
 - Trang admin tuỳ chỉnh giao diện (`/admin/settings`) mới áp dụng cho trang chủ — mở rộng thêm sang tuỳ chỉnh trang danh mục/trang sản phẩm nếu cần (hiện danh mục đã có banner riêng, nhưng nội dung khác như màu sắc/bố cục thì chưa)
 
 
-## 7. Cấu hình & Lệnh Mới Thêm Gần Đây
+## 23. Cấu hình & Lệnh Mới Thêm Gần Đây
 
-### 7.1 Cấu hình Site Settings
+### 23.1 Cấu hình Site Settings
 - Bảng site_settings trong PostgreSQL nay đóng vai trò quản lý cấu hình giao diện. 
 - Mọi thay đổi về Giao diện (Category Brands, Màu sắc, Text) hiện đều được quản lý tại trang /admin/settings và được load động.
 - Để sử dụng, API GET /api/v1/settings trả về JSON, Frontend inject thông qua SiteSettingsProvider.
 
-### 7.2 Lệnh & Script Hữu Ích
+### 23.2 Lệnh & Script Hữu Ích
 - Quét/Kiểm tra lỗi trùng lặp dữ liệu: Dự án đã được bổ sung các script độc lập (chạy trên Python) để kiểm tra tính toàn vẹn dữ liệu (VD: dọn dẹp dữ liệu danh mục lỗi/duplicate).
 
-## 8. Lịch Sử Cập Nhật & Sửa Lỗi (Changelog Gần Nhất)
+## 24. Lịch Sử Cập Nhật & Sửa Lỗi (Changelog Gần Nhất)
 - **Tối ưu Admin UI (Cấu hình Hãng)**: Bổ sung form quản lý category_brands bằng JSON tại trang Settings để gắn thương hiệu tương ứng với từng danh mục sản phẩm (VD: Máy ảnh -> Canon; Laptop -> Asus).
 - **Trang Danh mục (Category Page)**: 
   - Khắc phục lỗi Unexpected token div (Lỗi Syntax Error khi build Next.js).

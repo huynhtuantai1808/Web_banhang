@@ -39,6 +39,7 @@ export interface ProductInput {
   specification?: Record<string, unknown>;
   price: number;
   discount_price?: number;
+  stock_quantity?: number;
   is_installment_eligible?: boolean;
 }
 
