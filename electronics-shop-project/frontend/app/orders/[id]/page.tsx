@@ -235,6 +235,18 @@ export default function OrderDetailPage() {
                 <span className="text-lg text-circuit-text">Tổng cộng</span>
                 <span className="text-2xl text-circuit-signal font-bold drop-shadow-[0_0_8px_rgba(48,223,147,0.4)]">{formatVND(order.final_amount)}</span>
               </div>
+              {installmentPlan && (
+                <div className="border-t border-circuit-line/30 mt-3 pt-3 space-y-2.5">
+                  <div className="flex justify-between text-circuit-muted">
+                    <span>Đã thanh toán (Trả trước)</span>
+                    <span className="font-mono text-circuit-text font-medium">{formatVND(installmentPlan.down_payment)}</span>
+                  </div>
+                  <div className="flex justify-between text-circuit-muted">
+                    <span>Còn lại (Khoản vay gốc)</span>
+                    <span className="font-mono text-circuit-text font-medium">{formatVND(order.final_amount - installmentPlan.down_payment)}</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
