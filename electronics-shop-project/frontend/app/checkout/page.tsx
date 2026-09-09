@@ -928,6 +928,54 @@ export default function CheckoutPage() {
                     <span>Tổng tiền thanh toán:</span>
                     <span className="text-circuit-signal">{formatVND(finalTotal)}</span>
                   </div>
+                  {paymentMethod === "installment" && (() => {
+                    const opt = installmentOptions.find(o => o.months === installmentMonths);
+                    if (!opt) return null;
+                    return (
+                      <div className="mt-4 pt-4 border-t border-circuit-line/40 space-y-2 text-sm">
+                        <h4 className="font-mono text-xs text-circuit-copperLight uppercase tracking-widest font-semibold mb-3">Thông tin chi tiết trả góp</h4>
+                        <div className="flex justify-between text-circuit-muted">
+                          <span>Hình thức:</span>
+                          <span className="font-medium text-circuit-text">
+                            {installmentType === "credit_card" ? "Thẻ tín dụng" : "Công ty tài chính"}
+                          </span>
+                        </div>
+                        {installmentType === "credit_card" ? (
+                          <>
+                            <div className="flex justify-between text-circuit-muted">
+                              <span>Ngân hàng:</span>
+                              <span className="font-medium text-circuit-text">{selectedBank}</span>
+                            </div>
+                            <div className="flex justify-between text-circuit-muted">
+                              <span>Loại thẻ:</span>
+                              <span className="font-medium text-circuit-text">{selectedCardType}</span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex justify-between text-circuit-muted">
+                            <span>Công ty tài chính:</span>
+                            <span className="font-medium text-circuit-text">{selectedFinanceCo}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between text-circuit-muted">
+                          <span>Kỳ hạn:</span>
+                          <span className="font-medium text-circuit-text">{installmentMonths} tháng</span>
+                        </div>
+                        <div className="flex justify-between text-circuit-muted mt-2 pt-2 border-t border-circuit-line/20">
+                          <span>Số tiền trả trước:</span>
+                          <span className="font-mono font-medium text-circuit-text">{formatVND(opt.down_payment_amount || 0)}</span>
+                        </div>
+                        <div className="flex justify-between text-circuit-muted">
+                          <span>Số tiền vay:</span>
+                          <span className="font-mono font-medium text-circuit-text">{formatVND(opt.loan_amount || 0)}</span>
+                        </div>
+                        <div className="flex justify-between text-circuit-muted">
+                          <span>Góp mỗi tháng:</span>
+                          <span className="font-mono font-medium text-circuit-copperLight">{formatVND(opt.monthly_payment || opt.monthly_amount || 0)}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
