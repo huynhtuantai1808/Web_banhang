@@ -21,6 +21,7 @@ export interface ProductOut {
   average_rating?: number | null;
   review_count?: number | null;
   stock_quantity?: number | null;
+  is_hot?: boolean;
 }
 
 export interface ProductInput {
@@ -41,6 +42,7 @@ export interface ProductInput {
   discount_price?: number;
   stock_quantity?: number;
   is_installment_eligible?: boolean;
+  is_hot?: boolean;
 }
 
 export interface ProductFilters {
@@ -50,6 +52,7 @@ export interface ProductFilters {
   category_id?: number;
   feature?: string;
   on_sale?: boolean;
+  is_hot?: boolean;
   min_price?: number;
   max_price?: number;
   sort_by?: string;

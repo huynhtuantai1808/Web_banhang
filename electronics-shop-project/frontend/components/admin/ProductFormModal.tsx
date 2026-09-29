@@ -30,6 +30,7 @@ const EMPTY_FORM: ProductInput = {
   discount_price: undefined,
   stock_quantity: 0,
   is_installment_eligible: true,
+  is_hot: false,
 };
 
 type SpecEntry = { key: string; value: string };
@@ -115,6 +116,7 @@ export default function ProductFormModal({
         discount_price: editingProduct.discount_price ?? undefined,
         stock_quantity: editingProduct.stock_quantity ?? 0,
         is_installment_eligible: editingProduct.is_installment_eligible,
+        is_hot: editingProduct.is_hot ?? false,
       });
 
       // Load images
@@ -437,12 +439,20 @@ export default function ProductFormModal({
               </Field>
             </div>
 
-            <label className="flex items-center gap-2 text-sm text-circuit-muted">
-              <input type="checkbox" checked={form.is_installment_eligible}
-                onChange={(e) => update("is_installment_eligible", e.target.checked)}
-                className="accent-circuit-copper" />
-              Cho phép mua trả góp
-            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 text-sm text-circuit-muted">
+                <input type="checkbox" checked={form.is_installment_eligible}
+                  onChange={(e) => update("is_installment_eligible", e.target.checked)}
+                  className="accent-circuit-copper" />
+                Cho phép mua trả góp
+              </label>
+              <label className="flex items-center gap-2 text-sm text-circuit-muted">
+                <input type="checkbox" checked={form.is_hot || false}
+                  onChange={(e) => update("is_hot", e.target.checked)}
+                  className="accent-circuit-copper" />
+                Sản phẩm nổi bật (Hot)
+              </label>
+            </div>
 
             <button type="submit" disabled={saving}
               className="w-full rounded-md bg-circuit-copper py-2.5 text-sm font-medium text-circuit-bg hover:bg-circuit-copperLight transition-colors disabled:opacity-50 flex items-center justify-center gap-2">

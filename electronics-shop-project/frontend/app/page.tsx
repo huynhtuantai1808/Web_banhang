@@ -69,9 +69,8 @@ function HomePageContent() {
   const [error, setError] = useState<string | null>(null);
   const [cartMessage, setCartMessage] = useState<string | null>(null);
 
-  // Nhóm sản phẩm hiển thị ở trạng thái mặc định (chưa tìm kiếm/lọc gì) — theo khuyến mãi
-  // (đang giảm giá) và theo từng nhóm danh mục nổi bật.
-  const [onSaleProducts, setOnSaleProducts] = useState<Product[]>([]);
+  // Nhóm sản phẩm nổi bật (is_hot)
+  const [hotProducts, setHotProducts] = useState<Product[]>([]);
   const [categoryGroups, setCategoryGroups] = useState<{ category: CategoryOption; products: Product[] }[]>([]);
   const [groupsLoading, setGroupsLoading] = useState(true);
 
@@ -125,12 +124,12 @@ function HomePageContent() {
     async function loadGroups() {
       setGroupsLoading(true);
       try {
-        const [onSaleData, allCategories] = await Promise.all([
-          listProducts({ on_sale: true, page_size: 8 }),
+        const [hotData, allCategories] = await Promise.all([
+          listProducts({ is_hot: true, page_size: 8 }),
           listCategories(),
         ]);
 
-        const allIds = onSaleData.items.map((p) => p.id);
+        const allIds = hotData.items.map((p) => p.id);
         const topCategories = allCategories.filter((c) => !c.parent_id).slice(0, 3);
         const catGroupsData = await Promise.all(
           topCategories.map(async (category) => {
@@ -139,14 +138,14 @@ function HomePageContent() {
           })
         );
 
-        setOnSaleProducts(onSaleData.items.map((p) => toDisplayProduct(p)));
+        setHotProducts(hotData.items.map((p) => toDisplayProduct(p)));
         setCategoryGroups(
           catGroupsData
             .filter((g) => g.products.length > 0)
             .map((g) => ({ category: g.category, products: g.products.map((p) => toDisplayProduct(p)) }))
         );
       } catch {
-        setOnSaleProducts([]);
+        setHotProducts([]);
         setCategoryGroups([]);
       } finally {
         setGroupsLoading(false);
@@ -241,7 +240,7 @@ function HomePageContent() {
               Sản phẩm nổi bật
             </h2>
             <div className="rounded-2xl overflow-hidden border border-circuit-line shadow-glow">
-              <HotProductsWheel products={onSaleProducts.slice(0, 5)} />
+              <HotProductsWheel products={hotProducts} />
             </div>
           </div>
 

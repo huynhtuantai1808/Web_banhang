@@ -66,6 +66,7 @@ async def _row_to_out(
         primary_image_url=primary_image_url,
         average_rating=round(avg_rating, 1) if avg_rating else None,
         review_count=review_count,
+        is_hot=product.is_hot,
     )
 
 
@@ -98,8 +99,8 @@ async def list_products(
     brand: str | None = Query(None, description="Lọc theo tên hãng"),
     category: str | None = Query(None, description="Lọc theo tên danh mục"),
     category_id: int | None = Query(None, description="Lọc theo ID danh mục (tự động gồm cả danh mục con)"),
-    feature: str | None = Query(None, description="Lọc theo chức năng/công dụng (tìm trong tên + mô tả)"),
     on_sale: bool | None = Query(None, description="True = chỉ lấy sản phẩm đang có giá khuyến mãi"),
+    is_hot: bool | None = Query(None, description="Lọc sản phẩm hot"),
     min_price: float | None = None,
     max_price: float | None = None,
     sort_by: str | None = Query(None, description="price_asc, price_desc, new, name_asc, name_desc, discount_desc"),
@@ -130,6 +131,8 @@ async def list_products(
         )
     if on_sale:
         stmt = stmt.where(Product.discount_price.is_not(None))
+    if is_hot is not None:
+        stmt = stmt.where(Product.is_hot == is_hot)
     if min_price is not None:
         stmt = stmt.where(Product.price >= min_price)
     if max_price is not None:
@@ -231,6 +234,7 @@ async def create_product(
         discount_price=payload.discount_price,
         stock_quantity=payload.stock_quantity,
         is_installment_eligible=payload.is_installment_eligible,
+        is_hot=payload.is_hot,
     )
     db.add(product)
     await db.commit()
@@ -272,6 +276,7 @@ async def update_product(
     product.discount_price = payload.discount_price
     product.stock_quantity = payload.stock_quantity
     product.is_installment_eligible = payload.is_installment_eligible
+    product.is_hot = payload.is_hot
 
     await db.commit()
     await db.refresh(product)

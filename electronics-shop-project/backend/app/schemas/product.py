@@ -20,6 +20,7 @@ class ProductCreate(BaseModel):
     discount_price: float | None = None
     stock_quantity: int = 0
     is_installment_eligible: bool = True
+    is_hot: bool = False
 
 
 class ProductOut(BaseModel):
@@ -39,6 +40,7 @@ class ProductOut(BaseModel):
     discount_price: float | None = None
     stock_quantity: int
     is_installment_eligible: bool
+    is_hot: bool = False
     status: str
     primary_image_url: str | None = None
     average_rating: float | None = None
@@ -71,6 +73,7 @@ class ProductFilter(BaseModel):
     brand: str | None = None
     category: str | None = None
     feature: str | None = None
+    is_hot: bool | None = None
     min_price: float | None = None
     max_price: float | None = None
     page: int = 1

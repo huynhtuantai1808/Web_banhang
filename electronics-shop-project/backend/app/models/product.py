@@ -42,6 +42,7 @@ class Product(Base):
     discount_price: Mapped[float | None] = mapped_column(Numeric(14, 2))
     stock_quantity: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     is_installment_eligible: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_hot: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     status: Mapped[str] = mapped_column(String(20), default="active")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

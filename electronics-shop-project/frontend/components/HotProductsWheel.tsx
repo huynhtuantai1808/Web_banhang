@@ -83,7 +83,7 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
   };
 
   return (
-    <section className="relative w-full h-[600px] overflow-hidden bg-circuit-bg text-white">
+    <section className="relative w-full h-[500px] overflow-hidden bg-circuit-bg text-white">
       {/* Background with active product image (blurred/darkened) */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -99,14 +99,17 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
 
       <div className="relative z-10 container mx-auto h-full flex flex-col md:flex-row items-center">
         {/* Left side: Segmented Circle */}
-        <div className="w-full md:w-1/2 flex justify-start items-center -ml-20 md:-ml-32 lg:-ml-10">
-          <div className="relative w-[400px] h-[400px] md:w-[500px] md:h-[500px] lg:w-[600px] lg:h-[600px]">
+        <div className="w-full md:w-1/2 flex justify-start items-center -ml-20 md:-ml-24 lg:-ml-10">
+          <div className="relative w-[350px] h-[350px] md:w-[450px] md:h-[450px]">
             <svg
               viewBox="0 0 400 400"
               className="w-full h-full drop-shadow-2xl transition-transform duration-1000"
               style={{ transform: `rotate(-${(360 / numItems) * activeIndex}deg)` }}
             >
               <defs>
+                <clipPath id="center-circle">
+                  <circle cx="200" cy="200" r={innerRadius - 4} />
+                </clipPath>
                 {products.map((p, i) => (
                   <pattern
                     key={`pat-${i}`}
@@ -160,16 +163,19 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
                 );
               })}
               
-              {/* Center hole decoration */}
-              <circle cx="200" cy="200" r={innerRadius - 2} fill="#0d0d12" stroke="#1f2029" strokeWidth="2" />
-              <text
-                x="200"
-                y="215"
-                textAnchor="middle"
-                className="font-display text-4xl fill-circuit-copper font-bold"
-              >
-                {activeIndex + 1}
-              </text>
+              {/* Center image (replaces number) */}
+              <g style={{ transform: `rotate(${(360 / numItems) * activeIndex}deg)`, transformOrigin: "200px 200px" }} className="transition-transform duration-1000">
+                <circle cx="200" cy="200" r={innerRadius - 2} fill="#0d0d12" stroke="#30df93" strokeWidth="2" />
+                <image
+                  href={activeProduct.imageUrl}
+                  x={200 - (innerRadius - 4)}
+                  y={200 - (innerRadius - 4)}
+                  width={(innerRadius - 4) * 2}
+                  height={(innerRadius - 4) * 2}
+                  clipPath="url(#center-circle)"
+                  preserveAspectRatio="xMidYMid slice"
+                />
+              </g>
             </svg>
           </div>
         </div>
