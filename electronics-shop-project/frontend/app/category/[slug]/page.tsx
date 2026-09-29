@@ -157,13 +157,14 @@ function CategoryPageContent() {
             animate={{ opacity: 1 }}
             className="mb-8 rounded-xl border border-circuit-line overflow-hidden h-40 relative"
             style={{
-              backgroundImage: `linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.75)), url(${getMediaUrl(category.banner_image_url)})`,
+              backgroundImage: `url(${getMediaUrl(category.banner_image_url)})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
           >
-            <div className="absolute inset-0 flex items-center px-8">
-              <h1 className="font-display text-3xl text-circuit-text">{category.name}</h1>
+            <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+            <div className="absolute inset-0 flex items-center px-8 z-10">
+              <h1 className="font-display text-3xl text-white font-bold drop-shadow-md">{category.name}</h1>
             </div>
           </motion.div>
         )}

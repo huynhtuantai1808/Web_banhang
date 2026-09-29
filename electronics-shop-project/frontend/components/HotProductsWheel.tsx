@@ -84,14 +84,13 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
 
   return (
     <section className="relative w-full h-[500px] overflow-hidden bg-slate-900 text-white rounded-2xl">
-      {/* Background with active product image (blurred/darkened) */}
+      {/* Background with active product image (no blur) */}
       <div className="absolute inset-0 z-0">
         <div 
-          className="absolute inset-0 bg-contain bg-right md:bg-center bg-no-repeat opacity-60 transition-all duration-1000"
+          className="absolute inset-0 bg-[length:auto_80%] bg-right md:bg-right-bottom bg-no-repeat opacity-40 transition-all duration-1000"
           style={{ backgroundImage: `url(${activeProduct.imageUrl})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/50 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-slate-900/10" />
       </div>
 
       <div className="relative z-10 container mx-auto h-full flex flex-col md:flex-row items-center">
@@ -162,16 +161,15 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
               
               {/* Center image (replaces number) */}
               <g style={{ transform: `rotate(${(360 / numItems) * activeIndex}deg)`, transformOrigin: "200px 200px" }} className="transition-transform duration-1000">
-                {/* Nền trắng giúp ảnh sản phẩm trong và dễ nhìn hơn, nhất là ảnh có viền trắng */}
-                <circle cx="200" cy="200" r={innerRadius - 2} fill="#ffffff" stroke="#30df93" strokeWidth="2" />
+                <circle cx="200" cy="200" r={innerRadius - 2} fill="transparent" stroke="#30df93" strokeWidth="2" />
                 <image
                   href={activeProduct.imageUrl}
-                  x={200 - (innerRadius - 8)}
-                  y={200 - (innerRadius - 8)}
-                  width={(innerRadius - 8) * 2}
-                  height={(innerRadius - 8) * 2}
+                  x={200 - (innerRadius - 2)}
+                  y={200 - (innerRadius - 2)}
+                  width={(innerRadius - 2) * 2}
+                  height={(innerRadius - 2) * 2}
                   clipPath="url(#center-circle)"
-                  preserveAspectRatio="xMidYMid meet" // Chuyển từ slice sang meet để ảnh không bị cắt xén
+                  preserveAspectRatio="xMidYMid slice"
                 />
               </g>
             </svg>
@@ -181,10 +179,10 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
         {/* Right side: Product Info */}
         <div className="w-full md:w-1/2 p-6 md:p-12 flex flex-col justify-center">
           <div className="space-y-6">
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-white font-bold drop-shadow-md">
+            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-white font-bold drop-shadow-xl">
               {activeProduct.name}
             </h2>
-            <div className="text-gray-300 text-sm md:text-base leading-relaxed max-w-xl line-clamp-3">
+            <div className="text-gray-200 text-sm md:text-base leading-relaxed max-w-xl line-clamp-3 drop-shadow-md">
               {activeProduct.specHighlight}
             </div>
             <div className="flex items-center gap-4">
