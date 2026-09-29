@@ -99,6 +99,7 @@ async def list_products(
     brand: str | None = Query(None, description="Lọc theo tên hãng"),
     category: str | None = Query(None, description="Lọc theo tên danh mục"),
     category_id: int | None = Query(None, description="Lọc theo ID danh mục (tự động gồm cả danh mục con)"),
+    feature: str | None = Query(None, description="Lọc theo chức năng/công dụng (tìm trong tên + mô tả)"),
     on_sale: bool | None = Query(None, description="True = chỉ lấy sản phẩm đang có giá khuyến mãi"),
     is_hot: bool | None = Query(None, description="Lọc sản phẩm hot"),
     min_price: float | None = None,
