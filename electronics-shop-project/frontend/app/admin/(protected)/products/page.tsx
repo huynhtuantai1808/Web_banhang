@@ -186,6 +186,7 @@ export default function AdminProductsPage() {
               <th className="text-left px-4 py-3">Tên sản phẩm</th>
               <th className="text-left px-4 py-3">Hãng</th>
               <th className="text-left px-4 py-3">Danh mục</th>
+              <th className="text-center px-4 py-3">Nổi bật</th>
               <th className="text-right px-4 py-3">Giá</th>
               <th className="text-right px-4 py-3">Giá KM</th>
               <th className="text-right px-4 py-3">Tồn kho</th>
@@ -196,13 +197,13 @@ export default function AdminProductsPage() {
           <tbody className={loading ? "opacity-50 pointer-events-none transition-opacity" : "transition-opacity"}>
             {loading && products.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-10 text-center text-circuit-muted">
+                <td colSpan={10} className="px-4 py-10 text-center text-circuit-muted">
                   <Loader2 className="inline animate-spin mr-2" size={16} /> Đang tải dữ liệu từ Backend...
                 </td>
               </tr>
             ) : products.length === 0 ? (
               <tr>
-                <td colSpan={10} className="px-4 py-10 text-center text-circuit-muted">
+                <td colSpan={11} className="px-4 py-10 text-center text-circuit-muted">
                   Chưa có sản phẩm nào. Bấm "Thêm sản phẩm" hoặc "Nhập file Excel/CSV" để bắt đầu.
                 </td>
               </tr>
@@ -235,6 +236,7 @@ export default function AdminProductsPage() {
                   <td className="px-4 py-3">{p.name}</td>
                   <td className="px-4 py-3 text-circuit-muted">{p.brand || "—"}</td>
                   <td className="px-4 py-3 text-circuit-muted">{p.category || "—"}</td>
+                  <td className="px-4 py-3 text-center text-xl">{p.is_hot ? "🔥" : ""}</td>
                   <td className="px-4 py-3 text-right">{formatVND(p.price)}</td>
                   <td className="px-4 py-3 text-right text-circuit-signal">
                     {p.discount_price ? formatVND(p.discount_price) : "—"}

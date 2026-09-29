@@ -47,7 +47,7 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
   const size = 400; // SVG viewBox size
   const center = size / 2;
   const radius = size / 2;
-  const innerRadius = size * 0.32; // Tăng kích thước vùng ảnh trung tâm (từ 0.25 -> 0.32)
+  const innerRadius = size * 0.22; // Thu nhỏ lại vùng ảnh trung tâm theo yêu cầu
 
   const createSegmentPath = (index: number, total: number) => {
     const angleStep = (Math.PI * 2) / total;
