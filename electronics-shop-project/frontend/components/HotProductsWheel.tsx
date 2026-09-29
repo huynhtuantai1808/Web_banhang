@@ -87,11 +87,11 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
       {/* Background with active product image (blurred/darkened) */}
       <div className="absolute inset-0 z-0">
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-xl scale-110 opacity-40 transition-all duration-1000"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-lg scale-110 opacity-70 transition-all duration-1000"
           style={{ backgroundImage: `url(${activeProduct.imageUrl})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/60 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
       </div>
 
       <div className="relative z-10 container mx-auto h-full flex flex-col md:flex-row items-center">
