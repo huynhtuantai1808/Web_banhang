@@ -83,18 +83,15 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
   };
 
   return (
-    <section className="relative w-full h-[500px] overflow-hidden bg-circuit-bg text-white">
+    <section className="relative w-full h-[500px] overflow-hidden bg-slate-900 text-white rounded-2xl">
       {/* Background with active product image (blurred/darkened) */}
       <div className="absolute inset-0 z-0">
-        <Image
-          src={activeProduct.imageUrl}
-          alt="Background"
-          fill
-          className="object-cover opacity-30 transition-opacity duration-1000"
-          priority
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-xl scale-110 opacity-40 transition-all duration-1000"
+          style={{ backgroundImage: `url(${activeProduct.imageUrl})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-circuit-bg via-circuit-bg/80 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-circuit-bg via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
       </div>
 
       <div className="relative z-10 container mx-auto h-full flex flex-col md:flex-row items-center">
@@ -186,7 +183,7 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
             <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-white font-bold drop-shadow-md">
               {activeProduct.name}
             </h2>
-            <div className="text-circuit-muted text-sm md:text-base leading-relaxed max-w-xl line-clamp-3">
+            <div className="text-gray-300 text-sm md:text-base leading-relaxed max-w-xl line-clamp-3">
               {activeProduct.specHighlight}
             </div>
             <div className="flex items-center gap-4">
@@ -195,7 +192,7 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
                   <span className="font-display text-3xl md:text-4xl text-circuit-signal font-bold">
                     {activeProduct.discountPrice.toLocaleString("vi-VN")}₫
                   </span>
-                  <span className="text-circuit-muted line-through text-lg">
+                  <span className="text-gray-400 line-through text-lg">
                     {activeProduct.price.toLocaleString("vi-VN")}₫
                   </span>
                 </>
