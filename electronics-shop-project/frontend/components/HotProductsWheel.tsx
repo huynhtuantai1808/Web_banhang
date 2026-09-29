@@ -47,7 +47,7 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
   const size = 400; // SVG viewBox size
   const center = size / 2;
   const radius = size / 2;
-  const innerRadius = size * 0.25; // inner hole size
+  const innerRadius = size * 0.32; // Tăng kích thước vùng ảnh trung tâm (từ 0.25 -> 0.32)
 
   const createSegmentPath = (index: number, total: number) => {
     const angleStep = (Math.PI * 2) / total;
@@ -162,15 +162,16 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
               
               {/* Center image (replaces number) */}
               <g style={{ transform: `rotate(${(360 / numItems) * activeIndex}deg)`, transformOrigin: "200px 200px" }} className="transition-transform duration-1000">
-                <circle cx="200" cy="200" r={innerRadius - 2} fill="#0d0d12" stroke="#30df93" strokeWidth="2" />
+                {/* Nền trắng giúp ảnh sản phẩm trong và dễ nhìn hơn, nhất là ảnh có viền trắng */}
+                <circle cx="200" cy="200" r={innerRadius - 2} fill="#ffffff" stroke="#30df93" strokeWidth="2" />
                 <image
                   href={activeProduct.imageUrl}
-                  x={200 - (innerRadius - 4)}
-                  y={200 - (innerRadius - 4)}
-                  width={(innerRadius - 4) * 2}
-                  height={(innerRadius - 4) * 2}
+                  x={200 - (innerRadius - 8)}
+                  y={200 - (innerRadius - 8)}
+                  width={(innerRadius - 8) * 2}
+                  height={(innerRadius - 8) * 2}
                   clipPath="url(#center-circle)"
-                  preserveAspectRatio="xMidYMid slice"
+                  preserveAspectRatio="xMidYMid meet" // Chuyển từ slice sang meet để ảnh không bị cắt xén
                 />
               </g>
             </svg>
