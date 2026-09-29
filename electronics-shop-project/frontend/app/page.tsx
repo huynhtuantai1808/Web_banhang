@@ -71,6 +71,8 @@ function HomePageContent() {
 
   // Nhóm sản phẩm nổi bật (is_hot)
   const [hotProducts, setHotProducts] = useState<Product[]>([]);
+  // Nhóm sản phẩm đang giảm giá
+  const [onSaleProducts, setOnSaleProducts] = useState<Product[]>([]);
   const [categoryGroups, setCategoryGroups] = useState<{ category: CategoryOption; products: Product[] }[]>([]);
   const [groupsLoading, setGroupsLoading] = useState(true);
 
@@ -124,8 +126,9 @@ function HomePageContent() {
     async function loadGroups() {
       setGroupsLoading(true);
       try {
-        const [hotData, allCategories] = await Promise.all([
+        const [hotData, onSaleData, allCategories] = await Promise.all([
           listProducts({ is_hot: true, page_size: 8 }),
+          listProducts({ on_sale: true, page_size: 8 }),
           listCategories(),
         ]);
 
@@ -139,6 +142,7 @@ function HomePageContent() {
         );
 
         setHotProducts(hotData.items.map((p) => toDisplayProduct(p)));
+        setOnSaleProducts(onSaleData.items.map((p) => toDisplayProduct(p)));
         setCategoryGroups(
           catGroupsData
             .filter((g) => g.products.length > 0)
@@ -146,6 +150,7 @@ function HomePageContent() {
         );
       } catch {
         setHotProducts([]);
+        setOnSaleProducts([]);
         setCategoryGroups([]);
       } finally {
         setGroupsLoading(false);
