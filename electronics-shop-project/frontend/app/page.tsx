@@ -21,6 +21,7 @@ import { useSiteSettings } from "@/components/SiteSettingsProvider";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import BannerCarousel from "@/components/BannerCarousel";
 import QuickCategories from "@/components/QuickCategories";
+import HotProductsWheel from "@/components/HotProductsWheel";
 
 // Khoảng giá hiển thị trên FilterTabs → khoảng min/max thực tế gửi xuống Backend (đơn vị: VNĐ)
 const PRICE_RANGES: Record<string, { min_price?: number; max_price?: number }> = {
@@ -233,6 +234,16 @@ function HomePageContent() {
           <BannerCarousel position="promo" className="mb-8" />
 
           <QuickCategories />
+          
+          <div className="mb-10">
+            <h2 className="font-display text-2xl mb-4 text-circuit-copperLight flex items-center gap-2">
+              <span className="w-1.5 h-6 bg-circuit-signal rounded-full"></span>
+              Sản phẩm nổi bật
+            </h2>
+            <div className="rounded-2xl overflow-hidden border border-circuit-line shadow-glow">
+              <HotProductsWheel products={onSaleProducts.slice(0, 5)} />
+            </div>
+          </div>
 
           <RecentlyViewed />
 
