@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Truck, CreditCard, Tag, Check, X, CalendarClock, User, Building2, ShoppingCart, MapPin, Receipt, FileText } from "lucide-react";
+import { ArrowLeft, Loader2, Truck, CreditCard, Tag, Check, X, CalendarClock, User, Building2, ShoppingCart, MapPin, Receipt, FileText, QrCode, Copy, CheckCheck } from "lucide-react";
 import { getCart, getAutoDiscountPreview, CartOut } from "@/lib/services/cart";
 import { getGuestCart, clearGuestCart } from "@/lib/guestCart";
 import { getProduct } from "@/lib/services/products";
@@ -50,7 +50,8 @@ export default function CheckoutPage() {
   // Các bước Checkout
   const [step, setStep] = useState<1 | 2>(1);
   const [address, setAddress] = useState("");
-  const [gateway, setGateway] = useState<"cod" | "vnpay">("cod");
+  const [gateway, setGateway] = useState<"cod" | "vnpay" | "bank_transfer">("cod");
+  const [copied, setCopied] = useState(false);
   const [cardData, setCardData] = useState<{number:string;name:string;expiry:string;cvv:string}>({number:"",name:"",expiry:"",cvv:""});
   const [paymentMethod, setPaymentMethod] = useState<"full" | "installment">("full");
   const [installmentType, setInstallmentType] = useState<InstallmentType>("credit_card");
@@ -799,11 +800,11 @@ export default function CheckoutPage() {
                 <span className="w-2 h-2 rounded-full bg-circuit-copper inline-block animate-pulse-slow" />
                 Cổng thanh toán
               </label>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 <button
                   type="button"
                   onClick={() => setGateway("cod")}
-                  className={`relative rounded-xl border-2 px-5 py-4 text-sm text-left transition-all duration-300 hover:scale-[1.02] ${
+                  className={`relative rounded-xl border-2 px-4 py-4 text-sm text-left transition-all duration-300 hover:scale-[1.02] ${
                     gateway === "cod"
                       ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight shadow-[0_0_15px_rgba(200,127,69,0.2)]"
                       : "border-circuit-line/60 bg-circuit-panel/50 text-circuit-muted hover:border-circuit-copper/60 hover:bg-circuit-panel/80"
@@ -814,24 +815,38 @@ export default function CheckoutPage() {
                       GỢI Ý
                     </span>
                   )}
-                  <p className="font-medium flex items-center gap-2 text-base">
+                  <p className="font-medium flex items-center gap-2 text-sm">
                     <Truck size={16} /> Tiền mặt (COD)
                   </p>
-                  <p className="text-[11px] mt-1.5 opacity-80 uppercase tracking-wide">Thanh toán khi nhận hàng</p>
+                  <p className="text-[10px] mt-1.5 opacity-80 uppercase tracking-wide">Khi nhận hàng</p>
                 </button>
                 <button
                   type="button"
                   onClick={() => setGateway("vnpay")}
-                  className={`relative rounded-xl border-2 px-5 py-4 text-sm text-left transition-all duration-300 hover:scale-[1.02] ${
+                  className={`relative rounded-xl border-2 px-4 py-4 text-sm text-left transition-all duration-300 hover:scale-[1.02] ${
                     gateway === "vnpay"
                       ? "border-blue-400 bg-blue-400/10 text-blue-300 shadow-[0_0_15px_rgba(96,165,250,0.2)]"
                       : "border-circuit-line/60 bg-circuit-panel/50 text-circuit-muted hover:border-blue-400/60 hover:bg-circuit-panel/80"
                   }`}
                 >
-                  <p className="font-medium flex items-center gap-2 text-base">
+                  <p className="font-medium flex items-center gap-2 text-sm">
                     <CreditCard size={16} /> VNPay
                   </p>
-                  <p className="text-[11px] mt-1.5 opacity-80 uppercase tracking-wide">ATM / Thẻ quốc tế / QR</p>
+                  <p className="text-[10px] mt-1.5 opacity-80 uppercase tracking-wide">ATM / Thẻ / QR</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGateway("bank_transfer")}
+                  className={`relative rounded-xl border-2 px-4 py-4 text-sm text-left transition-all duration-300 hover:scale-[1.02] ${
+                    gateway === "bank_transfer"
+                      ? "border-emerald-400 bg-emerald-400/10 text-emerald-300 shadow-[0_0_15px_rgba(52,211,153,0.2)]"
+                      : "border-circuit-line/60 bg-circuit-panel/50 text-circuit-muted hover:border-emerald-400/60 hover:bg-circuit-panel/80"
+                  }`}
+                >
+                  <p className="font-medium flex items-center gap-2 text-sm">
+                    <QrCode size={16} /> Chuyển khoản
+                  </p>
+                  <p className="text-[10px] mt-1.5 opacity-80 uppercase tracking-wide">QR / Internet Banking</p>
                 </button>
               </div>
 
@@ -846,6 +861,71 @@ export default function CheckoutPage() {
                     isLoggedIn={loggedIn}
                     onCardChange={setCardData}
                   />
+                </div>
+              )}
+
+              {/* QR chuyển khoản - chỉ hiện khi chọn bank_transfer */}
+              {gateway === "bank_transfer" && (
+                <div className="mt-6 pt-6 border-t border-circuit-line/50 space-y-5">
+                  <div className="flex flex-col items-center gap-4">
+                    {/* QR Code từ VietQR */}
+                    <div className="relative">
+                      <div className="absolute inset-0 rounded-2xl bg-emerald-400/20 blur-xl" />
+                      <div className="relative bg-white rounded-2xl p-3 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={`https://img.vietqr.io/image/MB-0987654321-compact2.png?amount=${finalTotal}&addInfo=Thanh%20toan%20don%20hang&accountName=DIEN%20TU%20SHOP`}
+                          alt="QR chuyển khoản"
+                          width={200}
+                          height={200}
+                          className="rounded-xl"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Số tiền nổi bật */}
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-emerald-400 font-mono">{formatVND(finalTotal)}</p>
+                      <p className="text-xs text-circuit-muted mt-1">Quét mã QR hoặc chuyển khoản theo thông tin dưới</p>
+                    </div>
+                  </div>
+
+                  {/* Thông tin tài khoản */}
+                  <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/5 p-4 space-y-3">
+                    <p className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-semibold">Thông tin chuyển khoản</p>
+                    {([
+                      { label: "Ngân hàng", value: "MB Bank (Ngân hàng Quân Đội)" },
+                      { label: "Số tài khoản", value: "0987654321" },
+                      { label: "Chủ tài khoản", value: "CONG TY DIEN TU SHOP" },
+                      { label: "Số tiền", value: formatVND(finalTotal) },
+                      { label: "Nội dung", value: "Thanh toan don hang" },
+                    ] as {label:string;value:string}[]).map(({ label, value }) => (
+                      <div key={label} className="flex items-center justify-between gap-4">
+                        <span className="text-xs text-circuit-muted shrink-0">{label}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-circuit-text text-right">{value}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(value);
+                              setCopied(true);
+                              setTimeout(() => setCopied(false), 2000);
+                            }}
+                            className="p-1 rounded text-circuit-muted hover:text-emerald-400 transition-colors"
+                          >
+                            {copied ? <CheckCheck size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="rounded-lg bg-amber-400/10 border border-amber-400/30 px-4 py-3">
+                    <p className="text-xs text-amber-300">
+                      ⚠️ Sau khi chuyển khoản, đơn hàng sẽ được xác nhận trong vòng <strong>15–30 phút</strong>.
+                      Giữ lại ảnh chuyển khoản để xác minh nếu cần.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
