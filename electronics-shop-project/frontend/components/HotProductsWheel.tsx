@@ -116,7 +116,7 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
                   const midRadius = (innerRadius + 200) / 2;
                   const cx = 200 + midRadius * Math.cos(angle);
                   const cy = 200 + midRadius * Math.sin(angle);
-                  const imgSize = 140; // Size of the image inside the segment
+                  const imgSize = 260; // Size of the image inside the segment (large enough to cover it)
 
                   return (
                     <pattern
@@ -126,6 +126,8 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
                       width="400"
                       height="400"
                     >
+                      {/* Add a white background so transparent parts don't show the dark section background */}
+                      <rect width="400" height="400" fill="white" />
                       <image
                         href={p.imageUrl}
                         x={cx - imgSize / 2}
