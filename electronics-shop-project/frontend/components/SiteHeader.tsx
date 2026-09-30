@@ -80,19 +80,19 @@ export default function SiteHeader() {
       <nav className="flex items-center gap-3">
         <Link
           href="/news"
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-circuit-muted hover:text-circuit-copperLight hover:bg-circuit-surface transition-all duration-300"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-circuit-text hover:text-circuit-copperLight hover:bg-circuit-surface transition-all duration-300"
         >
           <Newspaper size={16} /> Tin tức
         </Link>
         <Link
           href="/promotions"
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-circuit-muted hover:text-circuit-signal hover:bg-circuit-signal/10 transition-all duration-300"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-circuit-text hover:text-circuit-signal hover:bg-circuit-signal/10 transition-all duration-300"
         >
           <Tag size={16} /> Khuyến mãi
         </Link>
         <Link
           href="/contact"
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-circuit-muted hover:text-circuit-copperLight hover:bg-circuit-surface transition-all duration-300"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-circuit-text hover:text-circuit-copperLight hover:bg-circuit-surface transition-all duration-300"
           title="Liên hệ"
         >
           <Phone size={16} />

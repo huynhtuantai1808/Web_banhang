@@ -47,7 +47,8 @@ body {
 }
 
 .glass-panel {
-  @apply bg-white backdrop-blur-xl border border-gray-300 shadow-md;
+  background-color: var(--circuit-glass);
+  @apply backdrop-blur-xl border border-circuit-line shadow-md;
 }
 
 .premium-card {
