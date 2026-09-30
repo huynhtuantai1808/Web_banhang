@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -50,6 +50,7 @@ function CategoryPageContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cartMessage, setCartMessage] = useState<string | null>(null);
+  const lastSlugRef = useRef(params.slug);
 
   useEffect(() => {
     async function load() {
@@ -68,10 +69,18 @@ function CategoryPageContent() {
         setCategory(current);
         const parent = current.parent_id ? allCategoriesData.find((c) => c.id === current.parent_id) : null;
         setParentCategory(parent || null);
-        setFilters((prev) => {
-          if (prev.category === current.name) return prev;
-          return { ...prev, category: current.name };
-        });
+        let currentFilterCat = filters.category;
+        if (lastSlugRef.current !== params.slug) {
+          lastSlugRef.current = params.slug;
+          currentFilterCat = current.name;
+          setFilters((prev) => ({ ...prev, category: current.name }));
+        }
+
+        if (!currentFilterCat) {
+          setProducts([]);
+          setLoading(false);
+          return;
+        }
 
         const data = await listProducts({ category_id: current.id, ...buildFilterParams(filters) });
         setProducts(data.items.map(toDisplayProduct));
@@ -89,7 +98,8 @@ function CategoryPageContent() {
   function handleFilterChange(newFilters: FilterState) {
     if (category && newFilters.category !== category.name) {
       if (!newFilters.category) {
-        router.push("/");
+        // User cleared the category filter, stay on page and show 0 products
+        setFilters(newFilters);
       } else {
         const targetCat = allCategories.find((c) => c.name === newFilters.category);
         if (targetCat) {
