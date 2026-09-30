@@ -7,7 +7,6 @@ import { LayoutDashboard, LogOut, Users, Package, Palette, Tag, UserCircle, Clip
 import { isEmployeeLoggedIn } from "@/lib/auth-storage";
 import { employeeLogout, isCurrentEmployeeAdmin } from "@/lib/services/employees";
 import Logo from "@/components/Logo";
-import AdminThemeProvider from "@/components/AdminThemeProvider";
 
 /**
  * Layout này áp dụng cho MỌI trang trong route group app/admin/(protected)/* — ví dụ
@@ -42,11 +41,9 @@ export default function AdminProtectedLayout({ children }: { children: React.Rea
 
   if (!checked) {
     return (
-      <AdminThemeProvider>
-        <div className="min-h-screen flex items-center justify-center bg-circuit-bg text-circuit-muted">
-          Đang kiểm tra đăng nhập...
-        </div>
-      </AdminThemeProvider>
+      <div className="dark min-h-screen flex items-center justify-center bg-circuit-bg text-circuit-muted">
+        Đang kiểm tra đăng nhập...
+      </div>
     );
   }
 
@@ -68,8 +65,7 @@ export default function AdminProtectedLayout({ children }: { children: React.Rea
   ];
 
   return (
-    <AdminThemeProvider>
-      <div className="min-h-screen bg-circuit-bg flex overflow-hidden">
+    <div className="dark min-h-screen bg-circuit-bg flex overflow-hidden">
         {/* Sidebar */}
         <aside className="w-64 border-r border-circuit-line bg-circuit-panel flex flex-col flex-shrink-0 z-20">
           <div className="h-16 flex items-center px-6 border-b border-circuit-line/60">
@@ -116,7 +112,6 @@ export default function AdminProtectedLayout({ children }: { children: React.Rea
             {children}
           </div>
         </main>
-      </div>
-    </AdminThemeProvider>
+    </div>
   );
 }
