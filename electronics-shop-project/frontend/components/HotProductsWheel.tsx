@@ -113,10 +113,12 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
                 {products.map((p, i) => {
                   const step = 360 / numItems;
                   const angle = (i * step + step / 2) * (Math.PI / 180);
-                  const midRadius = (innerRadius + 200) / 2;
-                  const cx = 200 + midRadius * Math.cos(angle);
-                  const cy = 200 + midRadius * Math.sin(angle);
-                  const imgSize = 260; // Size of the image inside the segment (large enough to cover it)
+                  // Tâm của ảnh dịch vào gần vòng tròn giữa một chút để nhìn cân đối hơn
+                  const imgRadius = 140; 
+                  const cx = 200 + imgRadius * Math.cos(angle);
+                  const cy = 200 + imgRadius * Math.sin(angle);
+                  // Giảm imgSize xuống để ảnh sản phẩm nhỏ lại, nằm gọn trong cánh mà không bị viền cánh cắt mất
+                  const imgSize = 110; 
 
                   return (
                     <pattern
