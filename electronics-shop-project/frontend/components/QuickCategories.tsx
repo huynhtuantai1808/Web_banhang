@@ -18,7 +18,7 @@ export default function QuickCategories() {
 
   if (links.length === 0) return null;
   return (
-    <div className="bg-gray-100 rounded-2xl p-4 sm:p-6 mb-8 border border-gray-200">
+    <div className="bg-circuit-surface rounded-2xl p-4 sm:p-6 mb-8 border border-circuit-line">
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-7 gap-3 sm:gap-4">
         {links.map((item, i) => {
           const IconComponent = item.icon ? (ICON_MAP[item.icon] || Smartphone) : Smartphone;
@@ -26,9 +26,12 @@ export default function QuickCategories() {
             <Link
               key={i}
               href={item.link || `/?category=${encodeURIComponent(item.name)}`}
-              className="group flex flex-col items-center justify-center p-3 bg-white rounded-xl shadow-sm border border-transparent hover:border-circuit-copper/30 hover:shadow-md transition-all duration-300"
+              className="group flex flex-col items-center justify-center p-3 bg-circuit-panel rounded-xl shadow-sm border border-circuit-line hover:shadow-md transition-all duration-300"
+              style={{}}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--circuit-copper) 30%, transparent)')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = '')}
             >
-              <div className="w-12 h-12 mb-2 rounded-full bg-gray-50 flex items-center justify-center text-circuit-copper group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+              <div className="w-12 h-12 mb-2 rounded-full bg-circuit-surface flex items-center justify-center text-circuit-copper group-hover:scale-110 transition-transform duration-300 overflow-hidden">
                 {item.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={getMediaUrl(item.image_url)} alt={item.name} className="w-8 h-8 object-contain" />
@@ -36,7 +39,7 @@ export default function QuickCategories() {
                   React.createElement(IconComponent, { size: 24, strokeWidth: 1.5 })
                 )}
               </div>
-              <span className="text-xs sm:text-[13px] text-center font-medium text-gray-700 leading-tight group-hover:text-circuit-copper transition-colors">
+              <span className="text-xs sm:text-[13px] text-center font-medium text-circuit-text leading-tight group-hover:text-circuit-copper transition-colors">
                 {item.name}
               </span>
             </Link>
