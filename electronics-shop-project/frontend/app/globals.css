@@ -10,10 +10,40 @@
      theo cấu hình admin đã lưu (accent_color trong bảng site_settings). */
   --accent-color: #c87f45;
   --accent-color-light: #b06e35;
+
+  /* CSS Variables cho Light Mode */
+  --circuit-bg: #ffffff;
+  --circuit-panel: #f8f9fb;
+  --circuit-surface: #f0f2f5;
+  --circuit-line: #e2e5ea;
+  --circuit-copper: #c87f45;
+  --circuit-copperLight: #b06e35;
+  --circuit-signal: #16a34a;
+  --circuit-signalMuted: #bbf7d0;
+  --circuit-text: #1a1a2e;
+  --circuit-muted: #6b7280;
+  --circuit-glass: rgba(248, 249, 251, 0.8);
+  --circuit-glass-dark: rgba(240, 242, 245, 0.9);
+}
+
+.dark {
+  /* CSS Variables cho Dark Mode */
+  --circuit-bg: #0f172a;
+  --circuit-panel: #1e293b;
+  --circuit-surface: #334155;
+  --circuit-line: #475569;
+  --circuit-copper: #c87f45;
+  --circuit-copperLight: #e2a673; 
+  --circuit-signal: #22c55e;
+  --circuit-signalMuted: #166534;
+  --circuit-text: #f8fafc;
+  --circuit-muted: #94a3b8;
+  --circuit-glass: rgba(30, 41, 59, 0.8);
+  --circuit-glass-dark: rgba(15, 23, 42, 0.9);
 }
 
 body {
-  @apply bg-circuit-bg text-circuit-text font-body;
+  @apply bg-circuit-bg text-circuit-text font-body transition-colors duration-300;
 }
 
 .glass-panel {

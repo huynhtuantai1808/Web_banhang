@@ -1,20 +1,21 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class', // Bật chế độ dark mode qua class="dark"
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
         circuit: {
-          bg: "#ffffff",        // White background
-          panel: "#f8f9fb",     // Slightly off-white panels
-          surface: "#f0f2f5",   // Floating element surface
-          line: "#e2e5ea",      // Light borders
-          copper: "#c87f45",    // Premium gold/copper accent (kept)
-          copperLight: "#b06e35",// Slightly darker for readability on white
-          signal: "#16a34a",    // Green for positive signals (darker for contrast)
-          signalMuted: "#bbf7d0",
-          text: "#1a1a2e",      // Dark text
-          muted: "#6b7280",     // Gray muted text
+          bg: "var(--circuit-bg)",
+          panel: "var(--circuit-panel)",
+          surface: "var(--circuit-surface)",
+          line: "var(--circuit-line)",
+          copper: "var(--circuit-copper)",
+          copperLight: "var(--circuit-copperLight)",
+          signal: "var(--circuit-signal)",
+          signalMuted: "var(--circuit-signalMuted)",
+          text: "var(--circuit-text)",
+          muted: "var(--circuit-muted)",
         },
         brand: {
           primary: "var(--accent-color)",
@@ -27,9 +28,9 @@ module.exports = {
         mono: ["var(--font-mono)", "monospace"],
       },
       backgroundImage: {
-        "circuit-grid": "linear-gradient(#f0f2f5 1px, transparent 1px), linear-gradient(90deg, #f0f2f5 1px, transparent 1px)",
+        "circuit-grid": "linear-gradient(var(--circuit-surface) 1px, transparent 1px), linear-gradient(90deg, var(--circuit-surface) 1px, transparent 1px)",
         "premium-gradient": "linear-gradient(135deg, rgba(200,127,69,0.08) 0%, rgba(255,255,255,0) 100%)",
-        "glass-gradient": "linear-gradient(145deg, rgba(248,249,251,0.8) 0%, rgba(240,242,245,0.9) 100%)",
+        "glass-gradient": "linear-gradient(145deg, var(--circuit-glass) 0%, var(--circuit-glass-dark) 100%)",
       },
       backgroundSize: {
         "circuit-grid": "32px 32px",

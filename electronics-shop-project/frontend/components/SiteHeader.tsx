@@ -10,6 +10,7 @@ import { getCart } from "@/lib/services/cart";
 import { getWishlistCount } from "@/lib/services/wishlist";
 import { getGuestWishlistCount } from "@/lib/wishlist";
 import Logo from "@/components/Logo";
+import ThemeToggle from "./ThemeToggle";
 
 function useCartCount() {
   const [count, setCount] = useState(0);
@@ -99,6 +100,7 @@ export default function SiteHeader() {
         </Link>
 
         <div className="w-px h-6 bg-circuit-line mx-1"></div>
+        <ThemeToggle />
 
         <Link
           href="/cart"
