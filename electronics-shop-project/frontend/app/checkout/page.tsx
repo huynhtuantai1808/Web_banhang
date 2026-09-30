@@ -25,6 +25,10 @@ function formatVND(v: number) {
 }
 
 export default function CheckoutPage() {
+  const bankId = process.env.NEXT_PUBLIC_BANK_ID || "MB";
+  const bankAccountNo = process.env.NEXT_PUBLIC_BANK_ACCOUNT_NO || "0987654321";
+  const bankAccountName = process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME || "DIEN TU SHOP";
+
   const router = useRouter();
   const loggedIn = isCustomerLoggedIn();
 
@@ -874,7 +878,7 @@ export default function CheckoutPage() {
                       <div className="relative bg-white rounded-2xl p-3 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={`https://img.vietqr.io/image/MB-0987654321-compact2.png?amount=${finalTotal}&addInfo=Thanh%20toan%20don%20hang&accountName=DIEN%20TU%20SHOP`}
+                          src={`https://img.vietqr.io/image/${bankId}-${bankAccountNo}-compact2.png?amount=${finalTotal}&addInfo=Thanh%20toan%20don%20hang&accountName=${encodeURIComponent(bankAccountName)}`}
                           alt="QR chuyển khoản"
                           width={200}
                           height={200}
@@ -894,9 +898,9 @@ export default function CheckoutPage() {
                   <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/5 p-4 space-y-3">
                     <p className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-semibold">Thông tin chuyển khoản</p>
                     {([
-                      { label: "Ngân hàng", value: "MB Bank (Ngân hàng Quân Đội)" },
-                      { label: "Số tài khoản", value: "0987654321" },
-                      { label: "Chủ tài khoản", value: "CONG TY DIEN TU SHOP" },
+                      { label: "Ngân hàng", value: bankId },
+                      { label: "Số tài khoản", value: bankAccountNo },
+                      { label: "Chủ tài khoản", value: bankAccountName },
                       { label: "Số tiền", value: formatVND(finalTotal) },
                       { label: "Nội dung", value: "Thanh toan don hang" },
                     ] as {label:string;value:string}[]).map(({ label, value }) => (

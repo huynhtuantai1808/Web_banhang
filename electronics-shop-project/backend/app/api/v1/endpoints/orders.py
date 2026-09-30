@@ -19,7 +19,7 @@ from app.services.discount_rule_service import compute_auto_discount
 
 router = APIRouter(prefix="/orders", tags=["Orders (Đơn hàng)"])
 
-VALID_GATEWAYS = ("cod", "vnpay", "credit_card", "finance")
+VALID_GATEWAYS = ("cod", "vnpay", "credit_card", "finance", "bank_transfer")
 VALID_PAYMENT_METHODS = ("full", "installment")
 
 
