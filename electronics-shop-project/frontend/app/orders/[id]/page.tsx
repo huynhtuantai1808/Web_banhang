@@ -18,6 +18,7 @@ function formatVND(v: number) {
 
 const STATUS_STEPS = [
   { key: "pending", label: "Chờ xác nhận" },
+  { key: "pre_order", label: "Đặt hàng trước" },
   { key: "confirmed", label: "Đã xác nhận" },
   { key: "shipping", label: "Đang giao" },
   { key: "completed", label: "Hoàn thành" },
@@ -225,11 +226,18 @@ export default function OrderDetailPage() {
             <p className="text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest font-semibold mb-4">Sản phẩm</p>
             <div className="space-y-3">
               {order.items.map((item, i) => (
-                <div key={i} className="flex justify-between items-center bg-circuit-bg/30 p-3 rounded-xl border border-circuit-line/30 text-sm">
-                  <span className="text-circuit-text font-medium pr-4">
-                    {item.product_name} <span className="text-circuit-muted font-mono ml-2">× {item.quantity}</span>
-                  </span>
-                  <span className="text-circuit-text font-mono font-semibold">
+                <div key={i} className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-circuit-bg/30 p-3 rounded-xl border border-circuit-line/30 text-sm gap-2">
+                  <div className="flex-1">
+                    <span className="text-circuit-text font-medium pr-4">
+                      {item.product_name} <span className="text-circuit-muted font-mono ml-2">× {item.quantity}</span>
+                    </span>
+                    {item.device_code && (
+                      <p className="text-[11px] text-circuit-muted font-mono mt-1 bg-circuit-bg/50 inline-block px-2 py-0.5 rounded border border-circuit-line/30">
+                        S/N: {item.device_code}
+                      </p>
+                    )}
+                  </div>
+                  <span className="text-circuit-text font-mono font-semibold shrink-0">
                     {formatVND(item.unit_price * item.quantity)}
                   </span>
                 </div>

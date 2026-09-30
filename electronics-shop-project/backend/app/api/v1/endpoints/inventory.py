@@ -133,9 +133,23 @@ async def create_inventory_transaction(
     if not product:
         raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm")
 
+    old_stock = product.stock_quantity or 0
+    if payload.type == "import":
+        product.stock_quantity = old_stock + payload.quantity
+    elif payload.type == "export":
+        product.stock_quantity = max(0, old_stock - payload.quantity)
+        
+    new_stock = product.stock_quantity
+
     transaction = InventoryTransaction(id=uuid.uuid4(), **payload.model_dump())
     db.add(transaction)
     await db.commit()
+    
+    if payload.type == "import" and old_stock <= 0 and new_stock > 0:
+        from app.api.v1.endpoints.orders import notify_preorder_customers
+        import asyncio
+        asyncio.create_task(notify_preorder_customers(db, product.id, product.name))
+        
     return {"message": f"Đã ghi nhận {payload.type} kho thành công"}
 
 

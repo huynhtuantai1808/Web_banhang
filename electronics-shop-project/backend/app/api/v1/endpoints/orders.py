@@ -54,10 +54,12 @@ async def _build_order_out(db: AsyncSession, order: Order) -> OrderOut:
     result = await db.execute(stmt)
     items = [
         OrderItemOut(
+            id=item.id,
             product_id=item.product_id,
             product_name=name,
             unit_price=float(item.unit_price),
             quantity=item.quantity,
+            device_code=item.device_code,
         )
         for item, name in result.all()
     ]
@@ -150,6 +152,14 @@ async def _create_order_core(
     discount_amount = auto_discount + promo_discount
     final_amount = total_amount - discount_amount
 
+    is_pre_order = any(p.stock_quantity is not None and p.stock_quantity <= 0 for _, p in cart_rows)
+    
+    order_status = "pending"
+    if is_pre_order:
+        order_status = "pre_order"
+    elif payload.payment_method == "installment" or payload.payment_gateway == "cod":
+        order_status = "confirmed"
+
     order = Order(
         id=uuid.uuid4(),
         order_code=await _next_order_code(db),
@@ -161,7 +171,7 @@ async def _create_order_core(
         payment_method=payload.payment_method,
         payment_gateway=payload.payment_gateway,
         payment_status="pending",
-        status="confirmed" if (payload.payment_method == "installment" or payload.payment_gateway == "cod") else "pending",
+        status=order_status,
         shipping_address=payload.shipping_address,
     )
     db.add(order)
@@ -368,7 +378,7 @@ async def send_order_email(
         .where(OrderItem.order_id == order.id)
     )
     items = [
-        {"product_name": n, "quantity": i.quantity, "unit_price": float(i.unit_price)}
+        {"product_name": n, "quantity": i.quantity, "unit_price": float(i.unit_price), "device_code": i.device_code}
         for i, n in items_result.all()
     ]
 
@@ -380,3 +390,46 @@ async def send_order_email(
         raise HTTPException(status_code=400, detail="Loại email không hợp lệ (confirmation/invoice)")
         
     return {"message": "Đã gửi email thành công"}
+
+
+async def notify_preorder_customers(db: AsyncSession, product_id: uuid.UUID, product_name: str):
+    from app.services.email_service import send_preorder_arrived_notification
+    from app.models.order import OrderItem, Order
+    from app.models.customer import Customer
+    import logging
+
+    try:
+        # Find all pending/pre_order orders containing this product
+        stmt = (
+            select(Order, Customer.email, Customer.phone)
+            .join(OrderItem, Order.id == OrderItem.order_id)
+            .outerjoin(Customer, Order.customer_id == Customer.id)
+            .where(
+                OrderItem.product_id == product_id,
+                Order.status == "pre_order"
+            )
+        )
+        result = await db.execute(stmt)
+        orders = result.all()
+
+        for order, email, phone in orders:
+            # Change status to pending or confirmed based on payment
+            if order.payment_method == "installment" or order.payment_gateway == "cod":
+                order.status = "confirmed"
+            else:
+                order.status = "pending"
+            
+            if email:
+                try:
+                    send_preorder_arrived_notification(product_name, email, order.order_code)
+                except Exception as e:
+                    logging.error(f"Failed to send pre-order notification to {email}: {e}")
+            
+            if phone:
+                print(f"[SMS DEV] Gửi tin nhắn đến {phone}: Sản phẩm {product_name} (Đơn {order.order_code}) bạn đặt trước đã có hàng và sẵn sàng giao!")
+        
+        if orders:
+            await db.commit()
+    except Exception as e:
+        logging.error(f"Error in notify_preorder_customers: {e}")
+

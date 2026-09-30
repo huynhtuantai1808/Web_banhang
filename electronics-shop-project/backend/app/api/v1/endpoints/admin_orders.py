@@ -28,7 +28,14 @@ async def _build_admin_order_out(db: AsyncSession, order: Order) -> dict:
         .where(OrderItem.order_id == order.id)
     )
     items = [
-        OrderItemOut(product_id=i.product_id, product_name=n, unit_price=float(i.unit_price), quantity=i.quantity)
+        OrderItemOut(
+            id=i.id,
+            product_id=i.product_id,
+            product_name=n,
+            unit_price=float(i.unit_price),
+            quantity=i.quantity,
+            device_code=i.device_code
+        )
         for i, n in items_result.all()
     ]
 
@@ -142,6 +149,41 @@ async def update_order_status(
     return await _build_admin_order_out(db, order)
 
 
+class UpdateDeviceCodeItem(BaseModel):
+    item_id: uuid.UUID
+    device_code: str | None
+
+class UpdateDeviceCodesRequest(BaseModel):
+    items: list[UpdateDeviceCodeItem]
+
+@router.put("/{order_id}/device-codes")
+async def update_order_device_codes(
+    order_id: uuid.UUID,
+    payload: UpdateDeviceCodesRequest = Body(...),
+    db: AsyncSession = Depends(get_db),
+    _employee_id: str = Depends(require_permission("can_edit")),
+):
+    """Cập nhật mã thiết bị (Serial/IMEI) cho các sản phẩm trong đơn hàng."""
+    order = await db.get(Order, order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Không tìm thấy đơn hàng")
+
+    item_ids = [item.item_id for item in payload.items]
+    if not item_ids:
+        return await _build_admin_order_out(db, order)
+
+    result = await db.execute(select(OrderItem).where(OrderItem.order_id == order_id))
+    order_items = result.scalars().all()
+    
+    order_items_map = {item.id: item for item in order_items}
+    for item_payload in payload.items:
+        if item_payload.item_id in order_items_map:
+            order_items_map[item_payload.item_id].device_code = item_payload.device_code
+            
+    await db.commit()
+    return await _build_admin_order_out(db, order)
+
+
 @router.get("/{order_id}/invoice")
 async def get_order_invoice(
     order_id: uuid.UUID, db: AsyncSession = Depends(get_db), _employee_id: str = Depends(require_employee)
@@ -163,6 +205,7 @@ async def get_order_invoice(
         {
             "product_name": name,
             "product_code": code,
+            "device_code": item.device_code,
             "unit_price": float(item.unit_price),
             "quantity": item.quantity,
             "subtotal": float(item.unit_price) * item.quantity,
@@ -225,7 +268,7 @@ async def send_order_email_endpoint(
         .where(OrderItem.order_id == order.id)
     )
     items = [
-        {"product_name": n, "quantity": i.quantity, "unit_price": float(i.unit_price)}
+        {"product_name": n, "quantity": i.quantity, "unit_price": float(i.unit_price), "device_code": i.device_code}
         for i, n in items_result.all()
     ]
 

@@ -262,6 +262,9 @@ async def update_product(
     brand_id = payload.brand_id if payload.brand_id else await get_or_create_brand(db, payload.brand)
     category_id = payload.category_id if payload.category_id else await get_or_create_category(db, payload.category)
 
+    old_stock = product.stock_quantity
+    new_stock = payload.stock_quantity
+
     product.product_code = payload.product_code
     product.name = payload.name
     product.description = payload.description
@@ -275,12 +278,18 @@ async def update_product(
     product.specification = payload.specification
     product.price = payload.price
     product.discount_price = payload.discount_price
-    product.stock_quantity = payload.stock_quantity
+    product.stock_quantity = new_stock
     product.is_installment_eligible = payload.is_installment_eligible
     product.is_hot = payload.is_hot
 
     await db.commit()
     await db.refresh(product)
+
+    # Trigger pre-order notification if stock arrived
+    if (old_stock is None or old_stock <= 0) and (new_stock is not None and new_stock > 0):
+        from app.api.v1.endpoints.orders import notify_preorder_customers
+        import asyncio
+        asyncio.create_task(notify_preorder_customers(db, product.id, product.name))
 
     brand_name = await get_brand_name(db, product.brand_id)
     category_name = await get_category_name(db, product.category_id)

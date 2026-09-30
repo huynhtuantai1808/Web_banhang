@@ -250,3 +250,25 @@ async def send_revenue_report_email(to_email: str, period: str, from_date: str, 
     </html>
     """
     _send_email_smtp(f"Báo cáo doanh thu {period.upper()}", html_content, to_email)
+
+
+def send_preorder_arrived_notification(product_name: str, to_email: str, order_code: str):
+    if not to_email:
+        return
+        
+    html_content = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #28a745;">Sản phẩm đặt trước đã có hàng!</h2>
+        <p>Xin chào,</p>
+        <p>Chúng tôi vui mừng thông báo rằng sản phẩm bạn đặt trước hiện đã có sẵn tại cửa hàng:</p>
+        <div style="background-color: #f8f9fa; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0; font-size: 16px;"><strong>Sản phẩm:</strong> {product_name}</p>
+            <p style="margin: 0; font-size: 16px;"><strong>Mã đơn hàng:</strong> {order_code}</p>
+        </div>
+        <p>Đơn hàng của bạn sẽ sớm được xử lý và giao đến bạn. Cảm ơn bạn đã kiên nhẫn chờ đợi.</p>
+        <p>Trân trọng,<br>Đội ngũ Electronics Shop</p>
+    </body>
+    </html>
+    """
+    _send_email_smtp(f"Sản phẩm {product_name} đã có hàng!", html_content, to_email)

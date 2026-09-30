@@ -82,8 +82,17 @@ export async function getOrderInvoice(orderId: string): Promise<InvoiceData> {
   return data;
 }
 
-/** Gửi hóa đơn qua email cho khách hàng. */
 export async function sendOrderInvoiceEmail(orderId: string, emailType: "confirmation" | "invoice" = "invoice"): Promise<{ message: string }> {
   const { data } = await apiClient.post<{ message: string }>(`/admin/orders/${orderId}/send-email`, { email_type: emailType });
+  return data;
+}
+
+export interface UpdateDeviceCodeItem {
+  item_id: string;
+  device_code: string | null;
+}
+
+export async function updateOrderDeviceCodes(orderId: string, items: UpdateDeviceCodeItem[]): Promise<AdminOrderOut> {
+  const { data } = await apiClient.put<AdminOrderOut>(`/admin/orders/${orderId}/device-codes`, { items });
   return data;
 }

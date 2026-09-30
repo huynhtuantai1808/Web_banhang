@@ -10,7 +10,7 @@ function formatVND(v: number) {
 }
 
 const ORDER_STATUS_LABEL: Record<string, string> = {
-  pending: "Chờ xác nhận", confirmed: "Đã xác nhận", shipping: "Đang giao",
+  pending: "Chờ xác nhận", pre_order: "Đặt hàng trước", confirmed: "Đã xác nhận", shipping: "Đang giao",
   completed: "Hoàn thành", cancelled: "Đã huỷ",
 };
 const ORDER_STATUSES = Object.keys(ORDER_STATUS_LABEL);

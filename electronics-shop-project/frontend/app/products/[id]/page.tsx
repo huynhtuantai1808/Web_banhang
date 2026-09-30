@@ -386,8 +386,8 @@ export default function ProductDetailPage() {
 
           {product.stock_quantity != null && product.stock_quantity <= 0 && (
             <div className="mb-4">
-              <span className="inline-block bg-red-500 text-white font-bold px-4 py-1.5 rounded text-sm shadow-sm">
-                HẾT HÀNG
+              <span className="inline-block bg-orange-500 text-white font-bold px-4 py-1.5 rounded text-sm shadow-sm">
+                ĐANG HẾT HÀNG (CHO PHÉP ĐẶT TRƯỚC)
               </span>
             </div>
           )}
@@ -444,23 +444,27 @@ export default function ProductDetailPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => handleBuyNow('full')}
-                disabled={adding || (product.stock_quantity != null && product.stock_quantity <= 0)}
+                disabled={adding}
                 className="flex-[2] flex flex-col items-center justify-center rounded-lg bg-[#d70018] text-white py-2.5 transition-colors hover:bg-red-700 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#d70018]"
               >
-                <span className="font-bold text-[15px] uppercase">Mua ngay</span>
-                <span className="text-[11px] font-normal mt-0.5">Giao nhanh từ 2 giờ trong nội thành</span>
+                <span className="font-bold text-[15px] uppercase">
+                  {(product.stock_quantity != null && product.stock_quantity <= 0) ? "Đặt hàng trước" : "Mua ngay"}
+                </span>
+                <span className="text-[11px] font-normal mt-0.5">
+                  {(product.stock_quantity != null && product.stock_quantity <= 0) ? "Giao hàng khi có sẵn" : "Giao nhanh từ 2 giờ trong nội thành"}
+                </span>
               </button>
 
               <button
                 onClick={handleAddToCart}
-                disabled={adding || (product.stock_quantity != null && product.stock_quantity <= 0)}
+                disabled={adding}
                 className="flex-1 flex flex-col items-center justify-center rounded-lg border border-[#d70018] bg-white text-[#d70018] py-2 transition-colors hover:bg-red-50 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
               >
                 {adding ? <Loader2 size={20} className="animate-spin mb-0.5" />
                   : added ? <Check size={20} className="mb-0.5" />
                   : <ShoppingCart size={20} className="mb-0.5" />}
                 <span className="text-[11px] font-medium leading-tight">
-                  {added ? "Đã thêm" : "Thêm giỏ hàng"}
+                  {added ? "Đã thêm" : ((product.stock_quantity != null && product.stock_quantity <= 0) ? "Giỏ hàng (đặt trước)" : "Thêm giỏ hàng")}
                 </span>
               </button>
             </div>

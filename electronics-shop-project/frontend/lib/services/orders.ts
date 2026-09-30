@@ -1,10 +1,12 @@
 import { apiClient } from "../apiClient";
 
 export interface OrderItemOut {
+  id: string;
   product_id: string;
   product_name: string;
   unit_price: number;
   quantity: number;
+  device_code?: string | null;
 }
 
 export interface OrderOut {

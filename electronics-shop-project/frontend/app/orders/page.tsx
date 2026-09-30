@@ -16,6 +16,7 @@ function formatVND(v: number) {
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "Chờ xác nhận",
+  pre_order: "Đặt hàng trước",
   confirmed: "Đã xác nhận",
   shipping: "Đang giao",
   completed: "Hoàn thành",

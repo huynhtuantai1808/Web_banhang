@@ -34,3 +34,4 @@ class OrderItem(Base):
     product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"))
     unit_price: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
+    device_code: Mapped[str | None] = mapped_column(String(100), nullable=True)

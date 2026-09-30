@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ClipboardList, Loader2, Search, X, Truck, PackageCheck } from "lucide-react";
-import { listAllOrders, updateOrderStatus, sendOrderInvoiceEmail, AdminOrderOut } from "@/lib/services/adminOrders";
+import { listAllOrders, updateOrderStatus, sendOrderInvoiceEmail, updateOrderDeviceCodes, AdminOrderOut } from "@/lib/services/adminOrders";
 import {
   createShipment, updateShipmentStatus, getShipmentForAdmin, ShipmentOut, ShipmentStatus,
   SUGGESTED_CARRIERS, SHIPMENT_STATUS_LABEL,
@@ -14,7 +14,7 @@ function formatVND(v: number) {
 }
 
 const ORDER_STATUS_LABEL: Record<string, string> = {
-  pending: "Chờ xác nhận", confirmed: "Đã xác nhận", shipping: "Đang giao",
+  pending: "Chờ xác nhận", pre_order: "Đặt hàng trước", confirmed: "Đã xác nhận", shipping: "Đang giao",
   completed: "Hoàn thành", cancelled: "Đã huỷ",
 };
 const ORDER_STATUSES = Object.keys(ORDER_STATUS_LABEL);
@@ -216,12 +216,7 @@ export default function AdminOrdersPage() {
             <div className="mb-8">
               <p className="text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest font-semibold mb-3">Sản phẩm ({selected.items.length})</p>
               <div className="space-y-2 bg-circuit-bg/30 p-4 rounded-xl border border-circuit-line/30">
-                {selected.items.map((item, i) => (
-                  <div key={i} className="flex justify-between text-sm py-2 border-b border-circuit-line/40 last:border-0 last:pb-0">
-                    <span className="text-circuit-text font-medium">{item.product_name} <span className="text-circuit-muted font-mono ml-1">× {item.quantity}</span></span>
-                    <span className="text-circuit-text font-mono font-semibold">{formatVND(item.unit_price * item.quantity)}</span>
-                  </div>
-                ))}
+                <DeviceCodeEditor order={selected} onUpdated={(updatedOrder) => setSelected(updatedOrder)} />
               </div>
               <div className="flex justify-between items-end font-display pt-4 mt-2 px-2">
                 <span className="text-lg text-circuit-text">Tổng thanh toán</span>
@@ -421,6 +416,68 @@ function ShipmentStatusEditor({
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function DeviceCodeEditor({ order, onUpdated }: { order: AdminOrderOut; onUpdated: (o: AdminOrderOut) => void }) {
+  const [deviceCodes, setDeviceCodes] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const codes: Record<string, string> = {};
+    order.items.forEach((item) => {
+      codes[item.id] = item.device_code || "";
+    });
+    setDeviceCodes(codes);
+  }, [order.items]);
+
+  async function handleSave() {
+    setSaving(true);
+    setError(null);
+    try {
+      const itemsPayload = Object.keys(deviceCodes).map(id => ({
+        item_id: id,
+        device_code: deviceCodes[id] || null,
+      }));
+      const updated = await updateOrderDeviceCodes(order.id, itemsPayload);
+      onUpdated(updated);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Cập nhật mã thiết bị thất bại");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {order.items.map((item, i) => (
+        <div key={item.id || i} className="flex flex-col sm:flex-row justify-between text-sm py-3 border-b border-circuit-line/40 last:border-0 last:pb-0 gap-3">
+          <div className="flex-1">
+            <span className="text-circuit-text font-medium">{item.product_name} <span className="text-circuit-muted font-mono ml-1">× {item.quantity}</span></span>
+            <div className="text-circuit-text font-mono font-semibold mt-1">{formatVND(item.unit_price * item.quantity)}</div>
+          </div>
+          <div className="flex-1 min-w-[200px]">
+            <input
+              value={deviceCodes[item.id] || ""}
+              onChange={(e) => setDeviceCodes({ ...deviceCodes, [item.id]: e.target.value })}
+              placeholder="Mã thiết bị / Serial / IMEI"
+              className="w-full rounded-md border border-circuit-line/60 bg-circuit-bg/50 px-3 py-1.5 text-xs font-mono text-circuit-text outline-none focus:border-circuit-copper transition-colors"
+            />
+          </div>
+        </div>
+      ))}
+      {error && <p className="text-xs text-red-400 bg-red-400/10 p-2 rounded-lg border border-red-400/20">{error}</p>}
+      <div className="flex justify-end pt-2">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider bg-circuit-copper text-circuit-bg shadow-glow hover:bg-circuit-copperLight transition-all disabled:opacity-50"
+        >
+          {saving ? <Loader2 size={14} className="animate-spin" /> : null} Lưu mã thiết bị
+        </button>
       </div>
     </div>
   );

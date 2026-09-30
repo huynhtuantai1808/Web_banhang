@@ -14,10 +14,12 @@ class OrderCreate(BaseModel):
 
 
 class OrderItemOut(BaseModel):
+    id: uuid.UUID
     product_id: uuid.UUID
     product_name: str
     unit_price: float
     quantity: int
+    device_code: str | None = None
 
     class Config:
         from_attributes = True
