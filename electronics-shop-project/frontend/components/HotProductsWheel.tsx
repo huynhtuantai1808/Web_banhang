@@ -117,8 +117,12 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
                   const imgRadius = 140; 
                   const cx = 200 + imgRadius * Math.cos(angle);
                   const cy = 200 + imgRadius * Math.sin(angle);
-                  // Giảm imgSize xuống để ảnh sản phẩm nhỏ lại, nằm gọn trong cánh mà không bị viền cánh cắt mất
-                  const imgSize = 110; 
+                  
+                  // Bạn có thể tùy chỉnh biến imageScale này để phóng to/thu nhỏ ảnh sản phẩm
+                  // Ví dụ: 1.0 là mặc định, 1.2 là to hơn 20%, 0.8 là nhỏ hơn 20%
+                  const imageScale = 1.0; 
+                  const baseImgSize = 120;
+                  const imgSize = baseImgSize * imageScale;
 
                   return (
                     <pattern
@@ -128,15 +132,13 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
                       width="400"
                       height="400"
                     >
-                      {/* Add a white background so transparent parts don't show the dark section background */}
-                      <rect width="400" height="400" fill="white" />
                       <image
                         href={p.imageUrl}
                         x={cx - imgSize / 2}
                         y={cy - imgSize / 2}
                         width={imgSize}
                         height={imgSize}
-                        preserveAspectRatio="xMidYMid slice"
+                        preserveAspectRatio="xMidYMid meet"
                       />
                     </pattern>
                   );
