@@ -137,11 +137,6 @@ export default function CheckoutPage() {
             });
           }
           setCart({ items, total_amount: total });
-          
-          if (type === "credit" || type === "finance") {
-            router.replace(`/login?redirect=/checkout?type=${type}`);
-            return;
-          }
         }
       } catch (err) {
         setError(err instanceof ApiError ? err.message : "Không tải được giỏ hàng");
@@ -196,9 +191,8 @@ export default function CheckoutPage() {
   const subtotal = cart?.total_amount ?? 0;
   const finalTotal = Math.max(0, subtotal - autoDiscount - (appliedPromo?.discount ?? 0));
 
-  // Tất cả sản phẩm trong giỏ có cho phép trả góp không — nếu 1 sản phẩm không hỗ trợ, hoặc khách
-  // chưa đăng nhập (trả góp yêu cầu tài khoản để theo dõi nhiều kỳ thanh toán), ẩn lựa chọn này.
-  const allEligibleForInstallment = loggedIn && cart ? cart.items.every((i) => i.is_installment_eligible) : false;
+  // Tất cả sản phẩm trong giỏ có cho phép trả góp không — nếu 1 sản phẩm không hỗ trợ, ẩn lựa chọn này.
+  const allEligibleForInstallment = cart ? cart.items.every((i) => i.is_installment_eligible) : false;
 
   useEffect(() => {
     if (paymentMethod !== "installment" || !allEligibleForInstallment || !installmentInfo) {

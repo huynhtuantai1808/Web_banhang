@@ -80,13 +80,14 @@ async def require_customer(
     """Dependency dành cho các route chỉ khách hàng mới gọi được (giỏ hàng, đơn hàng...)."""
     try:
         payload = decode_token(credentials.credentials)
-        if payload.get("role") != "customer":
+        role = payload.get("role")
+        if role not in ["customer", "admin"]:
             raise ValueError("Không đủ quyền")
         return payload.get("sub")
     except (JWTError, ValueError):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Chỉ tài khoản khách hàng mới được thực hiện thao tác này",
+            detail="Vui lòng đăng nhập bằng tài khoản khách hàng (Phiên đăng nhập có thể đã hết hạn)",
         )
 
 

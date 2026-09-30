@@ -285,7 +285,10 @@ async def create_guest_order(payload: GuestOrderCreate, request: Request, db: As
     order_payload = OrderCreate(
         shipping_address=payload.shipping_address,
         payment_gateway=payload.payment_gateway,
-        payment_method="full",  # khách vãng lai không hỗ trợ trả góp
+        payment_method=payload.payment_method,
+        installment_months=payload.installment_months,
+        installment_type=payload.installment_type,
+        down_payment=payload.down_payment,
         promo_code=payload.promo_code,
     )
     order, payment_url = await _create_order_core(db, request, customer.id, cart_rows, order_payload)

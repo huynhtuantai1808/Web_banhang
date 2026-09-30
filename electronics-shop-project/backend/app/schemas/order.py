@@ -59,6 +59,10 @@ class GuestOrderCreate(BaseModel):
     phone: str
     email: str | None = None
     shipping_address: str
-    payment_gateway: str = "cod"  # "cod" hoặc "vnpay" — KHÔNG hỗ trợ trả góp cho khách vãng lai
+    payment_gateway: str = "cod"
+    payment_method: str = "full"
+    installment_months: int | None = None
+    installment_type: str | None = None
+    down_payment: float | None = None
     promo_code: str | None = None
     items: list[GuestOrderItem]
