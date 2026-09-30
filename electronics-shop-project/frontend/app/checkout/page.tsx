@@ -18,6 +18,7 @@ import { ApiError } from "@/lib/apiClient";
 import { isCustomerLoggedIn } from "@/lib/auth-storage";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import CreditCardForm from "@/components/CreditCardForm";
 
 function formatVND(v: number) {
   return v.toLocaleString("vi-VN") + "₫";
@@ -50,6 +51,7 @@ export default function CheckoutPage() {
   const [step, setStep] = useState<1 | 2>(1);
   const [address, setAddress] = useState("");
   const [gateway, setGateway] = useState<"cod" | "vnpay">("cod");
+  const [cardData, setCardData] = useState<{number:string;name:string;expiry:string;cvv:string}>({number:"",name:"",expiry:"",cvv:""});
   const [paymentMethod, setPaymentMethod] = useState<"full" | "installment">("full");
   const [installmentType, setInstallmentType] = useState<InstallmentType>("credit_card");
   const [installmentMonths, setInstallmentMonths] = useState<number>(12);
@@ -843,6 +845,20 @@ export default function CheckoutPage() {
                   <p className="text-[11px] mt-1.5 opacity-80 uppercase tracking-wide">ATM / Thẻ quốc tế / QR</p>
                 </button>
               </div>
+
+              {/* Credit card form - chỉ hiện khi chọn VNPay */}
+              {gateway === "vnpay" && (
+                <div className="mt-6 pt-6 border-t border-circuit-line/50">
+                  <p className="text-xs font-mono text-circuit-muted uppercase tracking-widest mb-4 font-semibold flex items-center gap-2">
+                    <CreditCard size={14} className="text-circuit-copper" />
+                    Thông tin thẻ thanh toán
+                  </p>
+                  <CreditCardForm
+                    isLoggedIn={loggedIn}
+                    onCardChange={setCardData}
+                  />
+                </div>
+              )}
             </div>
           )}
 
