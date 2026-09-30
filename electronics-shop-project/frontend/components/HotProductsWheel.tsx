@@ -110,25 +110,33 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
                 <clipPath id="center-circle">
                   <circle cx="200" cy="200" r={innerRadius - 4} />
                 </clipPath>
-                {products.map((p, i) => (
-                  <pattern
-                    key={`pat-${i}`}
-                    id={`image-fill-${i}`}
-                    patternUnits="userSpaceOnUse"
-                    width="400"
-                    height="400"
-                    patternTransform={`rotate(${(360 / numItems) * i})`}
-                  >
-                    <image
-                      href={p.imageUrl}
-                      x="0"
-                      y="0"
+                {products.map((p, i) => {
+                  const step = 360 / numItems;
+                  const angle = (i * step + step / 2) * (Math.PI / 180);
+                  const midRadius = (innerRadius + 200) / 2;
+                  const cx = 200 + midRadius * Math.cos(angle);
+                  const cy = 200 + midRadius * Math.sin(angle);
+                  const imgSize = 140; // Size of the image inside the segment
+
+                  return (
+                    <pattern
+                      key={`pat-${i}`}
+                      id={`image-fill-${i}`}
+                      patternUnits="userSpaceOnUse"
                       width="400"
                       height="400"
-                      preserveAspectRatio="xMidYMid slice"
-                    />
-                  </pattern>
-                ))}
+                    >
+                      <image
+                        href={p.imageUrl}
+                        x={cx - imgSize / 2}
+                        y={cy - imgSize / 2}
+                        width={imgSize}
+                        height={imgSize}
+                        preserveAspectRatio="xMidYMid slice"
+                      />
+                    </pattern>
+                  );
+                })}
               </defs>
 
               {products.map((p, i) => {
