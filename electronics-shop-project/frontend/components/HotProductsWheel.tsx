@@ -12,10 +12,13 @@ interface HotProductsWheelProps {
 }
 
 export default function HotProductsWheel({ products }: HotProductsWheelProps) {
-  const [activeIndex, setActiveIndex] = useState(0);
+  // Sử dụng rotationSteps thay vì activeIndex để vòng xoay có thể tiếp tục quay liên tục mà không bị giật ngược
+  const [rotationSteps, setRotationSteps] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const numItems = products.length;
+  // Tính activeIndex từ rotationSteps (đảm bảo luôn dương và nằm trong mảng)
+  const activeIndex = ((rotationSteps % numItems) + numItems) % numItems;
   // If no products, don't render
   if (numItems === 0) return null;
 
@@ -28,7 +31,7 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
   const startTimer = () => {
     stopTimer();
     timerRef.current = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % numItems);
+      setRotationSteps((prev) => prev + 1);
     }, 10000);
   };
 
@@ -36,8 +39,15 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
     if (timerRef.current) clearInterval(timerRef.current);
   };
 
-  const handleSelect = (index: number) => {
-    setActiveIndex(index);
+  const handleSelect = (targetIndex: number) => {
+    setRotationSteps((prev) => {
+      const currentActive = ((prev % numItems) + numItems) % numItems;
+      let diff = (targetIndex - currentActive) % numItems;
+      // Tìm hướng xoay ngắn nhất
+      if (diff > numItems / 2) diff -= numItems;
+      if (diff < -numItems / 2) diff += numItems;
+      return prev + diff;
+    });
     startTimer(); // reset timer
   };
 
@@ -104,7 +114,7 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
             <svg
               viewBox="0 0 400 400"
               className="w-full h-full drop-shadow-2xl transition-transform duration-1000"
-              style={{ transform: `rotate(-${(360 / numItems) * activeIndex}deg)` }}
+              style={{ transform: `rotate(-${(360 / numItems) * rotationSteps}deg)` }}
             >
               <defs>
                 <clipPath id="center-circle">
