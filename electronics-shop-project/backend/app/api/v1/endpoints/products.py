@@ -289,7 +289,7 @@ async def update_product(
     if (old_stock is None or old_stock <= 0) and (new_stock is not None and new_stock > 0):
         from app.api.v1.endpoints.orders import notify_preorder_customers
         import asyncio
-        asyncio.create_task(notify_preorder_customers(db, product.id, product.name))
+        asyncio.create_task(notify_preorder_customers(product.id, product.name))
 
     brand_name = await get_brand_name(db, product.brand_id)
     category_name = await get_category_name(db, product.category_id)

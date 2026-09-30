@@ -148,7 +148,7 @@ async def create_inventory_transaction(
     if payload.type == "import" and old_stock <= 0 and new_stock > 0:
         from app.api.v1.endpoints.orders import notify_preorder_customers
         import asyncio
-        asyncio.create_task(notify_preorder_customers(db, product.id, product.name))
+        asyncio.create_task(notify_preorder_customers(product.id, product.name))
         
     return {"message": f"Đã ghi nhận {payload.type} kho thành công"}
 

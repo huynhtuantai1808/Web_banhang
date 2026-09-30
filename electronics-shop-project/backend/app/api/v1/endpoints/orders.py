@@ -392,25 +392,27 @@ async def send_order_email(
     return {"message": "Đã gửi email thành công"}
 
 
-async def notify_preorder_customers(db: AsyncSession, product_id: uuid.UUID, product_name: str):
+async def notify_preorder_customers(product_id: uuid.UUID, product_name: str):
     from app.services.email_service import send_preorder_arrived_notification
     from app.models.order import OrderItem, Order
     from app.models.customer import Customer
+    from app.db.session import AsyncSessionLocal
     import logging
 
     try:
-        # Find all pending/pre_order orders containing this product
-        stmt = (
-            select(Order, Customer.email, Customer.phone)
-            .join(OrderItem, Order.id == OrderItem.order_id)
-            .outerjoin(Customer, Order.customer_id == Customer.id)
-            .where(
-                OrderItem.product_id == product_id,
-                Order.status == "pre_order"
+        async with AsyncSessionLocal() as db:
+            # Find all pending/pre_order orders containing this product
+            stmt = (
+                select(Order, Customer.email, Customer.phone)
+                .join(OrderItem, Order.id == OrderItem.order_id)
+                .outerjoin(Customer, Order.customer_id == Customer.id)
+                .where(
+                    OrderItem.product_id == product_id,
+                    Order.status == "pre_order"
+                )
             )
-        )
-        result = await db.execute(stmt)
-        orders = result.all()
+            result = await db.execute(stmt)
+            orders = result.all()
 
         for order, email, phone in orders:
             # Change status to pending or confirmed based on payment
