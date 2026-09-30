@@ -112,7 +112,7 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
                 </clipPath>
                 {products.map((p, i) => {
                   const step = 360 / numItems;
-                  const angle = (i * step + step / 2) * (Math.PI / 180);
+                  const angle = (i * step + step / 2 - 90) * (Math.PI / 180);
                   // Tâm của ảnh dịch vào gần vòng tròn giữa một chút để nhìn cân đối hơn
                   const imgRadius = 140; 
                   const cx = 200 + imgRadius * Math.cos(angle);
