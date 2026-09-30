@@ -34,13 +34,13 @@ export default function CheckoutPage() {
 
   const [cart, setCart] = useState<CartOut | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Địa chỉ giao hàng mới
   const [street, setStreet] = useState("");
   const [province, setProvince] = useState("");
   const [district, setDistrict] = useState("");
   const [ward, setWard] = useState("");
-  
+
   const [provinces, setProvinces] = useState<any[]>([]);
   const [districts, setDistricts] = useState<any[]>([]);
   const [wards, setWards] = useState<any[]>([]);
@@ -50,13 +50,13 @@ export default function CheckoutPage() {
   const [vatCompany, setVatCompany] = useState("");
   const [vatTaxCode, setVatTaxCode] = useState("");
   const [vatAddress, setVatAddress] = useState("");
-  
+
   // Các bước Checkout
   const [step, setStep] = useState<1 | 2>(1);
   const [address, setAddress] = useState("");
   const [gateway, setGateway] = useState<"cod" | "vnpay" | "bank_transfer">("cod");
   const [copied, setCopied] = useState(false);
-  const [cardData, setCardData] = useState<{number:string;name:string;expiry:string;cvv:string}>({number:"",name:"",expiry:"",cvv:""});
+  const [cardData, setCardData] = useState<{ number: string; name: string; expiry: string; cvv: string }>({ number: "", name: "", expiry: "", cvv: "" });
   const [paymentMethod, setPaymentMethod] = useState<"full" | "installment">("full");
   const [installmentType, setInstallmentType] = useState<InstallmentType>("credit_card");
   const [installmentMonths, setInstallmentMonths] = useState<number>(12);
@@ -92,11 +92,11 @@ export default function CheckoutPage() {
     const params = new URLSearchParams(window.location.search);
     const type = params.get("type");
     if (type === "credit") {
-       setPaymentMethod("installment");
-       setInstallmentType("credit_card");
+      setPaymentMethod("installment");
+      setInstallmentType("credit_card");
     } else if (type === "finance") {
-       setPaymentMethod("installment");
-       setInstallmentType("finance");
+      setPaymentMethod("installment");
+      setInstallmentType("finance");
     }
 
     async function load() {
@@ -247,7 +247,7 @@ export default function CheckoutPage() {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-    
+
     // Ghép địa chỉ
     let fullAddress = `${street.trim()}, ${ward}, ${district}, ${province}`;
     if (requireVAT) {
@@ -311,7 +311,7 @@ export default function CheckoutPage() {
           }
         }
         sessionStorage.setItem("lastOrderInfo", JSON.stringify(orderInfo));
-        
+
         router.push(`/orders/result?payment=cod&order_code=${result.order.order_code}`);
       } else {
         const guestItems = getGuestCart();
@@ -331,7 +331,7 @@ export default function CheckoutPage() {
           autoDiscount: autoDiscount
         };
         sessionStorage.setItem("lastOrderInfo", JSON.stringify(orderInfo));
-        
+
         clearGuestCart();
         if (gateway === "vnpay" && result.payment_url) {
           window.location.href = result.payment_url;
@@ -365,578 +365,574 @@ export default function CheckoutPage() {
           </div>
         ) : step === 1 ? (
           <form onSubmit={handleNextStep} className="space-y-6">
-          {error && (
-            <div className="rounded-md border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm text-red-300">
-              {error}
-            </div>
-          )}
-
-          {/* Thông tin khách hàng — chỉ hiện khi chưa đăng nhập (đặt hàng không cần tài khoản) */}
-          {!loggedIn && (
-            <div className="rounded-2xl glass-panel p-6 border-t-4 border-t-circuit-copper/50">
-              <p className="text-[11px] font-mono text-circuit-copperLight uppercase mb-4 flex items-center gap-1.5 tracking-widest font-semibold">
-                <User size={16} /> Thông tin người nhận
-              </p>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <label className="block">
-                  <span className="block text-xs text-circuit-muted mb-1.5 font-medium">Họ và tên *</span>
-                  <input
-                    required
-                    value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
-                    className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper transition-colors focus:shadow-[0_0_10px_rgba(200,127,69,0.15)]"
-                  />
-                </label>
-                <label className="block">
-                  <span className="block text-xs text-circuit-muted mb-1.5 font-medium">Số điện thoại *</span>
-                  <input
-                    required
-                    value={guestPhone}
-                    onChange={(e) => setGuestPhone(e.target.value)}
-                    className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper transition-colors focus:shadow-[0_0_10px_rgba(200,127,69,0.15)]"
-                  />
-                </label>
+            {error && (
+              <div className="rounded-md border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm text-red-300">
+                {error}
               </div>
-              <label className="block">
-                <span className="block text-xs text-circuit-muted mb-1.5 font-medium">Email (tuỳ chọn)</span>
-                <input
-                  type="email"
-                  value={guestEmail}
-                  onChange={(e) => setGuestEmail(e.target.value)}
-                  className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper transition-colors focus:shadow-[0_0_10px_rgba(200,127,69,0.15)]"
-                />
+            )}
+
+            {/* Thông tin khách hàng — chỉ hiện khi chưa đăng nhập (đặt hàng không cần tài khoản) */}
+            {!loggedIn && (
+              <div className="rounded-2xl glass-panel p-6 border-t-4 border-t-circuit-copper/50">
+                <p className="text-[11px] font-mono text-circuit-copperLight uppercase mb-4 flex items-center gap-1.5 tracking-widest font-semibold">
+                  <User size={16} /> Thông tin người nhận
+                </p>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <label className="block">
+                    <span className="block text-xs text-circuit-muted mb-1.5 font-medium">Họ và tên *</span>
+                    <input
+                      required
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper transition-colors focus:shadow-[0_0_10px_rgba(200,127,69,0.15)]"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="block text-xs text-circuit-muted mb-1.5 font-medium">Số điện thoại *</span>
+                    <input
+                      required
+                      value={guestPhone}
+                      onChange={(e) => setGuestPhone(e.target.value)}
+                      className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper transition-colors focus:shadow-[0_0_10px_rgba(200,127,69,0.15)]"
+                    />
+                  </label>
+                </div>
+                <label className="block">
+                  <span className="block text-xs text-circuit-muted mb-1.5 font-medium">Email (tuỳ chọn)</span>
+                  <input
+                    type="email"
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                    className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper transition-colors focus:shadow-[0_0_10px_rgba(200,127,69,0.15)]"
+                  />
+                </label>
+                <p className="text-[11px] text-circuit-muted mt-3">
+                  Thông tin này được lưu lại cùng đơn hàng để bạn tra cứu sau qua{" "}
+                  <Link href="/orders/lookup" className="text-circuit-copperLight hover:underline font-medium">
+                    trang tra cứu đơn hàng
+                  </Link>{" "}
+                  (chỉ cần mã đơn + số điện thoại, không cần mật khẩu).
+                </p>
+              </div>
+            )}
+
+            {/* Tóm tắt giỏ hàng */}
+            {cart && (
+              <div className="rounded-2xl glass-panel p-6 border-t-4 border-t-circuit-copper/50">
+                <p className="text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest mb-4 font-semibold flex items-center gap-2">
+                  <ShoppingCart size={16} /> Đơn hàng của bạn
+                </p>
+                <div className="space-y-3 mb-4">
+                  {cart.items.map((item) => (
+                    <div key={item.id} className="flex items-center gap-3 text-sm">
+                      <div className="w-12 h-12 rounded-xl bg-circuit-bg/40 border border-circuit-line/30 overflow-hidden shrink-0 flex items-center justify-center p-1">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={getMediaUrl(item.product_image_url) || "/placeholder-product.svg"}
+                          alt=""
+                          className="object-contain w-full h-full"
+                        />
+                      </div>
+                      <span className="flex-1 text-circuit-text truncate font-medium">
+                        {item.product_name} × {item.quantity}
+                      </span>
+                      <span className="text-circuit-muted font-mono font-semibold">
+                        {formatVND((item.product_discount_price ?? item.product_price) * item.quantity)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Mã khuyến mãi */}
+                <div className="border-t border-circuit-line pt-3 mb-3">
+                  {!appliedPromo ? (
+                    <div className="flex gap-2">
+                      <div className="flex-1 flex items-center gap-2 rounded-md border border-circuit-line bg-circuit-bg px-3 py-2">
+                        <Tag size={14} className="text-circuit-muted" />
+                        <input
+                          value={promoInput}
+                          onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                          placeholder="Nhập mã khuyến mãi"
+                          className="flex-1 bg-transparent outline-none text-sm text-circuit-text placeholder:text-circuit-muted"
+                        />
+                      </div>
+                      {loggedIn && (
+                        <button
+                          type="button"
+                          onClick={handleApplyPromo}
+                          disabled={promoChecking || !promoInput.trim()}
+                          className="rounded-md border border-circuit-copper px-4 text-sm text-circuit-copperLight hover:bg-circuit-copper hover:text-circuit-bg transition-colors disabled:opacity-50"
+                        >
+                          {promoChecking ? <Loader2 size={14} className="animate-spin" /> : "Áp dụng"}
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between rounded-md border border-circuit-signal/40 bg-circuit-signal/10 px-3 py-2">
+                      <span className="flex items-center gap-2 text-sm text-circuit-signal">
+                        <Check size={14} /> Mã <strong>{appliedPromo.code}</strong> — giảm{" "}
+                        {formatVND(appliedPromo.discount)}
+                      </span>
+                      <button type="button" onClick={clearPromo} className="text-circuit-muted hover:text-red-400">
+                        <X size={14} />
+                      </button>
+                    </div>
+                  )}
+                  {promoMessage && !appliedPromo && (
+                    <p className="text-xs text-red-300 mt-1.5">{promoMessage}</p>
+                  )}
+                  {!loggedIn && promoInput && (
+                    <p className="text-xs text-circuit-muted mt-1.5">
+                      Mã sẽ được kiểm tra và áp dụng khi bạn xác nhận đặt hàng.
+                    </p>
+                  )}
+                  {!appliedPromo && myPromotions.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {myPromotions.map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => setPromoInput(p.code)}
+                          className="text-xs px-2 py-1 rounded-full border border-circuit-line text-circuit-copperLight hover:border-circuit-copper transition-colors"
+                          title={p.name}
+                        >
+                          {p.code}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1 border-t border-circuit-line pt-3 text-sm">
+                  <div className="flex justify-between text-circuit-muted">
+                    <span>Tạm tính</span>
+                    <span>{formatVND(subtotal)}</span>
+                  </div>
+                  {autoDiscount > 0 && (
+                    <div className="flex justify-between text-circuit-signal">
+                      <span>Chiết khấu tự động</span>
+                      <span>-{formatVND(autoDiscount)}</span>
+                    </div>
+                  )}
+                  {appliedPromo && (
+                    <div className="flex justify-between text-circuit-signal">
+                      <span>Giảm giá (mã {appliedPromo.code})</span>
+                      <span>-{formatVND(appliedPromo.discount)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-display text-lg text-circuit-text pt-1">
+                    <span>Tổng cộng{!loggedIn ? " (tạm tính)" : ""}</span>
+                    <span className="text-circuit-signal">{formatVND(finalTotal)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Địa chỉ giao hàng */}
+            <div className="rounded-2xl glass-panel p-6 border-t-4 border-t-circuit-copper/50 space-y-4">
+              <label className="block text-[11px] font-mono text-circuit-copperLight uppercase mb-2 tracking-widest font-semibold flex items-center gap-2">
+                <MapPin size={16} /> Địa chỉ giao hàng *
               </label>
-              <p className="text-[11px] text-circuit-muted mt-3">
-                Thông tin này được lưu lại cùng đơn hàng để bạn tra cứu sau qua{" "}
-                <Link href="/orders/lookup" className="text-circuit-copperLight hover:underline font-medium">
-                  trang tra cứu đơn hàng
-                </Link>{" "}
-                (chỉ cần mã đơn + số điện thoại, không cần mật khẩu).
-              </p>
-            </div>
-          )}
-
-          {/* Tóm tắt giỏ hàng */}
-          {cart && (
-            <div className="rounded-2xl glass-panel p-6 border-t-4 border-t-circuit-copper/50">
-              <p className="text-[11px] font-mono text-circuit-copperLight uppercase tracking-widest mb-4 font-semibold flex items-center gap-2">
-                <ShoppingCart size={16} /> Đơn hàng của bạn
-              </p>
-              <div className="space-y-3 mb-4">
-                {cart.items.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3 text-sm">
-                    <div className="w-12 h-12 rounded-xl bg-circuit-bg/40 border border-circuit-line/30 overflow-hidden shrink-0 flex items-center justify-center p-1">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={getMediaUrl(item.product_image_url) || "/placeholder-product.svg"}
-                        alt=""
-                        className="object-contain w-full h-full"
-                      />
-                    </div>
-                    <span className="flex-1 text-circuit-text truncate font-medium">
-                      {item.product_name} × {item.quantity}
-                    </span>
-                    <span className="text-circuit-muted font-mono font-semibold">
-                      {formatVND((item.product_discount_price ?? item.product_price) * item.quantity)}
-                    </span>
-                  </div>
-                ))}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <select
+                  required
+                  value={province}
+                  onChange={(e) => setProvince(e.target.value)}
+                  className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                >
+                  <option value="">-- Tỉnh / Thành phố --</option>
+                  {provinces.map(p => <option key={p.code} value={p.name}>{p.name}</option>)}
+                </select>
+                <select
+                  required
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                  disabled={!province}
+                  className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper disabled:opacity-50"
+                >
+                  <option value="">-- Quận / Huyện --</option>
+                  {districts.map(d => <option key={d.code} value={d.name}>{d.name}</option>)}
+                </select>
+                <select
+                  required
+                  value={ward}
+                  onChange={(e) => setWard(e.target.value)}
+                  disabled={!district}
+                  className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper disabled:opacity-50"
+                >
+                  <option value="">-- Phường / Xã --</option>
+                  {wards.map(w => <option key={w.code} value={w.name}>{w.name}</option>)}
+                </select>
               </div>
-
-              {/* Mã khuyến mãi */}
-              <div className="border-t border-circuit-line pt-3 mb-3">
-                {!appliedPromo ? (
-                  <div className="flex gap-2">
-                    <div className="flex-1 flex items-center gap-2 rounded-md border border-circuit-line bg-circuit-bg px-3 py-2">
-                      <Tag size={14} className="text-circuit-muted" />
-                      <input
-                        value={promoInput}
-                        onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
-                        placeholder="Nhập mã khuyến mãi"
-                        className="flex-1 bg-transparent outline-none text-sm text-circuit-text placeholder:text-circuit-muted"
-                      />
-                    </div>
-                    {loggedIn && (
-                      <button
-                        type="button"
-                        onClick={handleApplyPromo}
-                        disabled={promoChecking || !promoInput.trim()}
-                        className="rounded-md border border-circuit-copper px-4 text-sm text-circuit-copperLight hover:bg-circuit-copper hover:text-circuit-bg transition-colors disabled:opacity-50"
-                      >
-                        {promoChecking ? <Loader2 size={14} className="animate-spin" /> : "Áp dụng"}
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between rounded-md border border-circuit-signal/40 bg-circuit-signal/10 px-3 py-2">
-                    <span className="flex items-center gap-2 text-sm text-circuit-signal">
-                      <Check size={14} /> Mã <strong>{appliedPromo.code}</strong> — giảm{" "}
-                      {formatVND(appliedPromo.discount)}
-                    </span>
-                    <button type="button" onClick={clearPromo} className="text-circuit-muted hover:text-red-400">
-                      <X size={14} />
-                    </button>
-                  </div>
-                )}
-                {promoMessage && !appliedPromo && (
-                  <p className="text-xs text-red-300 mt-1.5">{promoMessage}</p>
-                )}
-                {!loggedIn && promoInput && (
-                  <p className="text-xs text-circuit-muted mt-1.5">
-                    Mã sẽ được kiểm tra và áp dụng khi bạn xác nhận đặt hàng.
-                  </p>
-                )}
-                {!appliedPromo && myPromotions.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {myPromotions.map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => setPromoInput(p.code)}
-                        className="text-xs px-2 py-1 rounded-full border border-circuit-line text-circuit-copperLight hover:border-circuit-copper transition-colors"
-                        title={p.name}
-                      >
-                        {p.code}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-1 border-t border-circuit-line pt-3 text-sm">
-                <div className="flex justify-between text-circuit-muted">
-                  <span>Tạm tính</span>
-                  <span>{formatVND(subtotal)}</span>
-                </div>
-                {autoDiscount > 0 && (
-                  <div className="flex justify-between text-circuit-signal">
-                    <span>Chiết khấu tự động</span>
-                    <span>-{formatVND(autoDiscount)}</span>
-                  </div>
-                )}
-                {appliedPromo && (
-                  <div className="flex justify-between text-circuit-signal">
-                    <span>Giảm giá (mã {appliedPromo.code})</span>
-                    <span>-{formatVND(appliedPromo.discount)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between font-display text-lg text-circuit-text pt-1">
-                  <span>Tổng cộng{!loggedIn ? " (tạm tính)" : ""}</span>
-                  <span className="text-circuit-signal">{formatVND(finalTotal)}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Địa chỉ giao hàng */}
-          <div className="rounded-2xl glass-panel p-6 border-t-4 border-t-circuit-copper/50 space-y-4">
-            <label className="block text-[11px] font-mono text-circuit-copperLight uppercase mb-2 tracking-widest font-semibold flex items-center gap-2">
-              <MapPin size={16} /> Địa chỉ giao hàng *
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <select
+              <input
+                type="text"
                 required
-                value={province}
-                onChange={(e) => setProvince(e.target.value)}
+                value={street}
+                onChange={(e) => setStreet(e.target.value)}
+                placeholder="Số nhà, tên đường..."
                 className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
-              >
-                <option value="">-- Tỉnh / Thành phố --</option>
-                {provinces.map(p => <option key={p.code} value={p.name}>{p.name}</option>)}
-              </select>
-              <select
-                required
-                value={district}
-                onChange={(e) => setDistrict(e.target.value)}
-                disabled={!province}
-                className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper disabled:opacity-50"
-              >
-                <option value="">-- Quận / Huyện --</option>
-                {districts.map(d => <option key={d.code} value={d.name}>{d.name}</option>)}
-              </select>
-              <select
-                required
-                value={ward}
-                onChange={(e) => setWard(e.target.value)}
-                disabled={!district}
-                className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper disabled:opacity-50"
-              >
-                <option value="">-- Phường / Xã --</option>
-                {wards.map(w => <option key={w.code} value={w.name}>{w.name}</option>)}
-              </select>
-            </div>
-            <input
-              type="text"
-              required
-              value={street}
-              onChange={(e) => setStreet(e.target.value)}
-              placeholder="Số nhà, tên đường..."
-              className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
-            />
-            
-            {/* Hóa đơn VAT */}
-            <div className="pt-4 border-t border-circuit-line/50 mt-4">
-              <label className="flex items-center gap-2 cursor-pointer text-sm text-circuit-text font-medium">
-                <input
-                  type="checkbox"
-                  checked={requireVAT}
-                  onChange={(e) => setRequireVAT(e.target.checked)}
-                  className="w-4 h-4 rounded border-circuit-line bg-circuit-bg text-circuit-copper focus:ring-circuit-copper"
-                />
-                Yêu cầu xuất hóa đơn VAT
-              </label>
-              
-              {requireVAT && (
-                <div className="mt-4 space-y-3 bg-circuit-bg/30 p-4 rounded-xl border border-circuit-line/40">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      required
-                      value={vatCompany}
-                      onChange={(e) => setVatCompany(e.target.value)}
-                      placeholder="Tên công ty"
-                      className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
-                    />
-                    <input
-                      type="text"
-                      required
-                      value={vatTaxCode}
-                      onChange={(e) => setVatTaxCode(e.target.value)}
-                      placeholder="Mã số thuế"
-                      className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
-                    />
-                  </div>
+              />
+
+              {/* Hóa đơn VAT */}
+              <div className="pt-4 border-t border-circuit-line/50 mt-4">
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-circuit-text font-medium">
                   <input
-                    type="text"
-                    required
-                    value={vatAddress}
-                    onChange={(e) => setVatAddress(e.target.value)}
-                    placeholder="Địa chỉ công ty"
-                    className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                    type="checkbox"
+                    checked={requireVAT}
+                    onChange={(e) => setRequireVAT(e.target.checked)}
+                    className="w-4 h-4 rounded border-circuit-line bg-circuit-bg text-circuit-copper focus:ring-circuit-copper"
                   />
-                </div>
-              )}
+                  Yêu cầu xuất hóa đơn VAT
+                </label>
+
+                {requireVAT && (
+                  <div className="mt-4 space-y-3 bg-circuit-bg/30 p-4 rounded-xl border border-circuit-line/40">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <input
+                        type="text"
+                        required
+                        value={vatCompany}
+                        onChange={(e) => setVatCompany(e.target.value)}
+                        placeholder="Tên công ty"
+                        className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                      />
+                      <input
+                        type="text"
+                        required
+                        value={vatTaxCode}
+                        onChange={(e) => setVatTaxCode(e.target.value)}
+                        placeholder="Mã số thuế"
+                        className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      value={vatAddress}
+                      onChange={(e) => setVatAddress(e.target.value)}
+                      placeholder="Địa chỉ công ty"
+                      className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Cấu hình trả góp */}
-          {paymentMethod === "installment" && (
-            <div className="rounded-2xl glass-panel border border-circuit-copper/40 shadow-glow p-6">
-              <label className="block text-[11px] font-mono text-circuit-copperLight uppercase mb-4 tracking-widest font-semibold flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-circuit-copper inline-block animate-pulse-slow" />
-                Thông tin trả góp
-              </label>
+            {/* Cấu hình trả góp */}
+            {paymentMethod === "installment" && (
+              <div className="rounded-2xl glass-panel border border-circuit-copper/40 shadow-glow p-6">
+                <label className="block text-[11px] font-mono text-circuit-copperLight uppercase mb-4 tracking-widest font-semibold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-circuit-copper inline-block animate-pulse-slow" />
+                  Thông tin trả góp
+                </label>
 
-              {installmentType === "credit_card" && (
-                <div className="mb-6 space-y-4">
-                  {/* Giao diện thẻ 3D */}
-                  <CreditCardForm
-                    isLoggedIn={loggedIn}
-                    onCardChange={(cd) => {
-                      // Loại thẻ từ số thẻ → sync vào selectedCardType
-                      const n = cd.number.replace(/\s/g, "");
-                      if (/^4/.test(n)) setSelectedCardType("VISA");
-                      else if (/^5[1-5]|^2[2-7]/.test(n)) setSelectedCardType("Mastercard");
-                      else if (/^35/.test(n)) setSelectedCardType("JCB");
-                    }}
-                  />
-                  <div>
-                    <label className="block text-xs font-medium text-circuit-muted mb-1.5">Tỷ lệ trả trước (Thẻ tín dụng)</label>
-                    <select
-                      value={creditDownPaymentPct}
-                      onChange={(e) => setCreditDownPaymentPct(Number(e.target.value))}
-                      className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
-                    >
-                      <option value={0.0}>0% — Không cần trả trước</option>
-                      <option value={0.2}>20%</option>
-                      <option value={0.3}>30%</option>
-                      <option value={0.4}>40%</option>
-                      <option value={0.5}>50%</option>
-                    </select>
+                {installmentType === "credit_card" && (
+                  <div className="mb-6 space-y-4">
+                    {/* Giao diện thẻ 3D */}
+                    <CreditCardForm
+                      isLoggedIn={loggedIn}
+                      onCardChange={(cd) => {
+                        // Loại thẻ từ số thẻ → sync vào selectedCardType
+                        const n = cd.number.replace(/\s/g, "");
+                        if (/^4/.test(n)) setSelectedCardType("VISA");
+                        else if (/^5[1-5]|^2[2-7]/.test(n)) setSelectedCardType("Mastercard");
+                        else if (/^35/.test(n)) setSelectedCardType("JCB");
+                      }}
+                    />
+                    <div>
+                      <label className="block text-xs font-medium text-circuit-muted mb-1.5">Tỷ lệ trả trước (Thẻ tín dụng)</label>
+                      <select
+                        value={creditDownPaymentPct}
+                        onChange={(e) => setCreditDownPaymentPct(Number(e.target.value))}
+                        className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                      >
+                        <option value={0.0}>0% — Không cần trả trước</option>
+                        <option value={0.2}>20%</option>
+                        <option value={0.3}>30%</option>
+                        <option value={0.4}>40%</option>
+                        <option value={0.5}>50%</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {installmentType === "finance" && (
-                <div className="mb-6 space-y-4">
-                  <div>
-                    <label className="block text-xs font-medium text-circuit-muted mb-1.5">Công ty hỗ trợ</label>
-                    <select
-                      value={selectedFinanceCo}
-                      onChange={(e) => setSelectedFinanceCo(e.target.value)}
-                      className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
-                    >
-                      {FINANCE_COMPANIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                {installmentType === "finance" && (
+                  <div className="mb-6 space-y-4">
+                    <div>
+                      <label className="block text-xs font-medium text-circuit-muted mb-1.5">Công ty hỗ trợ</label>
+                      <select
+                        value={selectedFinanceCo}
+                        onChange={(e) => setSelectedFinanceCo(e.target.value)}
+                        className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                      >
+                        {FINANCE_COMPANIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-circuit-muted mb-1.5">Tỷ lệ trả trước</label>
+                      <select
+                        value={financeDownPaymentPct}
+                        onChange={(e) => setFinanceDownPaymentPct(Number(e.target.value))}
+                        className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+                      >
+                        <option value={0.2}>20%</option>
+                        <option value={0.3}>30%</option>
+                        <option value={0.4}>40%</option>
+                        <option value={0.5}>50%</option>
+                        <option value={0.6}>60%</option>
+                        <option value={0.7}>70%</option>
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-circuit-muted mb-1.5">Tỷ lệ trả trước</label>
-                    <select
-                      value={financeDownPaymentPct}
-                      onChange={(e) => setFinanceDownPaymentPct(Number(e.target.value))}
-                      className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
-                    >
-                      <option value={0.2}>20%</option>
-                      <option value={0.3}>30%</option>
-                      <option value={0.4}>40%</option>
-                      <option value={0.5}>50%</option>
-                      <option value={0.6}>60%</option>
-                      <option value={0.7}>70%</option>
-                    </select>
-                  </div>
-                </div>
-              )}
+                )}
 
-              <div className="rounded-md border border-circuit-line bg-circuit-panel p-4">
+                <div className="rounded-md border border-circuit-line bg-circuit-panel p-4">
 
-                {installmentOptions.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="border-b border-circuit-line">
-                          <th className="py-1.5 text-left text-circuit-muted font-mono uppercase">Kỳ hạn</th>
-                          {installmentType === "finance" ? (
-                            <>
-                              <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Trả trước ({(financeDownPaymentPct * 100).toFixed(0)}%)</th>
-                              <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Khoản vay</th>
-                              <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Lãi suất</th>
-                            </>
-                          ) : (
-                            <>
-                              <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Trả trước ({(creditDownPaymentPct * 100).toFixed(0)}%)</th>
-                              <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Khoản vay</th>
-                              <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Phí (%)</th>
-                            </>
-                          )}
-                          <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Số tiền phí</th>
-                          <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Tổng cộng</th>
-                          <th className="py-1.5 text-right text-circuit-copperLight font-mono uppercase">Mỗi tháng</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {installmentOptions.map((opt) => (
-                          <tr
-                            key={`${opt.type}-${opt.months}`}
-                            onClick={() => setInstallmentMonths(opt.months)}
-                            className={`border-b border-circuit-line/50 cursor-pointer transition-colors hover:bg-circuit-panel/60 ${
-                              installmentMonths === opt.months ? "bg-circuit-copper/10" : ""
-                            }`}
-                          >
-                            <td className={`py-1.5 font-mono ${installmentMonths === opt.months ? "text-circuit-copperLight font-semibold" : "text-circuit-text"}`}>
-                              {opt.months} tháng {installmentMonths === opt.months && "✓"}
-                            </td>
+                  {installmentOptions.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-circuit-line">
+                            <th className="py-1.5 text-left text-circuit-muted font-mono uppercase">Kỳ hạn</th>
                             {installmentType === "finance" ? (
                               <>
-                                <td className="py-1.5 text-right text-circuit-muted">
-                                  {opt.down_payment_amount != null ? formatVND(opt.down_payment_amount) : "—"}
-                                </td>
-                                <td className="py-1.5 text-right text-circuit-muted">
-                                  {opt.loan_amount != null ? formatVND(opt.loan_amount) : "—"}
-                                </td>
-                                <td className="py-1.5 text-right text-circuit-muted">
-                                  {opt.monthly_interest_rate != null ? `${opt.monthly_interest_rate.toFixed(2)}%/tháng` : "—"}
-                                </td>
+                                <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Trả trước ({(financeDownPaymentPct * 100).toFixed(0)}%)</th>
+                                <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Khoản vay</th>
+                                <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Lãi suất</th>
                               </>
                             ) : (
                               <>
-                                <td className="py-1.5 text-right text-circuit-muted">
-                                  {opt.down_payment_amount != null && opt.down_payment_amount > 0 ? formatVND(opt.down_payment_amount) : "0₫"}
-                                </td>
-                                <td className="py-1.5 text-right text-circuit-muted">
-                                  {opt.loan_amount != null ? formatVND(opt.loan_amount) : "—"}
-                                </td>
-                                <td className="py-1.5 text-right text-circuit-muted">{opt.conversion_fee}%</td>
+                                <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Trả trước ({(creditDownPaymentPct * 100).toFixed(0)}%)</th>
+                                <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Khoản vay</th>
+                                <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Phí (%)</th>
                               </>
                             )}
-                            <td className="py-1.5 text-right text-circuit-muted">
-                              {opt.fee_amount != null ? formatVND(opt.fee_amount) : (opt.total_interest != null ? formatVND(opt.total_interest) : "—")}
-                            </td>
-                            <td className="py-1.5 text-right text-circuit-text font-medium">{formatVND(opt.total_amount)}</td>
-                            <td className="py-1.5 text-right font-bold text-circuit-copperLight">
-                              {formatVND(opt.monthly_payment ?? opt.monthly_amount)}
-                            </td>
+                            <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Số tiền phí</th>
+                            <th className="py-1.5 text-right text-circuit-muted font-mono uppercase">Tổng cộng</th>
+                            <th className="py-1.5 text-right text-circuit-copperLight font-mono uppercase">Mỗi tháng</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p className="text-xs text-circuit-muted text-center py-4">Đang tải bảng trả góp...</p>
-                )}
-
-                {installmentOptions.find((o) => o.months === installmentMonths) && (() => {
-                  const sel = installmentOptions.find((o) => o.months === installmentMonths)!;
-                  return (
-                    <div className="mt-3 flex items-center gap-2 text-xs text-circuit-muted">
-                      <CalendarClock size={12} />
-                      <span>
-                        Tổng cộng: <strong className="text-circuit-text">{formatVND(sel.total_amount)}</strong>
-                        {sel.down_payment_amount != null && sel.down_payment_amount > 0 && (
-                          <> · Trả trước <strong className="text-circuit-text">{formatVND(sel.down_payment_amount)}</strong></>
-                        )}
-                        {" "}— mỗi tháng{" "}
-                        <strong className="text-circuit-copperLight">
-                          {formatVND(sel.monthly_payment ?? sel.monthly_amount)}
-                        </strong>
-                      </span>
+                        </thead>
+                        <tbody>
+                          {installmentOptions.map((opt) => (
+                            <tr
+                              key={`${opt.type}-${opt.months}`}
+                              onClick={() => setInstallmentMonths(opt.months)}
+                              className={`border-b border-circuit-line/50 cursor-pointer transition-colors hover:bg-circuit-panel/60 ${installmentMonths === opt.months ? "bg-circuit-copper/10" : ""
+                                }`}
+                            >
+                              <td className={`py-1.5 font-mono ${installmentMonths === opt.months ? "text-circuit-copperLight font-semibold" : "text-circuit-text"}`}>
+                                {opt.months} tháng {installmentMonths === opt.months && "✓"}
+                              </td>
+                              {installmentType === "finance" ? (
+                                <>
+                                  <td className="py-1.5 text-right text-circuit-muted">
+                                    {opt.down_payment_amount != null ? formatVND(opt.down_payment_amount) : "—"}
+                                  </td>
+                                  <td className="py-1.5 text-right text-circuit-muted">
+                                    {opt.loan_amount != null ? formatVND(opt.loan_amount) : "—"}
+                                  </td>
+                                  <td className="py-1.5 text-right text-circuit-muted">
+                                    {opt.monthly_interest_rate != null ? `${opt.monthly_interest_rate.toFixed(2)}%/tháng` : "—"}
+                                  </td>
+                                </>
+                              ) : (
+                                <>
+                                  <td className="py-1.5 text-right text-circuit-muted">
+                                    {opt.down_payment_amount != null && opt.down_payment_amount > 0 ? formatVND(opt.down_payment_amount) : "0₫"}
+                                  </td>
+                                  <td className="py-1.5 text-right text-circuit-muted">
+                                    {opt.loan_amount != null ? formatVND(opt.loan_amount) : "—"}
+                                  </td>
+                                  <td className="py-1.5 text-right text-circuit-muted">{opt.conversion_fee}%</td>
+                                </>
+                              )}
+                              <td className="py-1.5 text-right text-circuit-muted">
+                                {opt.fee_amount != null ? formatVND(opt.fee_amount) : (opt.total_interest != null ? formatVND(opt.total_interest) : "—")}
+                              </td>
+                              <td className="py-1.5 text-right text-circuit-text font-medium">{formatVND(opt.total_amount)}</td>
+                              <td className="py-1.5 text-right font-bold text-circuit-copperLight">
+                                {formatVND(opt.monthly_payment ?? opt.monthly_amount)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
-                  );
-                })()}
+                  ) : (
+                    <p className="text-xs text-circuit-muted text-center py-4">Đang tải bảng trả góp...</p>
+                  )}
 
-                <p className="text-[10px] text-circuit-muted mt-3 border-t border-circuit-line pt-2">
-                  {installmentType === "credit_card"
-                    ? "* Phí chuyển đổi trả góp do ngân hàng/phát hành thẻ tín dụng áp dụng."
-                    : "* Lãi suất 1.5%/tháng (18%/năm) trên dư nợ giảm dần. Phí xử lý do công ty cho vay trả góp quy định."}
-                </p>
+                  {installmentOptions.find((o) => o.months === installmentMonths) && (() => {
+                    const sel = installmentOptions.find((o) => o.months === installmentMonths)!;
+                    return (
+                      <div className="mt-3 flex items-center gap-2 text-xs text-circuit-muted">
+                        <CalendarClock size={12} />
+                        <span>
+                          Tổng cộng: <strong className="text-circuit-text">{formatVND(sel.total_amount)}</strong>
+                          {sel.down_payment_amount != null && sel.down_payment_amount > 0 && (
+                            <> · Trả trước <strong className="text-circuit-text">{formatVND(sel.down_payment_amount)}</strong></>
+                          )}
+                          {" "}— mỗi tháng{" "}
+                          <strong className="text-circuit-copperLight">
+                            {formatVND(sel.monthly_payment ?? sel.monthly_amount)}
+                          </strong>
+                        </span>
+                      </div>
+                    );
+                  })()}
+
+                  <p className="text-[10px] text-circuit-muted mt-3 border-t border-circuit-line pt-2">
+                    {installmentType === "credit_card"
+                      ? "* Phí chuyển đổi trả góp do ngân hàng/phát hành thẻ tín dụng áp dụng."
+                      : "* Lãi suất 1.5%/tháng (18%/năm) trên dư nợ giảm dần. Phí xử lý do công ty cho vay trả góp quy định."}
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Chọn cổng thanh toán — chỉ áp dụng khi trả toàn bộ */}
-          {paymentMethod === "full" && (
-            <div className="rounded-2xl glass-panel p-6 border-t-4 border-t-circuit-copper/50">
-              <label className="block text-[11px] font-mono text-circuit-copperLight uppercase mb-4 tracking-widest font-semibold flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-circuit-copper inline-block animate-pulse-slow" />
-                Cổng thanh toán
-              </label>
-              <div className="grid grid-cols-3 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setGateway("cod")}
-                  className={`relative rounded-xl border-2 px-4 py-4 text-sm text-left transition-all duration-300 hover:scale-[1.02] ${
-                    gateway === "cod"
+            {/* Chọn cổng thanh toán — chỉ áp dụng khi trả toàn bộ */}
+            {paymentMethod === "full" && (
+              <div className="rounded-2xl glass-panel p-6 border-t-4 border-t-circuit-copper/50">
+                <label className="block text-[11px] font-mono text-circuit-copperLight uppercase mb-4 tracking-widest font-semibold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-circuit-copper inline-block animate-pulse-slow" />
+                  Cổng thanh toán
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setGateway("cod")}
+                    className={`relative rounded-xl border-2 px-4 py-4 text-sm text-left transition-all duration-300 hover:scale-[1.02] ${gateway === "cod"
                       ? "border-circuit-copper bg-circuit-copper/15 text-circuit-copperLight shadow-[0_0_15px_rgba(200,127,69,0.2)]"
                       : "border-circuit-line/60 bg-circuit-panel/50 text-circuit-muted hover:border-circuit-copper/60 hover:bg-circuit-panel/80"
-                  }`}
-                >
-                  {gateway === "cod" && (
-                    <span className="absolute -top-2.5 left-4 px-2 py-0.5 text-[10px] font-mono font-bold bg-circuit-signal text-circuit-bg rounded-md shadow-md">
-                      GỢI Ý
-                    </span>
-                  )}
-                  <p className="font-medium flex items-center gap-2 text-sm">
-                    <Truck size={16} /> Tiền mặt (COD)
-                  </p>
-                  <p className="text-[10px] mt-1.5 opacity-80 uppercase tracking-wide">Khi nhận hàng</p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setGateway("vnpay")}
-                  className={`relative rounded-xl border-2 px-4 py-4 text-sm text-left transition-all duration-300 hover:scale-[1.02] ${
-                    gateway === "vnpay"
+                      }`}
+                  >
+                    {gateway === "cod" && (
+                      <span className="absolute -top-2.5 left-4 px-2 py-0.5 text-[10px] font-mono font-bold bg-circuit-signal text-circuit-bg rounded-md shadow-md">
+                        GỢI Ý
+                      </span>
+                    )}
+                    <p className="font-medium flex items-center gap-2 text-sm">
+                      <Truck size={16} /> Tiền mặt (COD)
+                    </p>
+                    <p className="text-[10px] mt-1.5 opacity-80 uppercase tracking-wide">Khi nhận hàng</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGateway("vnpay")}
+                    className={`relative rounded-xl border-2 px-4 py-4 text-sm text-left transition-all duration-300 hover:scale-[1.02] ${gateway === "vnpay"
                       ? "border-blue-400 bg-blue-400/10 text-blue-300 shadow-[0_0_15px_rgba(96,165,250,0.2)]"
                       : "border-circuit-line/60 bg-circuit-panel/50 text-circuit-muted hover:border-blue-400/60 hover:bg-circuit-panel/80"
-                  }`}
-                >
-                  <p className="font-medium flex items-center gap-2 text-sm">
-                    <CreditCard size={16} /> VNPay
-                  </p>
-                  <p className="text-[10px] mt-1.5 opacity-80 uppercase tracking-wide">ATM / Thẻ / QR</p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setGateway("bank_transfer")}
-                  className={`relative rounded-xl border-2 px-4 py-4 text-sm text-left transition-all duration-300 hover:scale-[1.02] ${
-                    gateway === "bank_transfer"
+                      }`}
+                  >
+                    <p className="font-medium flex items-center gap-2 text-sm">
+                      <CreditCard size={16} /> Credit
+                    </p>
+                    <p className="text-[10px] mt-1.5 opacity-80 uppercase tracking-wide">ATM / Thẻ </p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGateway("bank_transfer")}
+                    className={`relative rounded-xl border-2 px-4 py-4 text-sm text-left transition-all duration-300 hover:scale-[1.02] ${gateway === "bank_transfer"
                       ? "border-emerald-400 bg-emerald-400/10 text-emerald-300 shadow-[0_0_15px_rgba(52,211,153,0.2)]"
                       : "border-circuit-line/60 bg-circuit-panel/50 text-circuit-muted hover:border-emerald-400/60 hover:bg-circuit-panel/80"
-                  }`}
-                >
-                  <p className="font-medium flex items-center gap-2 text-sm">
-                    <QrCode size={16} /> Chuyển khoản
-                  </p>
-                  <p className="text-[10px] mt-1.5 opacity-80 uppercase tracking-wide">QR / Internet Banking</p>
-                </button>
-              </div>
-
-              {/* Credit card form - chỉ hiện khi chọn VNPay */}
-              {gateway === "vnpay" && (
-                <div className="mt-6 pt-6 border-t border-circuit-line/50">
-                  <p className="text-xs font-mono text-circuit-muted uppercase tracking-widest mb-4 font-semibold flex items-center gap-2">
-                    <CreditCard size={14} className="text-circuit-copper" />
-                    Thông tin thẻ thanh toán
-                  </p>
-                  <CreditCardForm
-                    isLoggedIn={loggedIn}
-                    onCardChange={setCardData}
-                  />
+                      }`}
+                  >
+                    <p className="font-medium flex items-center gap-2 text-sm">
+                      <QrCode size={16} /> Chuyển khoản
+                    </p>
+                    <p className="text-[10px] mt-1.5 opacity-80 uppercase tracking-wide">QR / Internet Banking</p>
+                  </button>
                 </div>
-              )}
 
-              {/* QR chuyển khoản - chỉ hiện khi chọn bank_transfer */}
-              {gateway === "bank_transfer" && (
-                <div className="mt-6 pt-6 border-t border-circuit-line/50 space-y-5">
-                  <div className="flex flex-col items-center gap-4">
-                    {/* QR Code từ VietQR */}
-                    <div className="relative">
-                      <div className="absolute inset-0 rounded-2xl bg-emerald-400/20 blur-xl" />
-                      <div className="relative bg-white rounded-2xl p-3 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={`https://img.vietqr.io/image/${bankId}-${bankAccountNo}-compact2.png?amount=${finalTotal}&addInfo=Thanh%20toan%20don%20hang&accountName=${encodeURIComponent(bankAccountName)}`}
-                          alt="QR chuyển khoản"
-                          width={200}
-                          height={200}
-                          className="rounded-xl"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Số tiền nổi bật */}
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-emerald-400 font-mono">{formatVND(finalTotal)}</p>
-                      <p className="text-xs text-circuit-muted mt-1">Quét mã QR hoặc chuyển khoản theo thông tin dưới</p>
-                    </div>
+                {/* Credit card form - chỉ hiện khi chọn VNPay */}
+                {gateway === "vnpay" && (
+                  <div className="mt-6 pt-6 border-t border-circuit-line/50">
+                    <p className="text-xs font-mono text-circuit-muted uppercase tracking-widest mb-4 font-semibold flex items-center gap-2">
+                      <CreditCard size={14} className="text-circuit-copper" />
+                      Thông tin thẻ thanh toán
+                    </p>
+                    <CreditCardForm
+                      isLoggedIn={loggedIn}
+                      onCardChange={setCardData}
+                    />
                   </div>
+                )}
 
-                  {/* Thông tin tài khoản */}
-                  <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/5 p-4 space-y-3">
-                    <p className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-semibold">Thông tin chuyển khoản</p>
-                    {([
-                      { label: "Ngân hàng", value: bankId },
-                      { label: "Số tài khoản", value: bankAccountNo },
-                      { label: "Chủ tài khoản", value: bankAccountName },
-                      { label: "Số tiền", value: formatVND(finalTotal) },
-                      { label: "Nội dung", value: "Thanh toan don hang" },
-                    ] as {label:string;value:string}[]).map(({ label, value }) => (
-                      <div key={label} className="flex items-center justify-between gap-4">
-                        <span className="text-xs text-circuit-muted shrink-0">{label}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-circuit-text text-right">{value}</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              navigator.clipboard.writeText(value);
-                              setCopied(true);
-                              setTimeout(() => setCopied(false), 2000);
-                            }}
-                            className="p-1 rounded text-circuit-muted hover:text-emerald-400 transition-colors"
-                          >
-                            {copied ? <CheckCheck size={12} className="text-emerald-400" /> : <Copy size={12} />}
-                          </button>
+                {/* QR chuyển khoản - chỉ hiện khi chọn bank_transfer */}
+                {gateway === "bank_transfer" && (
+                  <div className="mt-6 pt-6 border-t border-circuit-line/50 space-y-5">
+                    <div className="flex flex-col items-center gap-4">
+                      {/* QR Code từ VietQR */}
+                      <div className="relative">
+                        <div className="absolute inset-0 rounded-2xl bg-emerald-400/20 blur-xl" />
+                        <div className="relative bg-white rounded-2xl p-3 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={`https://img.vietqr.io/image/${bankId}-${bankAccountNo}-compact2.png?amount=${finalTotal}&addInfo=Thanh%20toan%20don%20hang&accountName=${encodeURIComponent(bankAccountName)}`}
+                            alt="QR chuyển khoản"
+                            width={200}
+                            height={200}
+                            className="rounded-xl"
+                          />
                         </div>
                       </div>
-                    ))}
-                  </div>
 
-                  <div className="rounded-lg bg-amber-400/10 border border-amber-400/30 px-4 py-3">
-                    <p className="text-xs text-amber-300">
-                      ⚠️ Sau khi chuyển khoản, đơn hàng sẽ được xác nhận trong vòng <strong>15–30 phút</strong>.
-                      Giữ lại ảnh chuyển khoản để xác minh nếu cần.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+                      {/* Số tiền nổi bật */}
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-emerald-400 font-mono">{formatVND(finalTotal)}</p>
+                        <p className="text-xs text-circuit-muted mt-1">Quét mã QR hoặc chuyển khoản theo thông tin dưới</p>
+                      </div>
+                    </div>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-circuit-copper to-circuit-copperLight py-4 text-base font-bold text-circuit-bg hover:shadow-glow hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none mt-8"
-          >
-            TIẾP TỤC BƯỚC XÁC NHẬN
-          </button>
-        </form>
+                    {/* Thông tin tài khoản */}
+                    <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/5 p-4 space-y-3">
+                      <p className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-semibold">Thông tin chuyển khoản</p>
+                      {([
+                        { label: "Ngân hàng", value: bankId },
+                        { label: "Số tài khoản", value: bankAccountNo },
+                        { label: "Chủ tài khoản", value: bankAccountName },
+                        { label: "Số tiền", value: formatVND(finalTotal) },
+                        { label: "Nội dung", value: "Thanh toan don hang" },
+                      ] as { label: string; value: string }[]).map(({ label, value }) => (
+                        <div key={label} className="flex items-center justify-between gap-4">
+                          <span className="text-xs text-circuit-muted shrink-0">{label}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-circuit-text text-right">{value}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(value);
+                                setCopied(true);
+                                setTimeout(() => setCopied(false), 2000);
+                              }}
+                              className="p-1 rounded text-circuit-muted hover:text-emerald-400 transition-colors"
+                            >
+                              {copied ? <CheckCheck size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="rounded-lg bg-amber-400/10 border border-amber-400/30 px-4 py-3">
+                      <p className="text-xs text-amber-300">
+                        ⚠️ Sau khi chuyển khoản, đơn hàng sẽ được xác nhận trong vòng <strong>15–30 phút</strong>.
+                        Giữ lại ảnh chuyển khoản để xác minh nếu cần.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-circuit-copper to-circuit-copperLight py-4 text-base font-bold text-circuit-bg hover:shadow-glow hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none mt-8"
+            >
+              TIẾP TỤC BƯỚC XÁC NHẬN
+            </button>
+          </form>
         ) : (
           <div className="space-y-6">
             {error && (
@@ -948,13 +944,13 @@ export default function CheckoutPage() {
               <h2 className="text-lg font-display text-circuit-copperLight mb-4 flex items-center gap-2">
                 <Check size={20} /> Xác nhận thông tin đơn hàng
               </h2>
-              
+
               <div className="space-y-4 text-sm">
                 <div className="bg-circuit-bg/50 p-4 rounded-xl border border-circuit-line/60">
                   <p className="font-semibold text-circuit-text mb-2">Thông tin người nhận:</p>
                   <p className="text-circuit-muted">{loggedIn ? "Thành viên (xem trong tài khoản)" : `${guestName} - ${guestPhone}`}</p>
                 </div>
-                
+
                 <div className="bg-circuit-bg/50 p-4 rounded-xl border border-circuit-line/60">
                   <p className="font-semibold text-circuit-text mb-2">Địa chỉ giao hàng & Ghi chú:</p>
                   <p className="text-circuit-muted whitespace-pre-wrap">{address}</p>
@@ -963,7 +959,7 @@ export default function CheckoutPage() {
                 <div className="bg-circuit-bg/50 p-4 rounded-xl border border-circuit-line/60">
                   <p className="font-semibold text-circuit-text mb-2">Phương thức thanh toán:</p>
                   <p className="text-circuit-muted">
-                    {paymentMethod === "installment" 
+                    {paymentMethod === "installment"
                       ? (installmentType === "credit_card" ? `Trả góp thẻ tín dụng (${selectedBank})` : `Mua Trả góp (${selectedFinanceCo})`)
                       : (gateway === "vnpay" ? "Thanh toán qua VNPay" : "Thanh toán tiền mặt khi nhận hàng (COD)")}
                   </p>
@@ -1083,8 +1079,8 @@ export default function CheckoutPage() {
               </button>
             </div>
           </div>
-        
-      )}
+
+        )}
 
       </main>
       <SiteFooter />
