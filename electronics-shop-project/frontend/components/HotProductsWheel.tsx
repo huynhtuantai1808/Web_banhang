@@ -84,13 +84,17 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
 
   return (
     <section className="relative w-full h-[500px] overflow-hidden bg-slate-900 text-white rounded-2xl">
-      {/* Background with active product image (no blur) */}
-      <div className="absolute inset-0 z-0">
+      {/* Background with active product image (faded on the left to prevent sharp edges and text overlap) */}
+      <div className="absolute inset-y-0 right-0 w-3/4 md:w-1/2 z-0 pointer-events-none">
         <div 
-          className="absolute inset-0 bg-[length:auto_80%] bg-right md:bg-right-bottom bg-no-repeat opacity-40 transition-all duration-1000"
-          style={{ backgroundImage: `url(${activeProduct.imageUrl})` }}
+          className="absolute inset-0 bg-contain bg-right bg-no-repeat transition-all duration-1000"
+          style={{ 
+            backgroundImage: `url(${activeProduct.imageUrl})`,
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, transparent 20%, black 70%, black 100%)',
+            maskImage: 'linear-gradient(to right, transparent 0%, transparent 20%, black 70%, black 100%)',
+            opacity: 0.95
+          }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-slate-900/10" />
       </div>
 
       <div className="relative z-10 container mx-auto h-full flex flex-col md:flex-row items-center">
@@ -176,27 +180,26 @@ export default function HotProductsWheel({ products }: HotProductsWheelProps) {
           </div>
         </div>
 
-        {/* Right side: Product Info */}
-        <div className="w-full md:w-1/2 p-6 md:p-12 flex flex-col justify-center">
-          <div className="space-y-6">
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-white font-bold drop-shadow-xl">
+        <div className="w-full md:w-1/2 p-6 md:p-12 flex flex-col justify-center relative z-20">
+          <div className="space-y-6 max-w-xl">
+            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-white font-bold drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">
               {activeProduct.name}
             </h2>
-            <div className="text-gray-200 text-sm md:text-base leading-relaxed max-w-xl line-clamp-3 drop-shadow-md">
+            <div className="text-gray-200 text-sm md:text-base leading-relaxed line-clamp-3 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
               {activeProduct.specHighlight}
             </div>
             <div className="flex items-center gap-4">
               {activeProduct.discountPrice ? (
-                <>
+                <div className="flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-4 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
                   <span className="font-display text-3xl md:text-4xl text-circuit-signal font-bold">
                     {activeProduct.discountPrice.toLocaleString("vi-VN")}₫
                   </span>
-                  <span className="text-gray-400 line-through text-lg">
+                  <span className="text-gray-300 line-through text-lg pb-1">
                     {activeProduct.price.toLocaleString("vi-VN")}₫
                   </span>
-                </>
+                </div>
               ) : (
-                <span className="font-display text-3xl md:text-4xl text-circuit-signal font-bold">
+                <span className="font-display text-3xl md:text-4xl text-circuit-signal font-bold drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
                   {activeProduct.price.toLocaleString("vi-VN")}₫
                 </span>
               )}
