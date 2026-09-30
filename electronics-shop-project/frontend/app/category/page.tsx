@@ -140,10 +140,7 @@ function CategoryPageContent() {
   }
 
   return (
-    <>
-      <SiteHeader />
-      <main className="max-w-7xl mx-auto px-6 pb-10">
-
+    <main className="max-w-7xl mx-auto px-6 pb-10 mt-6">
       <div className="mb-8 flex flex-wrap items-center gap-3">
         <CategoryMenu />
         <div className="flex-1 min-w-[240px]">
@@ -236,15 +233,17 @@ function CategoryPageContent() {
       </div>
 
       </main>
-      <SiteFooter />
-    </>
   );
 }
 
 export default function CategoryPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center p-20"><Loader2 className="animate-spin text-circuit-copper" size={32} /></div>}>
-      <CategoryPageContent />
-    </Suspense>
+    <div className="min-h-screen flex flex-col bg-circuit-bg text-circuit-text">
+      <SiteHeader />
+      <Suspense fallback={<div className="flex-1 flex justify-center p-20"><Loader2 className="animate-spin text-circuit-copper" size={32} /></div>}>
+        <CategoryPageContent />
+      </Suspense>
+      <SiteFooter />
+    </div>
   );
 }

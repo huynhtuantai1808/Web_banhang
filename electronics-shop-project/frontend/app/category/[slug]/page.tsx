@@ -129,9 +129,7 @@ function CategoryPageContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-circuit-bg text-circuit-text">
-      <SiteHeader />
-      <main className="max-w-7xl mx-auto px-6 pb-10">
+    <main className="flex-1 max-w-7xl w-full mx-auto px-6 pb-10 mt-6">
         {/* Breadcrumb kiểu "Laptop > Gaming Laptop" */}
         <div className="flex items-center gap-1.5 text-sm text-circuit-muted mb-6">
           <Link href="/" className="hover:text-circuit-copperLight">Trang chủ</Link>
@@ -217,15 +215,17 @@ function CategoryPageContent() {
           </section>
         </div>
       </main>
-      <SiteFooter />
-    </div>
   );
 }
 
 export default function CategoryPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-circuit-bg text-circuit-copper"><Loader2 className="animate-spin" size={32} /></div>}>
-      <CategoryPageContent />
-    </Suspense>
+    <div className="min-h-screen flex flex-col bg-circuit-bg text-circuit-text">
+      <SiteHeader />
+      <Suspense fallback={<div className="flex-1 flex items-center justify-center bg-circuit-bg text-circuit-copper"><Loader2 className="animate-spin" size={32} /></div>}>
+        <CategoryPageContent />
+      </Suspense>
+      <SiteFooter />
+    </div>
   );
 }
