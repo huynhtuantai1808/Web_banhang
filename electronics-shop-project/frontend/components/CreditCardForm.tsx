@@ -73,7 +73,7 @@ const VN_BIN_MAP: Record<string, { bank: string; logo: string }> = {
   "452201": { bank: "HSBC", logo: "HSBC" },
   // Shinhan
   "970424": { bank: "Shinhan Bank", logo: "SHB" },
-  "431958": { bank: "Shinhan Bank", logo: "SHB" },
+  "451234": { bank: "Shinhan Bank", logo: "SHB" },
   // OCB
   "970448": { bank: "OCB", logo: "OCB" },
   // HDBank
