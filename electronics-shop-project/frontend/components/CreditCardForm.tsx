@@ -23,13 +23,98 @@ interface CreditCardFormProps {
   isLoggedIn?: boolean;
 }
 
-function detectBrand(num: string): "VISA" | "Mastercard" | "JCB" | "" {
+// BIN database cho các ngân hàng Việt Nam phổ biến
+// Key: prefix (4-6 chữ số đầu), Value: { bank, brand }
+const VN_BIN_MAP: Record<string, { bank: string; logo: string }> = {
+  // Vietcombank
+  "415960": { bank: "Vietcombank", logo: "VCB" },
+  "415961": { bank: "Vietcombank", logo: "VCB" },
+  "431956": { bank: "Vietcombank", logo: "VCB" },
+  "454038": { bank: "Vietcombank", logo: "VCB" },
+  "970436": { bank: "Vietcombank", logo: "VCB" },
+  // Vietinbank
+  "970415": { bank: "Vietinbank", logo: "CTG" },
+  "432512": { bank: "Vietinbank", logo: "CTG" },
+  "432513": { bank: "Vietinbank", logo: "CTG" },
+  // BIDV
+  "970418": { bank: "BIDV", logo: "BIDV" },
+  "451981": { bank: "BIDV", logo: "BIDV" },
+  "422249": { bank: "BIDV", logo: "BIDV" },
+  // Agribank
+  "970405": { bank: "Agribank", logo: "AGR" },
+  "436268": { bank: "Agribank", logo: "AGR" },
+  "970401": { bank: "Agribank", logo: "AGR" },
+  // Techcombank
+  "970407": { bank: "Techcombank", logo: "TCB" },
+  "458741": { bank: "Techcombank", logo: "TCB" },
+  "431200": { bank: "Techcombank", logo: "TCB" },
+  // MB Bank
+  "970422": { bank: "MB Bank", logo: "MB" },
+  "451899": { bank: "MB Bank", logo: "MB" },
+  // VPBank
+  "970432": { bank: "VPBank", logo: "VPB" },
+  "441929": { bank: "VPBank", logo: "VPB" },
+  // Sacombank
+  "970403": { bank: "Sacombank", logo: "STB" },
+  "431025": { bank: "Sacombank", logo: "STB" },
+  "431026": { bank: "Sacombank", logo: "STB" },
+  // ACB
+  "970416": { bank: "ACB", logo: "ACB" },
+  "431958": { bank: "ACB", logo: "ACB" },
+  "450678": { bank: "ACB", logo: "ACB" },
+  // TPBank
+  "970423": { bank: "TPBank", logo: "TPB" },
+  "421472": { bank: "TPBank", logo: "TPB" },
+  // VIB
+  "970441": { bank: "VIB", logo: "VIB" },
+  "431198": { bank: "VIB", logo: "VIB" },
+  // HSBC
+  "458763": { bank: "HSBC", logo: "HSBC" },
+  "452201": { bank: "HSBC", logo: "HSBC" },
+  // Shinhan
+  "970424": { bank: "Shinhan Bank", logo: "SHB" },
+  "431958": { bank: "Shinhan Bank", logo: "SHB" },
+  // OCB
+  "970448": { bank: "OCB", logo: "OCB" },
+  // HDBank
+  "970437": { bank: "HDBank", logo: "HDB" },
+  // SHB
+  "970443": { bank: "SHB", logo: "SHB" },
+  // Eximbank
+  "970431": { bank: "Eximbank", logo: "EIB" },
+  // LienVietPostBank
+  "970449": { bank: "LienVietPostBank", logo: "LPB" },
+  // Nam A Bank
+  "970428": { bank: "Nam A Bank", logo: "NAB" },
+};
+
+const ALL_VN_BANKS = [
+  "Vietcombank", "Vietinbank", "BIDV", "Agribank", "Techcombank",
+  "MB Bank", "VPBank", "Sacombank", "ACB", "TPBank", "VIB",
+  "HSBC", "Shinhan Bank", "OCB", "HDBank", "SHB", "Eximbank",
+  "LienVietPostBank", "Nam A Bank", "SeABank", "Bac A Bank", "Ngân hàng khác"
+];
+
+function detectBrand(num: string): "VISA" | "Mastercard" | "JCB" | "UnionPay" | "" {
   const n = num.replace(/\s/g, "");
   if (/^4/.test(n)) return "VISA";
-  if (/^5[1-5]/.test(n)) return "Mastercard";
-  if (/^35/.test(n)) return "JCB";
+  if (/^5[1-5]/.test(n) || /^2[2-7]/.test(n)) return "Mastercard";
+  if (/^35(2[89]|[3-8])/.test(n)) return "JCB";
+  if (/^62/.test(n)) return "UnionPay";
   return "";
 }
+
+function detectBank(num: string): { bank: string; logo: string } | null {
+  const n = num.replace(/\s/g, "");
+  if (n.length < 4) return null;
+  // Thử khớp từ 6 chữ số đến 4 chữ số
+  for (let len = 6; len >= 4; len--) {
+    const prefix = n.slice(0, len);
+    if (VN_BIN_MAP[prefix]) return VN_BIN_MAP[prefix];
+  }
+  return null;
+}
+
 
 function formatCardNumber(val: string) {
   return val.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
@@ -56,6 +141,8 @@ export default function CreditCardForm({ onCardChange, isLoggedIn }: CreditCardF
   const [saveCard, setSaveCard] = useState(false);
   const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
   const [selectedSaved, setSelectedSaved] = useState<string | null>(null);
+  const [detectedBank, setDetectedBank] = useState<{ bank: string; logo: string } | null>(null);
+  const [manualBank, setManualBank] = useState("");
 
   useEffect(() => {
     if (isLoggedIn) setSavedCards(getSavedCards());
@@ -66,8 +153,15 @@ export default function CreditCardForm({ onCardChange, isLoggedIn }: CreditCardF
   }, [card, onCardChange]);
 
   function updateCard(field: keyof CardData, value: string) {
-    setCard((prev) => ({ ...prev, [field]: value }));
+    const updated = { ...card, [field]: value };
+    setCard(updated);
     setSelectedSaved(null);
+    // Auto-detect bank from number
+    if (field === "number") {
+      const found = detectBank(value);
+      setDetectedBank(found);
+      if (found) setManualBank(found.bank);
+    }
   }
 
   function handleSaveCard() {
@@ -108,9 +202,11 @@ export default function CreditCardForm({ onCardChange, isLoggedIn }: CreditCardF
   }
 
   const brand = detectBrand(card.number);
+  const activeBank = detectedBank?.bank || manualBank || "";
   const displayNumber = card.number || "•••• •••• •••• ••••";
   const displayName = card.name || "TÊN CHỦ THẺ";
   const displayExpiry = card.expiry || "MM/YY";
+  const displayBank = activeBank || "NGÂN HÀNG";
 
   return (
     <div className="space-y-6">
@@ -187,13 +283,18 @@ export default function CreditCardForm({ onCardChange, isLoggedIn }: CreditCardF
               />
               <div className="relative h-full p-5 flex flex-col justify-between">
                 <div className="flex items-center justify-between">
-                  {/* Chip */}
-                  <div className="w-10 h-7 rounded-md bg-gradient-to-br from-yellow-300 to-yellow-500 flex items-center justify-center shadow-inner">
-                    <div className="grid grid-cols-2 gap-0.5 p-1">
-                      {[...Array(4)].map((_, i) => (
-                        <div key={i} className="w-1.5 h-1 bg-yellow-700/40 rounded-[1px]" />
-                      ))}
+                  {/* Chip + Bank name */}
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-7 rounded-md bg-gradient-to-br from-yellow-300 to-yellow-500 flex items-center justify-center shadow-inner">
+                      <div className="grid grid-cols-2 gap-0.5 p-1">
+                        {[...Array(4)].map((_, i) => (
+                          <div key={i} className="w-1.5 h-1 bg-yellow-700/40 rounded-[1px]" />
+                        ))}
+                      </div>
                     </div>
+                    {activeBank && (
+                      <span className="text-white/70 text-[10px] font-semibold uppercase tracking-wider">{activeBank}</span>
+                    )}
                   </div>
                   {/* Brand */}
                   <div className="text-right">
@@ -208,6 +309,9 @@ export default function CreditCardForm({ onCardChange, isLoggedIn }: CreditCardF
                     )}
                     {brand === "JCB" && (
                       <span className="text-white font-bold text-lg tracking-wider bg-blue-600 px-2 py-0.5 rounded">JCB</span>
+                    )}
+                    {brand === "UnionPay" && (
+                      <span className="text-white font-bold text-sm tracking-wider bg-red-700 px-2 py-0.5 rounded">UnionPay</span>
                     )}
                     {!brand && <CreditCard size={24} className="text-white/60" />}
                   </div>
@@ -277,6 +381,33 @@ export default function CreditCardForm({ onCardChange, isLoggedIn }: CreditCardF
             maxLength={19}
             className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text font-mono outline-none focus:border-circuit-copper transition-colors focus:shadow-[0_0_10px_rgba(200,127,69,0.15)]"
           />
+        </div>
+
+        {/* Bank detection result + manual selector */}
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-xs font-medium text-circuit-muted">Ngân hàng phát hành</label>
+            {detectedBank && (
+              <span className="flex items-center gap-1 text-[11px] text-emerald-500 font-medium">
+                <Check size={12} /> Tự nhận diện: {detectedBank.bank}
+              </span>
+            )}
+          </div>
+          <select
+            value={manualBank}
+            onChange={(e) => setManualBank(e.target.value)}
+            className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper transition-colors"
+          >
+            <option value="">-- Chọn ngân hàng --</option>
+            {ALL_VN_BANKS.map((b) => (
+              <option key={b} value={b}>{b}</option>
+            ))}
+          </select>
+          {detectedBank && manualBank === detectedBank.bank && (
+            <p className="text-[11px] text-emerald-500/80 mt-1">
+              ✓ Đã xác nhận thẻ từ {detectedBank.bank}
+            </p>
+          )}
         </div>
         <div>
           <label className="block text-xs font-medium text-circuit-muted mb-1.5">Tên chủ thẻ</label>
