@@ -51,7 +51,11 @@ body {
 }
 
 .premium-card {
-  @apply bg-white relative overflow-hidden transition-all duration-300 border border-gray-300 shadow-sm hover:border-circuit-copper/60 hover:shadow-lg;
+  @apply bg-circuit-panel relative overflow-hidden transition-all duration-300 border border-circuit-line shadow-sm hover:shadow-lg;
+}
+
+.premium-card:hover {
+  border-color: color-mix(in srgb, var(--circuit-copper) 60%, transparent);
 }
 
 /* Trace line chạy dọc theo cạnh card khi hover — chi tiết chữ ký của giao diện */
