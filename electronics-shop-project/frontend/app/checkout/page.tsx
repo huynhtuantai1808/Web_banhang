@@ -629,28 +629,17 @@ export default function CheckoutPage() {
 
               {installmentType === "credit_card" && (
                 <div className="mb-6 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-circuit-muted mb-1.5">Ngân hàng</label>
-                      <select
-                        value={selectedBank}
-                        onChange={(e) => setSelectedBank(e.target.value)}
-                        className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
-                      >
-                        {CREDIT_BANKS.map((b) => <option key={b} value={b}>{b}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-circuit-muted mb-1.5">Loại thẻ</label>
-                      <select
-                        value={selectedCardType}
-                        onChange={(e) => setSelectedCardType(e.target.value)}
-                        className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
-                      >
-                        {CARD_TYPES.map((c) => <option key={c} value={c}>{c}</option>)}
-                      </select>
-                    </div>
-                  </div>
+                  {/* Giao diện thẻ 3D */}
+                  <CreditCardForm
+                    isLoggedIn={loggedIn}
+                    onCardChange={(cd) => {
+                      // Loại thẻ từ số thẻ → sync vào selectedCardType
+                      const n = cd.number.replace(/\s/g, "");
+                      if (/^4/.test(n)) setSelectedCardType("VISA");
+                      else if (/^5[1-5]|^2[2-7]/.test(n)) setSelectedCardType("Mastercard");
+                      else if (/^35/.test(n)) setSelectedCardType("JCB");
+                    }}
+                  />
                   <div>
                     <label className="block text-xs font-medium text-circuit-muted mb-1.5">Tỷ lệ trả trước (Thẻ tín dụng)</label>
                     <select
@@ -658,7 +647,7 @@ export default function CheckoutPage() {
                       onChange={(e) => setCreditDownPaymentPct(Number(e.target.value))}
                       className="w-full rounded-xl border border-circuit-line/60 bg-circuit-bg/50 px-4 py-3 text-sm text-circuit-text outline-none focus:border-circuit-copper"
                     >
-                      <option value={0.0}>0%</option>
+                      <option value={0.0}>0% — Không cần trả trước</option>
                       <option value={0.2}>20%</option>
                       <option value={0.3}>30%</option>
                       <option value={0.4}>40%</option>
