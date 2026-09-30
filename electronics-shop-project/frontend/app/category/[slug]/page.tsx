@@ -51,6 +51,7 @@ function CategoryPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [cartMessage, setCartMessage] = useState<string | null>(null);
   const lastSlugRef = useRef(params.slug);
+  const userClearedRef = useRef(false);
 
   useEffect(() => {
     async function load() {
@@ -69,17 +70,20 @@ function CategoryPageContent() {
         setCategory(current);
         const parent = current.parent_id ? allCategoriesData.find((c) => c.id === current.parent_id) : null;
         setParentCategory(parent || null);
-        let currentFilterCat = filters.category;
         if (lastSlugRef.current !== params.slug) {
           lastSlugRef.current = params.slug;
-          currentFilterCat = current.name;
+          userClearedRef.current = false;
           setFilters((prev) => ({ ...prev, category: current.name }));
         }
 
-        if (!currentFilterCat) {
+        if (userClearedRef.current) {
           setProducts([]);
           setLoading(false);
           return;
+        }
+
+        if (!filters.category) {
+          setFilters((prev) => ({ ...prev, category: current.name }));
         }
 
         const data = await listProducts({ category_id: current.id, ...buildFilterParams(filters) });
@@ -99,6 +103,7 @@ function CategoryPageContent() {
     if (category && newFilters.category !== category.name) {
       if (!newFilters.category) {
         // User cleared the category filter, stay on page and show 0 products
+        userClearedRef.current = true;
         setFilters(newFilters);
       } else {
         const targetCat = allCategories.find((c) => c.name === newFilters.category);
