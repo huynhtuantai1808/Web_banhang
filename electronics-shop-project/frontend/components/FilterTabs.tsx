@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown } from "lucide-react";
 import { listBrands, listCategories, CatalogOption, CategoryOption } from "@/lib/services/products";
 
 /**
