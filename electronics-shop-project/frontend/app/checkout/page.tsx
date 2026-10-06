@@ -321,6 +321,7 @@ export default function CheckoutPage() {
           subtotal: subtotal,
           insurance: useInsurance ? Math.round(subtotal * 0.03) : 0,
           shippingFee: shippingFee,
+          deliveryEstimate: deliveryInfo.estimate,
           discount: appliedPromo?.discount ?? 0,
           autoDiscount: autoDiscount,
           paymentMethod: paymentMethod,
@@ -363,6 +364,7 @@ export default function CheckoutPage() {
           subtotal: subtotal,
           insurance: useInsurance ? Math.round(subtotal * 0.03) : 0,
           shippingFee: shippingFee,
+          deliveryEstimate: deliveryInfo.estimate,
           discount: appliedPromo?.discount ?? 0,
           autoDiscount: autoDiscount
         };

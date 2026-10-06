@@ -69,6 +69,13 @@ function OrderResultContent() {
         {info.icon}
         <h1 className="font-display text-2xl text-circuit-text mt-4">{info.title}</h1>
         <p className="text-circuit-muted mt-2">{info.desc}</p>
+        
+        {orderInfo?.deliveryEstimate && (
+          <div className="mt-4 inline-block px-4 py-2 bg-circuit-copper/10 border border-circuit-copper/30 rounded-full text-circuit-copperLight text-sm">
+            <span className="font-semibold">Thời gian giao hàng dự kiến:</span> {orderInfo.deliveryEstimate}
+          </div>
+        )}
+
         {orderCode && (
           <p className="font-mono text-sm text-circuit-copperLight mt-4">Mã đơn hàng: {orderCode}</p>
         )}
@@ -94,7 +101,7 @@ function OrderResultContent() {
               )}
               <div className="flex justify-between text-circuit-muted">
                 <span>Phí vận chuyển:</span>
-                <span className="font-mono">0₫ (Miễn phí)</span>
+                <span className="font-mono">{(orderInfo.shippingFee && orderInfo.shippingFee > 0) ? `${(orderInfo.shippingFee).toLocaleString("vi-VN")}₫` : "0₫ (Miễn phí)"}</span>
               </div>
               <div className="flex justify-between text-circuit-muted">
                 <span>Thuế VAT (10% - đã bao gồm):</span>
