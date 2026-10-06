@@ -151,7 +151,7 @@ async def _create_order_core(
 
     discount_amount = auto_discount + promo_discount
     insurance_fee = getattr(payload, "insurance_fee", 0.0)
-    shipping_fee = 0.0
+    shipping_fee = getattr(payload, "shipping_fee", 0.0)
     final_amount = total_amount - discount_amount + insurance_fee + shipping_fee
 
     is_pre_order = any(p.stock_quantity is not None and p.stock_quantity <= 0 for _, p in cart_rows)
@@ -305,6 +305,7 @@ async def create_guest_order(payload: GuestOrderCreate, request: Request, db: As
         down_payment=payload.down_payment or 0.0,
         promo_code=payload.promo_code,
         insurance_fee=payload.insurance_fee,
+        shipping_fee=payload.shipping_fee,
     )
     order, payment_url = await _create_order_core(db, request, customer.id, cart_rows, order_payload)
 

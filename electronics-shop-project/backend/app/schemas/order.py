@@ -12,6 +12,7 @@ class OrderCreate(BaseModel):
     promo_code: str | None = None      # mã khuyến mãi (tuỳ chọn)
     down_payment: float = 0.0          # Số tiền trả trước
     insurance_fee: float = 0.0         # Phí bảo hiểm điện tử
+    shipping_fee: float = 0.0          # Phí vận chuyển hỏa tốc
 
 
 class OrderItemOut(BaseModel):
@@ -71,4 +72,5 @@ class GuestOrderCreate(BaseModel):
     down_payment: float | None = None
     promo_code: str | None = None
     insurance_fee: float = 0.0
+    shipping_fee: float = 0.0
     items: list[GuestOrderItem]

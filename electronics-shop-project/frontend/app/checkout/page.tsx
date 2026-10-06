@@ -88,6 +88,7 @@ export default function CheckoutPage() {
   const [myPromotions, setMyPromotions] = useState<PromotionOut[]>([]);
   const [autoDiscount, setAutoDiscount] = useState(0);
   const [useInsurance, setUseInsurance] = useState(false);
+  const [useExpressShipping, setUseExpressShipping] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -189,9 +190,32 @@ export default function CheckoutPage() {
     }
   }, [district]);
 
+  function getDeliveryInfo(provinceName: string) {
+    if (!provinceName) return { estimate: "", expressAvailable: false };
+    const name = provinceName.toLowerCase();
+    
+    if (name.includes("hồ chí minh")) {
+      return { estimate: "1 - 2 ngày", expressAvailable: true };
+    }
+    
+    const mienBac = ["hà nội", "hải phòng", "quảng ninh", "hải dương", "hưng yên", "vĩnh phúc", "bắc ninh", "thái nguyên", "bắc giang", "hà nam", "nam định", "thái bình", "ninh bình", "hòa bình", "sơn la", "điện biên", "lai châu", "lào cai", "yên bái", "tuyên quang", "phú thọ", "hà giang", "cao bằng", "bắc kạn", "lạng sơn"];
+    const mienTrung = ["thanh hóa", "nghệ an", "hà tĩnh", "quảng bình", "quảng trị", "thừa thiên huế", "thừa thiên - huế", "huế", "đà nẵng", "quảng nam", "quảng ngãi", "bình định", "phú yên", "khánh hòa", "ninh thuận", "bình thuận", "kon tum", "gia lai", "đắk lắk", "đắk nông", "lâm đồng"];
+    
+    if (mienBac.some(p => name.includes(p))) {
+      return { estimate: "3 - 6 ngày", expressAvailable: false };
+    }
+    if (mienTrung.some(p => name.includes(p))) {
+      return { estimate: "3 - 5 ngày", expressAvailable: false };
+    }
+    // Miền Tây & Đông Nam Bộ
+    return { estimate: "2 - 4 ngày", expressAvailable: false };
+  }
+
+  const deliveryInfo = getDeliveryInfo(province);
   const subtotal = cart?.total_amount ?? 0;
   const insuranceFee = useInsurance ? Math.round(subtotal * 0.03) : 0; // 3% phí bảo hiểm
-  const finalTotal = Math.max(0, subtotal - autoDiscount - (appliedPromo?.discount ?? 0)) + insuranceFee;
+  const shippingFee = (useExpressShipping && deliveryInfo.expressAvailable) ? 50000 : 0;
+  const finalTotal = Math.max(0, subtotal - autoDiscount - (appliedPromo?.discount ?? 0)) + insuranceFee + shippingFee;
 
   // Tất cả sản phẩm trong giỏ có cho phép trả góp không — nếu 1 sản phẩm không hỗ trợ, ẩn lựa chọn này.
   const allEligibleForInstallment = cart ? cart.items.every((i) => i.is_installment_eligible) : false;
@@ -284,7 +308,8 @@ export default function CheckoutPage() {
           installmentType: paymentMethod === "installment" ? installmentType : undefined,
           promoCode: appliedPromo?.code,
           downPayment: down_payment,
-          insuranceFee: useInsurance ? Math.round(subtotal * 0.03) : 0
+          insuranceFee: useInsurance ? Math.round(subtotal * 0.03) : 0,
+          shippingFee: shippingFee
         });
         if (paymentMethod === "full" && gateway === "vnpay" && result.payment_url) {
           window.location.href = result.payment_url;
@@ -295,6 +320,7 @@ export default function CheckoutPage() {
           total: finalTotal,
           subtotal: subtotal,
           insurance: useInsurance ? Math.round(subtotal * 0.03) : 0,
+          shippingFee: shippingFee,
           discount: appliedPromo?.discount ?? 0,
           autoDiscount: autoDiscount,
           paymentMethod: paymentMethod,
@@ -328,6 +354,7 @@ export default function CheckoutPage() {
           gateway: paymentMethod === "installment" ? (installmentType === "credit_card" ? "credit_card" : "finance") : gateway,
           promoCode: promoInput.trim() || undefined,
           insuranceFee: useInsurance ? Math.round(subtotal * 0.03) : 0,
+          shippingFee: shippingFee,
           items: guestItems.map((i) => ({ productId: i.productId, quantity: i.quantity })),
         });
         const orderInfo = {
@@ -335,6 +362,7 @@ export default function CheckoutPage() {
           total: finalTotal,
           subtotal: subtotal,
           insurance: useInsurance ? Math.round(subtotal * 0.03) : 0,
+          shippingFee: shippingFee,
           discount: appliedPromo?.discount ?? 0,
           autoDiscount: autoDiscount
         };
@@ -516,6 +544,10 @@ export default function CheckoutPage() {
                     <span>Tạm tính</span>
                     <span>{formatVND(subtotal)}</span>
                   </div>
+                  <div className="flex justify-between text-circuit-muted">
+                    <span>Phí vận chuyển</span>
+                    <span>{shippingFee > 0 ? formatVND(shippingFee) : "0đ (Miễn phí)"}</span>
+                  </div>
                   {autoDiscount > 0 && (
                     <div className="flex justify-between text-circuit-signal">
                       <span>Chiết khấu tự động</span>
@@ -526,6 +558,24 @@ export default function CheckoutPage() {
                     <div className="flex justify-between text-circuit-signal">
                       <span>Giảm giá (mã {appliedPromo.code})</span>
                       <span>-{formatVND(appliedPromo.discount)}</span>
+                    </div>
+                  )}
+
+                  {deliveryInfo.estimate && (
+                    <div className="text-sm text-circuit-text py-2 border-t border-circuit-line/30 mt-2">
+                      <span className="block text-circuit-copperLight mb-1">Thời gian giao hàng dự kiến: {deliveryInfo.estimate}</span>
+                      {deliveryInfo.expressAvailable && (
+                        <label className="flex items-center gap-2 cursor-pointer mt-2">
+                          <input
+                            type="checkbox"
+                            checked={useExpressShipping}
+                            onChange={(e) => setUseExpressShipping(e.target.checked)}
+                            className="w-4 h-4 rounded border-circuit-line bg-circuit-bg text-circuit-copper focus:ring-circuit-copper"
+                          />
+                          Ship hỏa tốc nội thành
+                          <span className="ml-auto">{formatVND(50000)}</span>
+                        </label>
+                      )}
                     </div>
                   )}
 

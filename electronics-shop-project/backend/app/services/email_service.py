@@ -197,7 +197,7 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
             {f'<p style="display: flex; justify-content: space-between;"><span>Bảo hiểm điện tử:</span> <strong>{format_vnd(order.insurance_fee)}</strong></p>' if getattr(order, 'insurance_fee', 0) > 0 else ""}
             {f'<p style="display: flex; justify-content: space-between; color: #d70018;"><span>Giảm giá:</span> <strong>-{format_vnd(order.discount_amount)}</strong></p>' if order.discount_amount > 0 else ""}
             <p style="display: flex; justify-content: space-between; border-top: 2px solid #333; padding-top: 10px; margin-top: 10px; font-size: 1.2em; color: #d70018;">
-                <span>Tổng tiền:</span> <strong>{format_vnd(order.final_amount)}</strong>
+                <span>Tổng tiền:</span> <strong>{format_vnd(order.final_amount - getattr(order, 'shipping_fee', 0))}</strong>
             </p>
         </div>
         <div style="clear: both;"></div>
