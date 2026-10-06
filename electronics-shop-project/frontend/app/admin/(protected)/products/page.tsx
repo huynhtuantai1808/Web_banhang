@@ -22,6 +22,12 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  // Filters
+  const [brand, setBrand] = useState("");
+  const [categoryId, setCategoryId] = useState<number | "">("");
+  const [brands, setBrands] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+
   // Pagination states
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -36,12 +42,26 @@ export default function AdminProductsPage() {
 
   const importInputRef = useRef<HTMLInputElement>(null);
 
-  const fetchProducts = useCallback(async (kw?: string, p = page, pSize = pageSize) => {
+  // Load filter options
+  useEffect(() => {
+    import("@/lib/services/products").then((m) => {
+      Promise.all([m.listBrands(), m.listCategories()])
+        .then(([b, c]) => {
+          setBrands(b);
+          setCategories(c);
+        })
+        .catch(console.error);
+    });
+  }, []);
+
+  const fetchProducts = useCallback(async (kw?: string, b?: string, c?: number | "", p = page, pSize = pageSize) => {
     setLoading(true);
     setLoadError(null);
     try {
       const params: any = { page: p, page_size: pSize };
       if (kw) params.keyword = kw;
+      if (b) params.brand = b;
+      if (c) params.category_id = c;
       
       const data = await listProducts(params);
       setProducts(data.items);
@@ -55,12 +75,22 @@ export default function AdminProductsPage() {
   }, [page, pageSize]);
 
   useEffect(() => {
-    fetchProducts(keyword, page, pageSize);
-  }, [fetchProducts, page, pageSize]); // Tự động load lại khi chuyển trang/đổi kích thước trang
+    fetchProducts(keyword, brand, categoryId, page, pageSize);
+  }, [fetchProducts, page, pageSize, brand, categoryId]); // Tự động load lại khi chuyển trang/đổi kích thước trang
 
   function handleSearch(kw: string) {
     setPage(1); // Reset page khi tìm kiếm
-    fetchProducts(kw, 1, pageSize);
+    fetchProducts(kw, brand, categoryId, 1, pageSize);
+  }
+
+  function handleFilterBrand(b: string) {
+    setBrand(b);
+    setPage(1);
+  }
+
+  function handleFilterCategory(c: number | "") {
+    setCategoryId(c);
+    setPage(1);
   }
 
   function openCreateModal() {
@@ -87,7 +117,7 @@ export default function AdminProductsPage() {
           `Đã nhập ${result.success_count} sản phẩm.` +
           (result.failed_rows?.length ? ` ${result.failed_rows.length} dòng lỗi.` : ""),
       });
-      await fetchProducts(keyword);
+      await fetchProducts(keyword, brand, categoryId);
     } catch (err) {
       setBanner({ type: "error", text: err instanceof ApiError ? err.message : "Import thất bại" });
     } finally {
@@ -162,15 +192,41 @@ export default function AdminProductsPage() {
         {banner?.text}
       </div>
 
-      <div className="flex items-center gap-2 rounded-full border border-circuit-line bg-circuit-panel px-4 py-2 mb-6 max-w-sm">
-        <Search size={16} className="text-circuit-muted" />
-        <input
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSearch(keyword)}
-          placeholder="Tìm theo tên sản phẩm, nhấn Enter..."
-          className="flex-1 bg-transparent outline-none text-sm placeholder:text-circuit-muted"
-        />
+      <div className="flex flex-wrap items-center gap-4 mb-6">
+        <div className="flex items-center gap-2 rounded-full border border-circuit-line bg-circuit-panel px-4 py-2 flex-1 max-w-sm">
+          <Search size={16} className="text-circuit-muted" />
+          <input
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch(keyword)}
+            placeholder="Tìm theo tên sản phẩm, nhấn Enter..."
+            className="flex-1 bg-transparent outline-none text-sm placeholder:text-circuit-muted"
+          />
+        </div>
+
+        <select
+          value={brand}
+          onChange={(e) => handleFilterBrand(e.target.value)}
+          className="rounded-full border border-circuit-line bg-circuit-panel px-4 py-2 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+        >
+          <option value="">— Tất cả hãng —</option>
+          {brands.map((b) => (
+            <option key={b.id} value={b.name}>{b.name}</option>
+          ))}
+        </select>
+
+        <select
+          value={categoryId}
+          onChange={(e) => handleFilterCategory(e.target.value ? Number(e.target.value) : "")}
+          className="rounded-full border border-circuit-line bg-circuit-panel px-4 py-2 text-sm text-circuit-text outline-none focus:border-circuit-copper"
+        >
+          <option value="">— Tất cả danh mục —</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.parent_id ? `    ${c.name}` : c.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className={`mb-6 rounded-md border border-red-400/40 bg-red-400/10 px-4 py-3 text-sm text-red-300 ${!loadError && "hidden"}`}>

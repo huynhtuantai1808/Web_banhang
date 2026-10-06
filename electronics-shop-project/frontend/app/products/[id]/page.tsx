@@ -424,13 +424,13 @@ export default function ProductDetailPage() {
             const formatPrice = (p: number) => p.toLocaleString("vi-VN") + "đ";
 
             // Target keys to use as main specification variations (e.g., Storage, RAM)
-            const targetSpecKeys = ['Dung lượng', 'RAM', 'Ổ cứng', 'ROM', 'Size'];
+            const targetSpecKeysLower = ['dung lượng', 'ram', 'ổ cứng', 'rom', 'size'];
             
-            // Find which spec keys are actually used and have variations
-            const activeSpecKeys = targetSpecKeys.filter(key => {
-              const values = new Set(allVariants.map(v => v.specification?.[key]).filter(Boolean));
-              return values.size > 0; 
-            });
+            // Collect all unique keys from all variations
+            const allSpecKeys = Array.from(new Set(allVariants.flatMap(v => Object.keys(v.specification || {}))));
+            
+            // Find which actual keys in the data match our target keys (case-insensitive)
+            const activeSpecKeys = allSpecKeys.filter(key => targetSpecKeysLower.includes(key.toLowerCase()));
 
             // Get unique colors with their primary image and price (for the current selected spec)
             const availableColors = Array.from(new Set(allVariants.map(v => v.color).filter(Boolean))) as string[];
@@ -468,8 +468,8 @@ export default function ProductDetailPage() {
               <div className="flex flex-col gap-6 mb-6">
                 {/* 1. Specification buttons (e.g., Dung lượng) */}
                 {activeSpecKeys.map(key => {
-                  const uniqueValues = Array.from(new Set(allVariants.map(v => String(v.specification?.[key])).filter(v => v !== 'undefined')));
-                  if (uniqueValues.length <= 1 && !uniqueValues[0]) return null;
+                  const uniqueValues = Array.from(new Set(allVariants.map(v => String(v.specification?.[key])).filter(v => v && v !== 'undefined')));
+                  if (uniqueValues.length === 0) return null;
                   
                   return (
                     <div key={key}>
