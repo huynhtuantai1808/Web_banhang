@@ -39,6 +39,7 @@ export interface CreateOrderInput {
   installmentType?: "credit_card" | "finance";
   promoCode?: string;
   downPayment?: number;
+  insuranceFee?: number;
 }
 
 /** Tạo đơn hàng từ giỏ hàng hiện tại. */
@@ -51,6 +52,7 @@ export async function createOrder(input: CreateOrderInput): Promise<OrderCreateR
     installment_type: input.installmentType,
     promo_code: input.promoCode || undefined,
     down_payment: input.downPayment,
+    insurance_fee: input.insuranceFee,
   });
   return data;
 }
@@ -72,6 +74,7 @@ export interface GuestOrderInput {
   shippingAddress: string;
   gateway?: "cod" | "vnpay" | "credit_card" | "finance" | "bank_transfer";
   promoCode?: string;
+  insuranceFee?: number;
   items: { productId: string; quantity: number }[];
 }
 
@@ -84,6 +87,7 @@ export async function createGuestOrder(input: GuestOrderInput): Promise<OrderCre
     shipping_address: input.shippingAddress,
     payment_gateway: input.gateway ?? "cod",
     promo_code: input.promoCode || undefined,
+    insurance_fee: input.insuranceFee,
     items: input.items.map((i) => ({ product_id: i.productId, quantity: i.quantity })),
   });
   return data;

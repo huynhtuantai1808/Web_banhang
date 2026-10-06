@@ -11,6 +11,7 @@ class OrderCreate(BaseModel):
     installment_type: str | None = None  # "credit_card" | "finance" — mặc định "credit_card"
     promo_code: str | None = None      # mã khuyến mãi (tuỳ chọn)
     down_payment: float = 0.0          # Số tiền trả trước
+    insurance_fee: float = 0.0         # Phí bảo hiểm điện tử
 
 
 class OrderItemOut(BaseModel):
@@ -39,6 +40,8 @@ class OrderOut(BaseModel):
     created_at: datetime
     items: list[OrderItemOut] = []
     promotion_code: str | None = None
+    insurance_fee: float = 0.0
+    shipping_fee: float = 0.0
     has_installment_plan: bool = False
 
     class Config:
@@ -67,4 +70,5 @@ class GuestOrderCreate(BaseModel):
     installment_type: str | None = None
     down_payment: float | None = None
     promo_code: str | None = None
+    insurance_fee: float = 0.0
     items: list[GuestOrderItem]

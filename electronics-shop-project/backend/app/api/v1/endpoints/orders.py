@@ -150,7 +150,9 @@ async def _create_order_core(
             raise HTTPException(status_code=400, detail=str(e))
 
     discount_amount = auto_discount + promo_discount
-    final_amount = total_amount - discount_amount
+    insurance_fee = getattr(payload, "insurance_fee", 0.0)
+    shipping_fee = 0.0
+    final_amount = total_amount - discount_amount + insurance_fee + shipping_fee
 
     is_pre_order = any(p.stock_quantity is not None and p.stock_quantity <= 0 for _, p in cart_rows)
     
@@ -167,6 +169,8 @@ async def _create_order_core(
         promotion_id=promotion.id if promotion else None,
         total_amount=total_amount,
         discount_amount=discount_amount,
+        insurance_fee=insurance_fee,
+        shipping_fee=shipping_fee,
         final_amount=final_amount,
         payment_method=payload.payment_method,
         payment_gateway=payload.payment_gateway,

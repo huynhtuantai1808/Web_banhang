@@ -86,16 +86,42 @@ function OrderResultContent() {
               ))}
             </div>
             <div className="space-y-1.5 text-sm">
+              {orderInfo.subtotal && (
+                <div className="flex justify-between text-circuit-muted">
+                  <span>Tạm tính:</span>
+                  <span className="font-mono">{(orderInfo.subtotal).toLocaleString("vi-VN")}₫</span>
+                </div>
+              )}
               <div className="flex justify-between text-circuit-muted">
-                <span>Tổng tiền:</span>
-                <span className="font-mono">{(orderInfo.total).toLocaleString("vi-VN")}₫</span>
+                <span>Phí vận chuyển:</span>
+                <span className="font-mono">0₫ (Miễn phí)</span>
               </div>
+              <div className="flex justify-between text-circuit-muted">
+                <span>Thuế VAT (10% - đã bao gồm):</span>
+                <span className="font-mono">{(Math.round((orderInfo.total || 0) * 0.1 / 1.1)).toLocaleString("vi-VN")}₫</span>
+              </div>
+              {orderInfo.insurance > 0 && (
+                <div className="flex justify-between text-circuit-muted">
+                  <span>Bảo hiểm điện tử (3%):</span>
+                  <span className="font-mono">{(orderInfo.insurance).toLocaleString("vi-VN")}₫</span>
+                </div>
+              )}
+              {orderInfo.autoDiscount > 0 && (
+                <div className="flex justify-between text-circuit-signal">
+                  <span>Giảm giá tự động:</span>
+                  <span className="font-mono">-{(orderInfo.autoDiscount).toLocaleString("vi-VN")}₫</span>
+                </div>
+              )}
               {orderInfo.discount > 0 && (
                 <div className="flex justify-between text-circuit-signal">
-                  <span>Khuyến mãi giảm:</span>
+                  <span>Khuyến mãi:</span>
                   <span className="font-mono">-{(orderInfo.discount).toLocaleString("vi-VN")}₫</span>
                 </div>
               )}
+              <div className="flex justify-between font-display text-lg pt-2 border-t border-circuit-line/60">
+                <span>Tổng tiền:</span>
+                <span className="font-mono text-circuit-signal">{(orderInfo.total).toLocaleString("vi-VN")}₫</span>
+              </div>
             </div>
             
             {orderInfo.paymentMethod === "installment" && orderInfo.installment && (

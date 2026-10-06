@@ -87,6 +87,7 @@ export default function CheckoutPage() {
   const [promoMessage, setPromoMessage] = useState<string | null>(null);
   const [myPromotions, setMyPromotions] = useState<PromotionOut[]>([]);
   const [autoDiscount, setAutoDiscount] = useState(0);
+  const [useInsurance, setUseInsurance] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -189,7 +190,8 @@ export default function CheckoutPage() {
   }, [district]);
 
   const subtotal = cart?.total_amount ?? 0;
-  const finalTotal = Math.max(0, subtotal - autoDiscount - (appliedPromo?.discount ?? 0));
+  const insuranceFee = useInsurance ? Math.round(subtotal * 0.03) : 0; // 3% phí bảo hiểm
+  const finalTotal = Math.max(0, subtotal - autoDiscount - (appliedPromo?.discount ?? 0)) + insuranceFee;
 
   // Tất cả sản phẩm trong giỏ có cho phép trả góp không — nếu 1 sản phẩm không hỗ trợ, ẩn lựa chọn này.
   const allEligibleForInstallment = cart ? cart.items.every((i) => i.is_installment_eligible) : false;
@@ -281,7 +283,8 @@ export default function CheckoutPage() {
           installmentMonths: paymentMethod === "installment" ? installmentMonths : undefined,
           installmentType: paymentMethod === "installment" ? installmentType : undefined,
           promoCode: appliedPromo?.code,
-          downPayment: down_payment
+          downPayment: down_payment,
+          insuranceFee: useInsurance ? Math.round(subtotal * 0.03) : 0
         });
         if (paymentMethod === "full" && gateway === "vnpay" && result.payment_url) {
           window.location.href = result.payment_url;
@@ -290,6 +293,8 @@ export default function CheckoutPage() {
         const orderInfo: any = {
           items: cart?.items.map(i => ({ productId: i.product_id, quantity: i.quantity, name: i.product_name, price: i.product_discount_price ?? i.product_price, image: i.product_image_url })) || [],
           total: finalTotal,
+          subtotal: subtotal,
+          insurance: useInsurance ? Math.round(subtotal * 0.03) : 0,
           discount: appliedPromo?.discount ?? 0,
           autoDiscount: autoDiscount,
           paymentMethod: paymentMethod,
@@ -322,11 +327,14 @@ export default function CheckoutPage() {
           shippingAddress: finalAddress,
           gateway: paymentMethod === "installment" ? (installmentType === "credit_card" ? "credit_card" : "finance") : gateway,
           promoCode: promoInput.trim() || undefined,
+          insuranceFee: useInsurance ? Math.round(subtotal * 0.03) : 0,
           items: guestItems.map((i) => ({ productId: i.productId, quantity: i.quantity })),
         });
         const orderInfo = {
           items: guestItems,
           total: finalTotal,
+          subtotal: subtotal,
+          insurance: useInsurance ? Math.round(subtotal * 0.03) : 0,
           discount: appliedPromo?.discount ?? 0,
           autoDiscount: autoDiscount
         };
@@ -520,7 +528,19 @@ export default function CheckoutPage() {
                       <span>-{formatVND(appliedPromo.discount)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between font-display text-lg text-circuit-text pt-1">
+
+                  <label className="flex items-center gap-2 cursor-pointer text-sm text-circuit-text py-2 border-t border-circuit-line/30 mt-2">
+                    <input
+                      type="checkbox"
+                      checked={useInsurance}
+                      onChange={(e) => setUseInsurance(e.target.checked)}
+                      className="w-4 h-4 rounded border-circuit-line bg-circuit-bg text-circuit-copper focus:ring-circuit-copper"
+                    />
+                    Bảo hiểm thiết bị điện tử (3%)
+                    <span className="ml-auto">{formatVND(Math.round(subtotal * 0.03))}</span>
+                  </label>
+
+                  <div className="flex justify-between font-display text-lg text-circuit-text pt-2 border-t border-circuit-line">
                     <span>Tổng cộng{!loggedIn ? " (tạm tính)" : ""}</span>
                     <span className="text-circuit-signal">{formatVND(finalTotal)}</span>
                   </div>
@@ -925,6 +945,39 @@ export default function CheckoutPage() {
               </div>
             )}
 
+            {/* Đề xuất mua kèm */}
+            <div className="rounded-2xl glass-panel p-6 border-t-4 border-t-circuit-copper/50 space-y-4">
+              <label className="block text-[11px] font-mono text-circuit-copperLight uppercase mb-2 tracking-widest font-semibold flex items-center gap-2">
+                <ShoppingCart size={16} /> Gợi ý phụ kiện mua kèm
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-3 p-3 border border-circuit-line/40 rounded-xl bg-circuit-bg/30 hover:border-circuit-copper/50 transition-colors">
+                  <div className="w-16 h-16 bg-circuit-panel rounded-lg flex items-center justify-center shrink-0">
+                    <span className="text-xs text-circuit-muted">Ốp lưng</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-circuit-text truncate">Ốp lưng chống sốc cao cấp</p>
+                    <p className="text-xs font-mono font-semibold text-circuit-copperLight mt-1">290.000đ</p>
+                  </div>
+                  <button type="button" onClick={() => alert("Sản phẩm đã được thêm vào giỏ hàng")} className="text-[11px] px-3 py-1.5 bg-circuit-copper/10 text-circuit-copper rounded hover:bg-circuit-copper hover:text-circuit-bg transition-colors font-medium">
+                    + Thêm
+                  </button>
+                </div>
+                <div className="flex items-center gap-3 p-3 border border-circuit-line/40 rounded-xl bg-circuit-bg/30 hover:border-circuit-copper/50 transition-colors">
+                  <div className="w-16 h-16 bg-circuit-panel rounded-lg flex items-center justify-center shrink-0">
+                    <span className="text-xs text-circuit-muted">Sạc nhanh</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-circuit-text truncate">Củ sạc nhanh 20W PD</p>
+                    <p className="text-xs font-mono font-semibold text-circuit-copperLight mt-1">450.000đ</p>
+                  </div>
+                  <button type="button" onClick={() => alert("Sản phẩm đã được thêm vào giỏ hàng")} className="text-[11px] px-3 py-1.5 bg-circuit-copper/10 text-circuit-copper rounded hover:bg-circuit-copper hover:text-circuit-bg transition-colors font-medium">
+                    + Thêm
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <button
               type="submit"
               disabled={submitting}
@@ -953,8 +1006,17 @@ export default function CheckoutPage() {
 
                 <div className="bg-circuit-bg/50 p-4 rounded-xl border border-circuit-line/60">
                   <p className="font-semibold text-circuit-text mb-2">Địa chỉ giao hàng & Ghi chú:</p>
-                  <p className="text-circuit-muted whitespace-pre-wrap">{address}</p>
+                  <p className="text-circuit-muted whitespace-pre-wrap">{`${street.trim()}, ${ward}, ${district}, ${province}`}</p>
                 </div>
+
+                {requireVAT && (
+                  <div className="bg-circuit-bg/50 p-4 rounded-xl border border-circuit-line/60">
+                    <p className="font-semibold text-circuit-text mb-2">Thông tin xuất hóa đơn (VAT):</p>
+                    <p className="text-circuit-muted">Công ty: {vatCompany.trim()}</p>
+                    <p className="text-circuit-muted">MST: {vatTaxCode.trim()}</p>
+                    <p className="text-circuit-muted">Địa chỉ: {vatAddress.trim()}</p>
+                  </div>
+                )}
 
                 <div className="bg-circuit-bg/50 p-4 rounded-xl border border-circuit-line/60">
                   <p className="font-semibold text-circuit-text mb-2">Phương thức thanh toán:</p>
@@ -986,6 +1048,20 @@ export default function CheckoutPage() {
                     <span>Tạm tính:</span>
                     <span>{formatVND(subtotal)}</span>
                   </div>
+                  <div className="flex justify-between text-circuit-muted">
+                    <span>Phí vận chuyển:</span>
+                    <span>0đ (Miễn phí)</span>
+                  </div>
+                  <div className="flex justify-between text-circuit-muted">
+                    <span>Thuế VAT (10% - đã bao gồm):</span>
+                    <span>{formatVND(Math.round(finalTotal * 0.1 / 1.1))}</span>
+                  </div>
+                  {useInsurance && (
+                    <div className="flex justify-between text-circuit-muted">
+                      <span>Bảo hiểm điện tử (3%):</span>
+                      <span>{formatVND(Math.round(subtotal * 0.03))}</span>
+                    </div>
+                  )}
                   {autoDiscount > 0 && (
                     <div className="flex justify-between text-circuit-signal">
                       <span>Giảm giá tự động:</span>

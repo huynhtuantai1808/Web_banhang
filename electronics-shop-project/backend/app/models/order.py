@@ -15,6 +15,8 @@ class Order(Base):
     promotion_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("promotions.id"))
     total_amount: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
     discount_amount: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    insurance_fee: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    shipping_fee: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
     final_amount: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
     payment_method: Mapped[str] = mapped_column(String(20), default="full")  # full | installment
     payment_gateway: Mapped[str] = mapped_column(String(20), default="cod")  # cod | vnpay
