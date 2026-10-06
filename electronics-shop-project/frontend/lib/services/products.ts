@@ -22,6 +22,8 @@ export interface ProductOut {
   review_count?: number | null;
   stock_quantity?: number | null;
   is_hot?: boolean;
+  group_code?: string | null;
+  variations?: ProductOut[];
 }
 
 export interface ProductInput {
@@ -43,6 +45,7 @@ export interface ProductInput {
   stock_quantity?: number;
   is_installment_eligible?: boolean;
   is_hot?: boolean;
+  group_code?: string;
 }
 
 export interface ProductFilters {

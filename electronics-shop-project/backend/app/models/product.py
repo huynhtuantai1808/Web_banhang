@@ -34,6 +34,7 @@ class Product(Base):
     video_url: Mapped[str | None] = mapped_column(String(500))     # link YouTube/video embed
     brand_id: Mapped[int | None] = mapped_column(ForeignKey("brands.id"))
     category_id: Mapped[int | None] = mapped_column(ForeignKey("categories.id"))
+    group_code: Mapped[str | None] = mapped_column(String(100), index=True)
     color: Mapped[str | None] = mapped_column(String(50))
     material: Mapped[str | None] = mapped_column(String(100))
     size_dimension: Mapped[str | None] = mapped_column(String(100))

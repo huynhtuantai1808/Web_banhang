@@ -291,7 +291,7 @@ export default function ProductFormModal({
         {/* ── Tab: Thông tin ── */}
         {activeTab === "info" && (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <Field label="Mã sản phẩm *">
                 <input required disabled={isEditing} value={form.product_code}
                   onChange={(e) => update("product_code", e.target.value)} className="input" placeholder="SP000123" />
@@ -299,6 +299,10 @@ export default function ProductFormModal({
               <Field label="Tên sản phẩm *">
                 <input required value={form.name}
                   onChange={(e) => update("name", e.target.value)} className="input" placeholder="iPhone 16 Pro Max 256GB" />
+              </Field>
+              <Field label="Mã nhóm (Tùy chọn)">
+                <input value={form.group_code || ""}
+                  onChange={(e) => update("group_code", e.target.value)} className="input" placeholder="VD: IPHONE-16-PRO" />
               </Field>
             </div>
 

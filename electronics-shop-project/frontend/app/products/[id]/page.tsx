@@ -415,23 +415,91 @@ export default function ProductDetailPage() {
             </div>
           )}
 
-          {/* Color / Size */}
-          {(product.color || product.size_dimension) && (
-            <div className="flex gap-4 mb-5">
-              {product.color && (
-                <div className="text-sm">
-                  <span className="text-circuit-muted font-mono text-xs uppercase">Màu: </span>
-                  <span className="text-circuit-text">{product.color}</span>
-                </div>
-              )}
-              {product.size_dimension && (
-                <div className="text-sm">
-                  <span className="text-circuit-muted font-mono text-xs uppercase">Kích thước: </span>
-                  <span className="text-circuit-text">{product.size_dimension}</span>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Color & Dynamic Specs (Variations) */}
+          {(() => {
+            const allVariants = [product, ...(product.variations || [])];
+            
+            // Collect unique colors
+            const availableColors = Array.from(new Set(allVariants.map(v => v.color).filter(Boolean))) as string[];
+            
+            // Target specific keys from specification for variations based on product type
+            const targetSpecKeys = ['Dung lượng', 'RAM', 'Ổ cứng', 'ROM', 'Size'];
+            const activeSpecKeys = targetSpecKeys.filter(key => {
+              const values = new Set(allVariants.map(v => v.specification?.[key]).filter(Boolean));
+              return values.size > 0; 
+            });
+
+            const navigateToVariant = (newColor: string | null | undefined, specKey: string, specValue: any) => {
+              // Build target criteria
+              const targetColor = newColor === undefined ? product.color : newColor;
+              const targetSpecs = { ...product.specification };
+              if (specKey && specValue) {
+                targetSpecs[specKey] = specValue;
+              }
+              
+              // Find matching variant
+              const match = allVariants.find(v => {
+                const colorMatch = targetColor ? v.color === targetColor : true;
+                let specsMatch = true;
+                if (specKey) {
+                  specsMatch = v.specification?.[specKey] === specValue;
+                }
+                return colorMatch && specsMatch;
+              });
+
+              if (match && match.id !== product.id) {
+                router.replace(`/products/${match.id}`);
+              }
+            };
+
+            return (
+              <div className="flex flex-col gap-3 mb-5">
+                {availableColors.length > 0 && (
+                  <div>
+                    <span className="text-circuit-muted font-mono text-xs uppercase block mb-1">Màu sắc: </span>
+                    <div className="flex flex-wrap gap-2">
+                      {availableColors.map(color => {
+                        const isActive = product.color === color;
+                        return (
+                          <button
+                            key={color}
+                            onClick={() => navigateToVariant(color, '', null)}
+                            className={`px-3 py-1 text-sm border rounded ${isActive ? 'border-circuit-copper bg-circuit-copper/10 text-circuit-copperLight' : 'border-circuit-line text-circuit-muted hover:border-circuit-copper/50'}`}
+                          >
+                            {color}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                
+                {activeSpecKeys.map(key => {
+                  const values = Array.from(new Set(allVariants.map(v => String(v.specification?.[key])).filter(v => v !== 'undefined')));
+                  if (values.length <= 1 && !values[0]) return null; // Skip if no valid values
+                  return (
+                    <div key={key}>
+                      <span className="text-circuit-muted font-mono text-xs uppercase block mb-1">{key}: </span>
+                      <div className="flex flex-wrap gap-2">
+                        {values.map(val => {
+                          const isActive = String(product.specification?.[key]) === val;
+                          return (
+                            <button
+                              key={val}
+                              onClick={() => navigateToVariant(undefined, key, val)}
+                              className={`px-3 py-1 text-sm border rounded ${isActive ? 'border-circuit-copper bg-circuit-copper/10 text-circuit-copperLight' : 'border-circuit-line text-circuit-muted hover:border-circuit-copper/50'}`}
+                            >
+                              {val}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           {cartError && (
             <div className="mb-3 rounded-md border border-red-400/40 bg-red-400/10 px-3 py-2 text-sm text-red-300">

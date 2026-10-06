@@ -12,6 +12,7 @@ class ProductCreate(BaseModel):
     brand_id: int | None = None
     category: str | None = None
     category_id: int | None = None
+    group_code: str | None = None
     color: str | None = None
     material: str | None = None
     size_dimension: str | None = None
@@ -32,6 +33,7 @@ class ProductOut(BaseModel):
     video_url: str | None = None
     brand: str | None = None
     category: str | None = None
+    group_code: str | None = None
     color: str | None = None
     material: str | None = None
     size_dimension: str | None = None
@@ -49,6 +51,8 @@ class ProductOut(BaseModel):
     class Config:
         from_attributes = True
 
+class ProductDetailOut(ProductOut):
+    variations: list[ProductOut] = []
 
 class ReviewCreate(BaseModel):
     rating: int

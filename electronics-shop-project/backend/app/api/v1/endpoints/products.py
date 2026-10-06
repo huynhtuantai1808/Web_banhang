@@ -7,7 +7,7 @@ from app.db.session import get_db
 from app.models.product import Product, Brand, Category, ProductImage
 from app.models.review import ProductReview
 from app.models.customer import Customer
-from app.schemas.product import ProductCreate, ProductOut, ReviewCreate, ReviewOut
+from app.schemas.product import ProductCreate, ProductOut, ProductDetailOut, ReviewCreate, ReviewOut
 from app.core.security import require_permission, require_customer, optional_customer
 from app.services.catalog_service import (
     get_or_create_brand, get_or_create_category, get_brand_name, get_category_name,
@@ -54,6 +54,7 @@ async def _row_to_out(
         video_url=product.video_url,
         brand=brand_name,
         category=category_name,
+        group_code=product.group_code,
         color=product.color,
         material=product.material,
         size_dimension=product.size_dimension,
@@ -191,7 +192,7 @@ async def list_products(
     }
 
 
-@router.get("/{product_id}", response_model=ProductOut)
+@router.get("/{product_id}", response_model=ProductDetailOut)
 async def get_product(product_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     stmt = _base_query().where(Product.id == product_id)
     result = await db.execute(stmt)
@@ -199,7 +200,18 @@ async def get_product(product_id: uuid.UUID, db: AsyncSession = Depends(get_db))
     if not row:
         raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm")
     p, b, c, img = row
-    return await _row_to_out(db, p, b, c, img)
+    out = await _row_to_out(db, p, b, c, img)
+    
+    variations = []
+    if p.group_code:
+        var_stmt = _base_query().where(and_(Product.group_code == p.group_code, Product.status == 'active'))
+        var_res = await db.execute(var_stmt)
+        for vp, vb, vc, vimg in var_res.all():
+            if vp.id != p.id:
+                var_out = await _row_to_out(db, vp, vb, vc, vimg)
+                variations.append(var_out)
+                
+    return ProductDetailOut(**out.model_dump(), variations=variations)
 
 
 @router.post("", response_model=ProductOut, status_code=201)
@@ -227,6 +239,7 @@ async def create_product(
         video_url=payload.video_url,
         brand_id=brand_id,
         category_id=category_id,
+        group_code=payload.group_code,
         color=payload.color,
         material=payload.material,
         size_dimension=payload.size_dimension,
@@ -272,6 +285,7 @@ async def update_product(
     product.video_url = payload.video_url
     product.brand_id = brand_id
     product.category_id = category_id
+    product.group_code = payload.group_code
     product.color = payload.color
     product.material = payload.material
     product.size_dimension = payload.size_dimension
