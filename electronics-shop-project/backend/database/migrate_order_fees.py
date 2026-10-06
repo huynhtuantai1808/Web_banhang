@@ -6,10 +6,10 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy import text
-from app.db.base import async_engine
+from app.db.session import engine
 
 async def migrate():
-    async with async_engine.begin() as conn:
+    async with engine.begin() as conn:
         print("Checking/Adding insurance_fee and shipping_fee columns to orders table...")
         
         # Check if column exists
