@@ -473,6 +473,7 @@ export default function ProductDetailPage() {
                   
                   return (
                     <div key={key}>
+                      <span className="text-[17px] text-circuit-text mb-3 block">Chọn {key.toLowerCase()}</span>
                       <div className="flex flex-wrap gap-3">
                         {uniqueValues.map(val => {
                           const isActive = String(product.specification?.[key]) === val;
