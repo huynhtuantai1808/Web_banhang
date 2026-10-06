@@ -4,11 +4,11 @@ from sqlalchemy import text
 
 sys.path.append('.')
 
-from app.db.session import async_engine
+from app.db.session import engine
 
 async def migrate():
     print("Starting migration: add group_code to products")
-    async with async_engine.begin() as conn:
+    async with engine.begin() as conn:
         # Check if column exists first
         result = await conn.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='products' AND column_name='group_code'"))
         exists = result.scalar()
