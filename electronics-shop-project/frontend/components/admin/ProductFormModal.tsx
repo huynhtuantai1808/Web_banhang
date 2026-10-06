@@ -117,6 +117,7 @@ export default function ProductFormModal({
         stock_quantity: editingProduct.stock_quantity ?? 0,
         is_installment_eligible: editingProduct.is_installment_eligible,
         is_hot: editingProduct.is_hot ?? false,
+        group_code: editingProduct.group_code ?? "",
       });
 
       // Load images
