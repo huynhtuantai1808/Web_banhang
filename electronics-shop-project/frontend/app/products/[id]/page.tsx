@@ -418,27 +418,29 @@ export default function ProductDetailPage() {
           {/* Color & Dynamic Specs (Variations) */}
           {(() => {
             const allVariants = [product, ...(product.variations || [])];
+            if (allVariants.length <= 1) return null; // No variations to show
             
-            // Collect unique colors
-            const availableColors = Array.from(new Set(allVariants.map(v => v.color).filter(Boolean))) as string[];
-            
-            // Target specific keys from specification for variations based on product type
+            // Format price helper
+            const formatPrice = (p: number) => p.toLocaleString("vi-VN") + "đ";
+
+            // Target keys to use as main specification variations (e.g., Storage, RAM)
             const targetSpecKeys = ['Dung lượng', 'RAM', 'Ổ cứng', 'ROM', 'Size'];
+            
+            // Find which spec keys are actually used and have variations
             const activeSpecKeys = targetSpecKeys.filter(key => {
               const values = new Set(allVariants.map(v => v.specification?.[key]).filter(Boolean));
               return values.size > 0; 
             });
 
+            // Get unique colors with their primary image and price (for the current selected spec)
+            const availableColors = Array.from(new Set(allVariants.map(v => v.color).filter(Boolean))) as string[];
+
             const navigateToVariant = (newColor: string | null | undefined, specKey: string, specValue: any) => {
-              // Build target criteria
+              // We want to find the best match variant
               const targetColor = newColor === undefined ? product.color : newColor;
-              const targetSpecs = { ...product.specification };
-              if (specKey && specValue) {
-                targetSpecs[specKey] = specValue;
-              }
               
-              // Find matching variant
-              const match = allVariants.find(v => {
+              // We want to keep other specs the same if possible
+              let match = allVariants.find(v => {
                 const colorMatch = targetColor ? v.color === targetColor : true;
                 let specsMatch = true;
                 if (specKey) {
@@ -447,49 +449,55 @@ export default function ProductDetailPage() {
                 return colorMatch && specsMatch;
               });
 
+              // Fallback: if exact match not found (e.g. this color doesn't have this capacity),
+              // just find any variant that matches the primary change
+              if (!match) {
+                if (newColor !== undefined) {
+                  match = allVariants.find(v => v.color === newColor);
+                } else if (specKey) {
+                  match = allVariants.find(v => v.specification?.[specKey] === specValue);
+                }
+              }
+
               if (match && match.id !== product.id) {
                 router.replace(`/products/${match.id}`);
               }
             };
 
             return (
-              <div className="flex flex-col gap-3 mb-5">
-                {availableColors.length > 0 && (
-                  <div>
-                    <span className="text-circuit-muted font-mono text-xs uppercase block mb-1">Màu sắc: </span>
-                    <div className="flex flex-wrap gap-2">
-                      {availableColors.map(color => {
-                        const isActive = product.color === color;
-                        return (
-                          <button
-                            key={color}
-                            onClick={() => navigateToVariant(color, '', null)}
-                            className={`px-3 py-1 text-sm border rounded ${isActive ? 'border-circuit-copper bg-circuit-copper/10 text-circuit-copperLight' : 'border-circuit-line text-circuit-muted hover:border-circuit-copper/50'}`}
-                          >
-                            {color}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                
+              <div className="flex flex-col gap-6 mb-6">
+                {/* 1. Specification buttons (e.g., Dung lượng) */}
                 {activeSpecKeys.map(key => {
-                  const values = Array.from(new Set(allVariants.map(v => String(v.specification?.[key])).filter(v => v !== 'undefined')));
-                  if (values.length <= 1 && !values[0]) return null; // Skip if no valid values
+                  const uniqueValues = Array.from(new Set(allVariants.map(v => String(v.specification?.[key])).filter(v => v !== 'undefined')));
+                  if (uniqueValues.length <= 1 && !uniqueValues[0]) return null;
+                  
                   return (
                     <div key={key}>
-                      <span className="text-circuit-muted font-mono text-xs uppercase block mb-1">{key}: </span>
-                      <div className="flex flex-wrap gap-2">
-                        {values.map(val => {
+                      <div className="flex flex-wrap gap-3">
+                        {uniqueValues.map(val => {
                           const isActive = String(product.specification?.[key]) === val;
+                          // Find price for this spec (preferably keeping current color)
+                          let matchingVariant = allVariants.find(v => v.color === product.color && String(v.specification?.[key]) === val);
+                          if (!matchingVariant) matchingVariant = allVariants.find(v => String(v.specification?.[key]) === val);
+                          const displayPrice = matchingVariant ? (matchingVariant.discount_price || matchingVariant.price) : 0;
+                          
                           return (
                             <button
                               key={val}
                               onClick={() => navigateToVariant(undefined, key, val)}
-                              className={`px-3 py-1 text-sm border rounded ${isActive ? 'border-circuit-copper bg-circuit-copper/10 text-circuit-copperLight' : 'border-circuit-line text-circuit-muted hover:border-circuit-copper/50'}`}
+                              className={`relative overflow-hidden flex flex-col items-center justify-center px-4 py-2 min-w-[120px] rounded-md border transition-all ${
+                                isActive 
+                                ? 'border-[#d70018] bg-white text-[#d70018]' 
+                                : 'border-circuit-line bg-white text-circuit-text hover:border-gray-400'
+                              }`}
                             >
-                              {val}
+                              <span className="text-[15px] font-semibold">{val}</span>
+                              <span className="text-[13px]">{formatPrice(displayPrice)}</span>
+                              {isActive && (
+                                <div className="absolute top-0 right-0 w-6 h-6 bg-[#d70018] text-white flex items-start justify-end rounded-bl-xl">
+                                  <Check size={14} className="mr-0.5 mt-0.5" />
+                                </div>
+                              )}
                             </button>
                           );
                         })}
@@ -497,6 +505,50 @@ export default function ProductDetailPage() {
                     </div>
                   );
                 })}
+
+                {/* 2. Color buttons */}
+                {availableColors.length > 0 && (
+                  <div>
+                    <span className="text-[17px] text-circuit-text mb-3 block">Màu sắc</span>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {availableColors.map(color => {
+                        const isActive = product.color === color;
+                        // Find price for this color (keeping current specs if possible)
+                        // This allows showing different prices for different colors
+                        let matchingVariant = allVariants.find(v => v.color === color && JSON.stringify(v.specification) === JSON.stringify(product.specification));
+                        if (!matchingVariant) matchingVariant = allVariants.find(v => v.color === color);
+                        const displayPrice = matchingVariant ? (matchingVariant.discount_price || matchingVariant.price) : 0;
+                        const thumbUrl = matchingVariant?.primary_image_url ? getMediaUrl(matchingVariant.primary_image_url) : "/placeholder-product.svg";
+
+                        return (
+                          <button
+                            key={color}
+                            onClick={() => navigateToVariant(color, '', null)}
+                            className={`relative overflow-hidden flex items-center gap-3 px-3 py-2 rounded-md border bg-white transition-all ${
+                              isActive 
+                              ? 'border-[#d70018] text-[#d70018]' 
+                              : 'border-circuit-line text-circuit-text hover:border-gray-400'
+                            }`}
+                          >
+                            <div className="w-10 h-10 shrink-0">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={thumbUrl} alt={color} className="w-full h-full object-contain" />
+                            </div>
+                            <div className="flex flex-col items-start text-left">
+                              <span className="text-[14px] font-medium leading-tight mb-1">{color}</span>
+                              <span className="text-[13px] leading-tight">{formatPrice(displayPrice)}</span>
+                            </div>
+                            {isActive && (
+                              <div className="absolute top-0 right-0 w-6 h-6 bg-[#d70018] text-white flex items-start justify-end rounded-bl-xl">
+                                <Check size={14} className="mr-0.5 mt-0.5" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })()}
