@@ -42,11 +42,13 @@ export default function ProductFormModal({
   onClose,
   onSaved,
   editingProduct,
+  duplicateProduct,
 }: {
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
   editingProduct?: ProductOut | null;
+  duplicateProduct?: ProductOut | null;
 }) {
   const [form, setForm] = useState<ProductInput>(EMPTY_FORM);
   const [specRows, setSpecRows] = useState<SpecEntry[]>([emptySpec()]);
@@ -83,9 +85,12 @@ export default function ProductFormModal({
   useEffect(() => {
     if (!open) return;
     setActiveTab("info");
-    if (editingProduct) {
+    
+    const sourceProduct = editingProduct || duplicateProduct;
+    
+    if (sourceProduct) {
       // Populate specification rows
-      const specs = editingProduct.specification;
+      const specs = sourceProduct.specification;
       let rows: SpecEntry[];
       if (specs && typeof specs === "object") {
         rows = Object.entries(specs as Record<string, unknown>).map(([k, v]) => ({
@@ -99,38 +104,43 @@ export default function ProductFormModal({
       setSpecRows(rows);
 
       setForm({
-        product_code: editingProduct.product_code,
-        name: editingProduct.name,
-        description: editingProduct.description ?? "",
-        long_description: editingProduct.long_description ?? "",
-        video_url: editingProduct.video_url ?? "",
-        brand: editingProduct.brand ?? "",
+        product_code: duplicateProduct ? `${sourceProduct.product_code}-COPY` : sourceProduct.product_code,
+        name: sourceProduct.name,
+        description: sourceProduct.description ?? "",
+        long_description: sourceProduct.long_description ?? "",
+        video_url: sourceProduct.video_url ?? "",
+        brand: sourceProduct.brand ?? "",
         brand_id: undefined,
-        category: editingProduct.category ?? "",
+        category: sourceProduct.category ?? "",
         category_id: undefined,
-        color: editingProduct.color ?? "",
-        material: editingProduct.material ?? "",
-        size_dimension: editingProduct.size_dimension ?? "",
+        color: sourceProduct.color ?? "",
+        material: sourceProduct.material ?? "",
+        size_dimension: sourceProduct.size_dimension ?? "",
         specification: undefined,
-        price: editingProduct.price,
-        discount_price: editingProduct.discount_price ?? undefined,
-        stock_quantity: editingProduct.stock_quantity ?? 0,
-        is_installment_eligible: editingProduct.is_installment_eligible,
-        is_hot: editingProduct.is_hot ?? false,
-        group_code: editingProduct.group_code ?? "",
+        price: sourceProduct.price,
+        discount_price: sourceProduct.discount_price ?? undefined,
+        stock_quantity: sourceProduct.stock_quantity ?? 0,
+        is_installment_eligible: sourceProduct.is_installment_eligible,
+        is_hot: sourceProduct.is_hot ?? false,
+        group_code: sourceProduct.group_code ?? "",
       });
 
-      // Load images
-      listProductImages(editingProduct.id)
-        .then(setImages)
-        .catch(() => setImages([]));
+      if (editingProduct) {
+        // Load images only when editing
+        listProductImages(editingProduct.id)
+          .then(setImages)
+          .catch(() => setImages([]));
 
-      // Load reviews
-      setLoadingReviews(true);
-      getProductReviews(editingProduct.id)
-        .then(setReviews)
-        .catch(() => setReviews([]))
-        .finally(() => setLoadingReviews(false));
+        // Load reviews only when editing
+        setLoadingReviews(true);
+        getProductReviews(editingProduct.id)
+          .then(setReviews)
+          .catch(() => setReviews([]))
+          .finally(() => setLoadingReviews(false));
+      } else {
+        setImages([]);
+        setReviews([]);
+      }
     } else {
       setForm(EMPTY_FORM);
       setSpecRows([emptySpec()]);
@@ -138,7 +148,7 @@ export default function ProductFormModal({
       setImages([]);
     }
     setError(null);
-  }, [open, editingProduct]);
+  }, [open, editingProduct, duplicateProduct]);
 
   // Sync spec rows → form.specification before save
   function buildSpecFromRows(rows: SpecEntry[]): Record<string, unknown> | undefined {

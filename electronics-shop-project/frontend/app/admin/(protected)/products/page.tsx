@@ -38,6 +38,7 @@ export default function AdminProductsPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductOut | null>(null);
+  const [duplicateProduct, setDuplicateProduct] = useState<ProductOut | null>(null);
   const [imageManagerFor, setImageManagerFor] = useState<ProductOut | null>(null);
 
   const importInputRef = useRef<HTMLInputElement>(null);
@@ -95,11 +96,19 @@ export default function AdminProductsPage() {
 
   function openCreateModal() {
     setEditingProduct(null);
+    setDuplicateProduct(null);
     setModalOpen(true);
   }
 
   function openEditModal(product: ProductOut) {
     setEditingProduct(product);
+    setDuplicateProduct(null);
+    setModalOpen(true);
+  }
+
+  function openDuplicateModal(product: ProductOut) {
+    setEditingProduct(null);
+    setDuplicateProduct(product);
     setModalOpen(true);
   }
 
@@ -316,6 +325,13 @@ export default function AdminProductsPage() {
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-1.5">
                       <button
+                        onClick={() => openDuplicateModal(p)}
+                        title="Nhân bản sản phẩm"
+                        className="p-2 rounded-lg hover:bg-circuit-line text-circuit-muted hover:text-green-400 transition-colors"
+                      >
+                        <Copy size={16} />
+                      </button>
+                      <button
                         onClick={() => setImageManagerFor(p)}
                         title="Quản lý ảnh"
                         className="p-2 rounded-lg hover:bg-circuit-line text-circuit-muted hover:text-circuit-copperLight transition-colors"
@@ -391,8 +407,9 @@ export default function AdminProductsPage() {
       <ProductFormModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onSaved={() => fetchProducts(keyword)}
+        onSaved={() => fetchProducts(keyword, brand, categoryId)}
         editingProduct={editingProduct}
+        duplicateProduct={duplicateProduct}
       />
 
       <ImageManagerModal
