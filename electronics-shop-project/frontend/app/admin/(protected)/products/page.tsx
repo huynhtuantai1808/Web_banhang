@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Plus, Package, Search, PencilLine, Trash2, Upload, Loader2, RefreshCw, Camera, ChevronLeft, ChevronRight,
+  Plus, Package, Search, PencilLine, Trash2, Upload, Loader2, RefreshCw, Camera, ChevronLeft, ChevronRight, Copy
 } from "lucide-react";
 import {
   listProducts, importProductsFile, deleteProduct, ProductOut,
