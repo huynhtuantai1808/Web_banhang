@@ -185,51 +185,54 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
         installment_html = f"""
         <div style="background-color: #f0f7ff; padding: 15px; margin-bottom: 20px; border-left: 4px solid #0056b3; border-radius: 4px;">
             <h4 style="margin-top: 0; margin-bottom: 10px; color: #0056b3;">Chi tiết trả góp</h4>
-            <p style="margin: 5px 0;"><strong>Thời hạn:</strong> {plan.total_months} tháng</p>
-            <p style="margin: 5px 0;"><strong>Thanh toán mỗi tháng:</strong> {format_vnd(float(plan.monthly_amount))}</p>
-            <p style="margin: 5px 0;"><strong>Thời hạn đóng tiền hàng tháng:</strong> {due_date}</p>
-            <p style="margin: 5px 0;"><strong>Ngày kết thúc (dự kiến):</strong> {end_date_str}</p>
+            <p style="margin: 3px 0;"><strong>Thời hạn:</strong> {plan.total_months} tháng</p>
+            <p style="margin: 3px 0;"><strong>Thanh toán mỗi tháng:</strong> {format_vnd(float(plan.monthly_amount))}</p>
+            <p style="margin: 3px 0;"><strong>Thời hạn đóng tiền hàng tháng:</strong> {due_date}</p>
+            <p style="margin: 3px 0;"><strong>Ngày kết thúc (dự kiến):</strong> {end_date_str}</p>
         </div>
         """
 
     html_content = f"""
     <html>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
-        <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px;">
+    <body style="font-family: Arial; line-height: 1.4; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px;">
             <h1 style="color: #d70018; margin: 0 0 10px 0;">HÓA ĐƠN ĐIỆN TỬ</h1>
-            <p style="margin: 5px 0;"><strong>Mẫu số:</strong> 01GTKT0/001 - <strong>Ký hiệu:</strong> AA/26E - <strong>Số hóa đơn:</strong> {order.order_code}</p>
-            <p style="margin: 5px 0;"><strong>Ngày lập:</strong> {format_date(order.created_at)}</p>
+            <p style="margin: 3px 0;"><strong>Mẫu số:</strong> 01GTKT0/001 - <strong>Ký hiệu:</strong> AA/26E - <strong>Số hóa đơn:</strong> {order.order_code}</p>
+            <p style="margin: 3px 0;"><strong>Ngày lập:</strong> {format_date(order.created_at)}</p>
         </div>
 
-        <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
-            <div style="width: 48%;">
-                <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">Thông tin người bán</h3>
-                <p><strong>CÔNG TY TNHH ELECTRONICS SHOP</strong></p>
-                <p><strong>MST:</strong> 0123456789</p>
-                <p><strong>Địa chỉ:</strong> 123 Đường Công Nghệ, Quận 1, TP.HCM</p>
-            </div>
-            <div style="width: 48%;">
-                <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">Thông tin người mua</h3>
-                <p><strong>Khách hàng:</strong> {buyer_name}</p>
-                <p><strong>Địa chỉ giao hàng:</strong> {shipping_address}</p>
-            </div>
-        </div>
+        <table style="width: 100%; margin-bottom: 20px;" border="0" cellpadding="0" cellspacing="0">
+            <tr>
+                <td style="width: 48%; vertical-align: top;">
+                    <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">Thông tin người bán</h3>
+                    <p style="margin: 3px 0;"><strong>CÔNG TY TNHH ELECTRONICS SHOP</strong></p>
+                    <p style="margin: 3px 0;"><strong>MST:</strong> 0123456789</p>
+                    <p style="margin: 3px 0;"><strong>Địa chỉ:</strong> 123 Đường Công Nghệ, Quận 1, TP.HCM</p>
+                </td>
+                <td style="width: 4%;"></td>
+                <td style="width: 48%; vertical-align: top;">
+                    <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">Thông tin người mua</h3>
+                    <p style="margin: 3px 0;"><strong>Khách hàng:</strong> {buyer_name}</p>
+                    <p style="margin: 3px 0;"><strong>Địa chỉ giao hàng:</strong> {shipping_address}</p>
+                </td>
+            </tr>
+        </table>
 
         <div style="margin-bottom: 20px;">
-            <p><strong>Mã đơn hàng:</strong> {order.order_code}</p>
-            <p><strong>Trạng thái thanh toán:</strong> {payment_status_text}</p>
-            <p><strong>Phương thức:</strong> {payment_method_text}</p>
+            <p style="margin: 3px 0;"><strong>Mã đơn hàng:</strong> {order.order_code}</p>
+            <p style="margin: 3px 0;"><strong>Trạng thái thanh toán:</strong> {payment_status_text}</p>
+            <p style="margin: 3px 0;"><strong>Phương thức:</strong> {payment_method_text}</p>
         </div>
         
-        {installment_html}
+        {installment_html.replace('display: flex;', '').replace('justify-content: space-between;', '')}
 
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
             <thead>
                 <tr style="background-color: #f8f9fa;">
-                    <th style="padding: 10px; border-bottom: 2px solid #ddd; text-align: left;">Sản phẩm</th>
-                    <th style="padding: 10px; border-bottom: 2px solid #ddd; text-align: center;">SL</th>
-                    <th style="padding: 10px; border-bottom: 2px solid #ddd; text-align: right;">Đơn giá</th>
-                    <th style="padding: 10px; border-bottom: 2px solid #ddd; text-align: right;">Thành tiền</th>
+                    <th style="padding: 8px; border-bottom: 2px solid #ddd; text-align: left;">Sản phẩm</th>
+                    <th style="padding: 8px; border-bottom: 2px solid #ddd; text-align: center;">SL</th>
+                    <th style="padding: 8px; border-bottom: 2px solid #ddd; text-align: right;">Đơn giá</th>
+                    <th style="padding: 8px; border-bottom: 2px solid #ddd; text-align: right;">Thành tiền</th>
                 </tr>
             </thead>
             <tbody>
@@ -237,21 +240,22 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
             </tbody>
         </table>
 
-        <div style="width: 300px; float: right; text-align: right;">
-            <p style="display: flex; justify-content: space-between;"><span>Tiền hàng (chưa VAT):</span> <strong>{format_vnd(total_before_tax)}</strong></p>
-            <p style="display: flex; justify-content: space-between;"><span>Thuế GTGT (10%):</span> <strong>{format_vnd(tax_amount)}</strong></p>
-            <p style="display: flex; justify-content: space-between;"><span>Phí vận chuyển:</span> <strong>0 ₫</strong></p>
-            {f'<p style="display: flex; justify-content: space-between;"><span>Bảo hiểm điện tử:</span> <strong>{format_vnd(order.insurance_fee)}</strong></p>' if getattr(order, 'insurance_fee', 0) > 0 else ""}
-            {f'<p style="display: flex; justify-content: space-between; color: #d70018;"><span>Giảm giá:</span> <strong>-{format_vnd(order.discount_amount)}</strong></p>' if order.discount_amount > 0 else ""}
-            <p style="display: flex; justify-content: space-between; border-top: 2px solid #333; padding-top: 10px; margin-top: 10px; font-size: 1.2em; color: #d70018;">
-                <span>Tổng tiền:</span> <strong>{format_vnd(order.final_amount - getattr(order, 'shipping_fee', 0))}</strong>
-            </p>
+        <div style="width: 350px; float: right;">
+            <table style="width: 100%;" border="0" cellpadding="3" cellspacing="0">
+                <tr><td style="text-align: left;">Tiền hàng (chưa VAT):</td><td style="text-align: right;"><strong>{format_vnd(total_before_tax)}</strong></td></tr>
+                <tr><td style="text-align: left;">Thuế GTGT (10%):</td><td style="text-align: right;"><strong>{format_vnd(tax_amount)}</strong></td></tr>
+                <tr><td style="text-align: left;">Phí vận chuyển:</td><td style="text-align: right;"><strong>0 ₫</strong></td></tr>
+                {f'<tr><td style="text-align: left;">Bảo hiểm điện tử:</td><td style="text-align: right;"><strong>{format_vnd(order.insurance_fee)}</strong></td></tr>' if getattr(order, 'insurance_fee', 0) > 0 else ""}
+                {f'<tr><td style="text-align: left; color: #d70018;">Giảm giá:</td><td style="text-align: right; color: #d70018;"><strong>-{format_vnd(order.discount_amount)}</strong></td></tr>' if order.discount_amount > 0 else ""}
+                <tr><td colspan="2"><div style="border-top: 2px solid #333; margin: 5px 0;"></div></td></tr>
+                <tr><td style="text-align: left; font-size: 1.2em; color: #d70018;">Tổng tiền:</td><td style="text-align: right; font-size: 1.2em; color: #d70018;"><strong>{format_vnd(order.final_amount - getattr(order, 'shipping_fee', 0))}</strong></td></tr>
+            </table>
         </div>
         <div style="clear: both;"></div>
 
-        <div style="margin-top: 40px; text-align: center; font-size: 0.9em; color: #666; border-top: 1px solid #ccc; padding-top: 20px;">
-            <p>Tra cứu hóa đơn điện tử tại: <a href="https://electronicsshop.local/invoice">https://electronicsshop.local/invoice</a></p>
-            <p>Mã xác thực: {order.id}</p>
+        <div style="margin-top: 30px; text-align: center; font-size: 0.9em; color: #666; border-top: 1px solid #ccc; padding-top: 15px;">
+            <p style="margin: 3px 0;">Tra cứu hóa đơn điện tử tại: <a href="https://electronicsshop.local/invoice">https://electronicsshop.local/invoice</a></p>
+            <p style="margin: 3px 0;">Mã xác thực: {order.id}</p>
         </div>
     </body>
     </html>
