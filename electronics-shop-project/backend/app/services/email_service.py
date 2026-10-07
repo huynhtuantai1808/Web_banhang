@@ -129,14 +129,7 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
     
     items_html = ""
     for item in items:
-        items_html += f"""
-        <tr>
-            <td style="padding: 5px; border-bottom: 1px solid #ddd;">{item['product_name']}</td>
-            <td style="padding: 5px; border-bottom: 1px solid #ddd; text-align: center;">{item['quantity']}</td>
-            <td style="padding: 5px; border-bottom: 1px solid #ddd; text-align: right;">{format_vnd(item['unit_price'])}</td>
-            <td style="padding: 5px; border-bottom: 1px solid #ddd; text-align: right;">{format_vnd(item['unit_price'] * item['quantity'])}</td>
-        </tr>
-        """
+        items_html += f'<tr><td style="padding: 5px; border-bottom: 1px solid #ddd;">{item["product_name"]}</td><td style="padding: 5px; border-bottom: 1px solid #ddd; text-align: center;">{item["quantity"]}</td><td style="padding: 5px; border-bottom: 1px solid #ddd; text-align: right;">{format_vnd(item["unit_price"])}</td><td style="padding: 5px; border-bottom: 1px solid #ddd; text-align: right;">{format_vnd(item["unit_price"] * item["quantity"])}</td></tr>'
 
     # Xác định trạng thái thanh toán hiển thị
     if order.payment_method == "installment" or order.payment_gateway in ["credit_card", "finance"]:
@@ -194,6 +187,19 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
         </div>
         """
 
+    summary_rows = [
+        f'<tr><td style="text-align: left; padding: 2px 0;">Tiền hàng (chưa VAT):</td><td style="text-align: right; padding: 2px 0;"><strong>{format_vnd(total_before_tax)}</strong></td></tr>',
+        f'<tr><td style="text-align: left; padding: 2px 0;">Thuế GTGT (10%):</td><td style="text-align: right; padding: 2px 0;"><strong>{format_vnd(tax_amount)}</strong></td></tr>',
+        f'<tr><td style="text-align: left; padding: 2px 0;">Phí vận chuyển:</td><td style="text-align: right; padding: 2px 0;"><strong>0 ₫</strong></td></tr>'
+    ]
+    if getattr(order, 'insurance_fee', 0) > 0:
+        summary_rows.append(f'<tr><td style="text-align: left; padding: 2px 0;">Bảo hiểm điện tử:</td><td style="text-align: right; padding: 2px 0;"><strong>{format_vnd(order.insurance_fee)}</strong></td></tr>')
+    if order.discount_amount > 0:
+        summary_rows.append(f'<tr><td style="text-align: left; color: #d70018; padding: 2px 0;">Giảm giá:</td><td style="text-align: right; color: #d70018; padding: 2px 0;"><strong>-{format_vnd(order.discount_amount)}</strong></td></tr>')
+    summary_rows.append('<tr><td colspan="2"><div style="border-top: 2px solid #333; margin: 5px 0;"></div></td></tr>')
+    summary_rows.append(f'<tr><td style="text-align: left; font-size: 1.2em; color: #d70018; padding-top: 5px;">Tổng tiền:</td><td style="text-align: right; font-size: 1.2em; color: #d70018; padding-top: 5px;"><strong>{format_vnd(order.final_amount - getattr(order, "shipping_fee", 0))}</strong></td></tr>')
+    summary_html = "".join(summary_rows)
+
     html_content = f"""
     <html>
     <body style="font-family: Arial; font-size: 14px; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
@@ -248,14 +254,8 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
         </table>
 
         <div style="width: 350px; float: right;">
-            <table style="width: 100%;" border="0" cellpadding="2" cellspacing="0">
-                <tr><td style="text-align: left;">Tiền hàng (chưa VAT):</td><td style="text-align: right;"><strong>{format_vnd(total_before_tax)}</strong></td></tr>
-                <tr><td style="text-align: left;">Thuế GTGT (10%):</td><td style="text-align: right;"><strong>{format_vnd(tax_amount)}</strong></td></tr>
-                <tr><td style="text-align: left;">Phí vận chuyển:</td><td style="text-align: right;"><strong>0 ₫</strong></td></tr>
-                {f'<tr><td style="text-align: left;">Bảo hiểm điện tử:</td><td style="text-align: right;"><strong>{format_vnd(order.insurance_fee)}</strong></td></tr>' if getattr(order, 'insurance_fee', 0) > 0 else ""}
-                {f'<tr><td style="text-align: left; color: #d70018;">Giảm giá:</td><td style="text-align: right; color: #d70018;"><strong>-{format_vnd(order.discount_amount)}</strong></td></tr>' if order.discount_amount > 0 else ""}
-                <tr><td colspan="2"><div style="border-top: 2px solid #333; margin: 3px 0;"></div></td></tr>
-                <tr><td style="text-align: left; font-size: 1.2em; color: #d70018; padding-top: 3px;">Tổng tiền:</td><td style="text-align: right; font-size: 1.2em; color: #d70018; padding-top: 3px;"><strong>{format_vnd(order.final_amount - getattr(order, 'shipping_fee', 0))}</strong></td></tr>
+            <table style="width: 100%;" border="0" cellpadding="0" cellspacing="0">
+                {summary_html}
             </table>
         </div>
         <div style="clear: both;"></div>
