@@ -14,6 +14,10 @@ class CartItemOut(BaseModel):
     product_price: float
     product_discount_price: float | None = None
     product_image_url: str | None = None
+    color: str | None = None
+    material: str | None = None
+    size_dimension: str | None = None
+    specification: dict | None = None
     is_installment_eligible: bool = True
     quantity: int
 

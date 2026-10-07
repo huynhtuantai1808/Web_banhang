@@ -38,6 +38,10 @@ async function hydrateGuestCart(): Promise<CartOut> {
         product_price: product.price,
         product_discount_price: product.discount_price ?? null,
         product_image_url: product.primary_image_url ?? null,
+        color: product.color ?? null,
+        material: product.material ?? null,
+        size_dimension: product.size_dimension ?? null,
+        specification: product.specification ?? null,
         is_installment_eligible: product.is_installment_eligible,
         quantity: line.quantity,
       });
@@ -173,6 +177,24 @@ export default function CartPage() {
                   <Link href={`/products/${item.product_id}`} className="text-circuit-text truncate hover:text-circuit-copperLight transition-colors block text-lg font-medium">
                     {item.product_name}
                   </Link>
+                  {(() => {
+                    const specs = [];
+                    if (item.color) specs.push(item.color);
+                    if (item.size_dimension) specs.push(item.size_dimension);
+                    if (item.specification) {
+                      const s = item.specification as Record<string, any>;
+                      const capKey = Object.keys(s).find(k => k.toLowerCase().includes("dung lượng") || k.toLowerCase().includes("rom"));
+                      if (capKey) specs.push(s[capKey]);
+                      const ramKey = Object.keys(s).find(k => k.toLowerCase() === "ram");
+                      if (ramKey) specs.push(`RAM ${s[ramKey]}`);
+                    }
+                    if (specs.length === 0) return null;
+                    return (
+                      <p className="text-sm text-circuit-muted mt-0.5 truncate">
+                        {specs.join(" | ")}
+                      </p>
+                    );
+                  })()}
                   <p className="text-sm text-circuit-signal font-mono mt-1">{formatVND(unitPrice)}</p>
                 </div>
 

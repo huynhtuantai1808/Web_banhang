@@ -134,6 +134,10 @@ export default function CheckoutPage() {
               product_price: product.price,
               product_discount_price: product.discount_price ?? null,
               product_image_url: product.primary_image_url ?? null,
+              color: product.color ?? null,
+              material: product.material ?? null,
+              size_dimension: product.size_dimension ?? null,
+              specification: product.specification ?? null,
               is_installment_eligible: product.is_installment_eligible,
               quantity: line.quantity,
             });
@@ -471,8 +475,26 @@ export default function CheckoutPage() {
                           className="object-contain w-full h-full"
                         />
                       </div>
-                      <span className="flex-1 text-circuit-text truncate font-medium">
-                        {item.product_name} × {item.quantity}
+                      <span className="flex-1 text-circuit-text font-medium min-w-0">
+                        <span className="block truncate">{item.product_name} × {item.quantity}</span>
+                        {(() => {
+                          const specs = [];
+                          if (item.color) specs.push(item.color);
+                          if (item.size_dimension) specs.push(item.size_dimension);
+                          if (item.specification) {
+                            const s = item.specification as Record<string, any>;
+                            const capKey = Object.keys(s).find(k => k.toLowerCase().includes("dung lượng") || k.toLowerCase().includes("rom"));
+                            if (capKey) specs.push(s[capKey]);
+                            const ramKey = Object.keys(s).find(k => k.toLowerCase() === "ram");
+                            if (ramKey) specs.push(`RAM ${s[ramKey]}`);
+                          }
+                          if (specs.length === 0) return null;
+                          return (
+                            <span className="text-xs text-circuit-muted mt-0.5 truncate block font-normal">
+                              {specs.join(" | ")}
+                            </span>
+                          );
+                        })()}
                       </span>
                       <span className="text-circuit-muted font-mono font-semibold">
                         {formatVND((item.product_discount_price ?? item.product_price) * item.quantity)}
@@ -1084,8 +1106,26 @@ export default function CheckoutPage() {
                   <div className="space-y-3">
                     {cart?.items.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-center text-sm">
-                        <span className="text-circuit-text font-medium pr-4">
+                        <span className="text-circuit-text font-medium pr-4 block">
                           {item.product_name} <span className="text-circuit-muted font-mono ml-2">× {item.quantity}</span>
+                          {(() => {
+                            const specs = [];
+                            if (item.color) specs.push(item.color);
+                            if (item.size_dimension) specs.push(item.size_dimension);
+                            if (item.specification) {
+                              const s = item.specification as Record<string, any>;
+                              const capKey = Object.keys(s).find(k => k.toLowerCase().includes("dung lượng") || k.toLowerCase().includes("rom"));
+                              if (capKey) specs.push(s[capKey]);
+                              const ramKey = Object.keys(s).find(k => k.toLowerCase() === "ram");
+                              if (ramKey) specs.push(`RAM ${s[ramKey]}`);
+                            }
+                            if (specs.length === 0) return null;
+                            return (
+                              <span className="text-xs text-circuit-muted mt-0.5 truncate block font-normal">
+                                {specs.join(" | ")}
+                              </span>
+                            );
+                          })()}
                         </span>
                         <span className="text-circuit-text font-mono font-semibold">
                           {formatVND((item.product_discount_price ?? item.product_price) * item.quantity)}

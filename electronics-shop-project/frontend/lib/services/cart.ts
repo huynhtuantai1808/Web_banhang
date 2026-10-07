@@ -7,6 +7,10 @@ export interface CartItemOut {
   product_price: number;
   product_discount_price?: number | null;
   product_image_url?: string | null;
+  color?: string | null;
+  material?: string | null;
+  size_dimension?: string | null;
+  specification?: Record<string, unknown> | null;
   is_installment_eligible: boolean;
   quantity: number;
 }

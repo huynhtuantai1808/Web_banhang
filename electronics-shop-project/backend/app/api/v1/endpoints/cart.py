@@ -48,6 +48,10 @@ async def _build_cart_out(db: AsyncSession, cart_id: uuid.UUID) -> CartOut:
                 product_price=float(product.price),
                 product_discount_price=float(product.discount_price) if product.discount_price else None,
                 product_image_url=image_url,
+                color=product.color,
+                material=product.material,
+                size_dimension=product.size_dimension,
+                specification=product.specification,
                 is_installment_eligible=product.is_installment_eligible,
                 quantity=cart_item.quantity,
             )
