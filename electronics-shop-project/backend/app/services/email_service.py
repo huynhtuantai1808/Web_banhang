@@ -263,8 +263,29 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
         import io
         pdf_buffer = io.BytesIO()
         
-        # Add basic font encoding support for Vietnamese (Arial or Times New Roman, but we rely on xhtml2pdf default font encoding support if possible, or add meta tag)
-        pdf_html = html_content.replace('<html>', '<html><head><meta charset="utf-8"></head>')
+        import os
+        font_dir = os.path.join(os.getcwd(), 'app', 'static', 'fonts').replace('\\', '/')
+        
+        pdf_head = f"""<html>
+        <head>
+            <meta charset="utf-8">
+            <style>
+                @font-face {{
+                    font-family: 'Roboto';
+                    src: url('file:///{font_dir}/Roboto-Regular.ttf');
+                }}
+                @font-face {{
+                    font-family: 'Roboto';
+                    src: url('file:///{font_dir}/Roboto-Bold.ttf');
+                    font-weight: bold;
+                }}
+                body {{
+                    font-family: 'Roboto', Arial, sans-serif;
+                }}
+            </style>
+        </head>"""
+        
+        pdf_html = html_content.replace('<html>', pdf_head).replace('font-family: Arial, sans-serif;', 'font-family: "Roboto", Arial, sans-serif;')
         
         pisa_status = pisa.CreatePDF(
             pdf_html, dest=pdf_buffer, encoding='utf-8'
