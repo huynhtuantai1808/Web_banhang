@@ -271,21 +271,21 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
             <meta charset="utf-8">
             <style>
                 @font-face {{
-                    font-family: 'NotoSans';
-                    src: url('file:///{font_dir}/NotoSans-Regular.ttf');
+                    font-family: Arial;
+                    src: url('{font_dir}/arial.ttf');
                 }}
                 @font-face {{
-                    font-family: 'NotoSans';
-                    src: url('file:///{font_dir}/NotoSans-Bold.ttf');
+                    font-family: Arial;
+                    src: url('{font_dir}/arial-bold.ttf');
                     font-weight: bold;
                 }}
                 body {{
-                    font-family: 'NotoSans', Arial, sans-serif;
+                    font-family: Arial;
                 }}
             </style>
         </head>"""
         
-        pdf_html = html_content.replace('<html>', pdf_head).replace('font-family: Arial, sans-serif;', 'font-family: "NotoSans", Arial, sans-serif;')
+        pdf_html = html_content.replace('<html>', pdf_head).replace('font-family: Arial, sans-serif;', 'font-family: Arial;')
         
         pisa_status = pisa.CreatePDF(
             pdf_html, dest=pdf_buffer, encoding='utf-8'
