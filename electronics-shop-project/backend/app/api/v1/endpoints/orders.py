@@ -391,7 +391,14 @@ async def send_order_email(
     if payload.email_type == "confirmation":
         send_order_confirmation(order, items, user=customer, guest_email=guest_email)
     elif payload.email_type == "invoice":
-        send_electronic_invoice(order, items, user=customer, guest_email=guest_email)
+        plan = None
+        if order.payment_method == "installment":
+            from app.models.installment import InstallmentPlan
+            plan_result = await db.execute(
+                select(InstallmentPlan).where(InstallmentPlan.order_id == order.id)
+            )
+            plan = plan_result.scalar_one_or_none()
+        send_electronic_invoice(order, items, user=customer, guest_email=guest_email, plan=plan)
     else:
         raise HTTPException(status_code=400, detail="Loại email không hợp lệ (confirmation/invoice)")
         

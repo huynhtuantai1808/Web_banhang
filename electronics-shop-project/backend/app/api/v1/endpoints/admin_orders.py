@@ -278,7 +278,14 @@ async def send_order_email_endpoint(
             send_order_confirmation(order, items, user=customer, guest_email=customer.email)
             msg = "Đã gửi email xác nhận"
         elif payload.email_type == "invoice":
-            send_electronic_invoice(order, items, user=customer, guest_email=customer.email)
+            plan = None
+            if order.payment_method == "installment":
+                from app.models.installment import InstallmentPlan
+                plan_result = await db.execute(
+                    select(InstallmentPlan).where(InstallmentPlan.order_id == order.id)
+                )
+                plan = plan_result.scalar_one_or_none()
+            send_electronic_invoice(order, items, user=customer, guest_email=customer.email, plan=plan)
             msg = "Đã gửi email hóa đơn điện tử"
         else:
             raise HTTPException(status_code=400, detail="Loại email không hợp lệ")

@@ -11,10 +11,14 @@ def format_vnd(amount: int) -> str:
         return "0 ₫"
     return f"{amount:,.0f} ₫".replace(",", ".")
 
+from datetime import datetime, timezone, timedelta
+
 def format_date(dt: datetime) -> str:
     if not dt:
         return ""
-    return dt.strftime("%d/%m/%Y %H:%M")
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone(timedelta(hours=7))).strftime("%d/%m/%Y %H:%M")
 
 
 def _send_email_smtp(subject: str, html_content: str, to_email: str):
@@ -98,7 +102,8 @@ def send_order_confirmation(order: Order, items: list = None, user: Customer = N
     _send_email_smtp(f"Xác nhận đơn hàng {order.order_code}", html_content, to_email)
 
 
-def send_electronic_invoice(order: Order, items: list, user: Customer = None, guest_email: str = None):
+def send_electronic_invoice(order: Order, items: list, user: Customer = None, guest_email: str = None, plan = None):
+    import re
     to_email = user.email if user else guest_email
     if not to_email:
         return
@@ -138,6 +143,15 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
         }
         payment_status_text = status_map.get(order.payment_status, order.payment_status.upper())
 
+    # Xử lý địa chỉ giao hàng và trích xuất phương thức trả góp
+    shipping_address = order.shipping_address or 'Không có'
+    installment_note = ""
+    if "Trả góp" in shipping_address:
+        match = re.search(r'\[(Trả góp:.*?)\]', shipping_address)
+        if match:
+            installment_note = match.group(1)
+            shipping_address = shipping_address.replace(match.group(0), "").strip()
+
     # Xác định phương thức thanh toán hiển thị
     gateway_map = {
         "vnpay": "VNPay",
@@ -146,6 +160,26 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
         "finance": "Trả góp (Công ty tài chính)"
     }
     payment_method_text = gateway_map.get(order.payment_gateway, order.payment_gateway.upper())
+    if installment_note:
+        if "Trả góp" in payment_method_text:
+            payment_method_text = installment_note
+        else:
+            payment_method_text += f" - {installment_note}"
+        
+    installment_html = ""
+    if plan:
+        due_date = f"Ngày {plan.created_at.day} hàng tháng" if plan.created_at else "Hàng tháng"
+        end_date = plan.created_at + timedelta(days=30 * plan.total_months) if plan.created_at else None
+        end_date_str = format_date(end_date).split(" ")[0] if end_date else ""
+        installment_html = f"""
+        <div style="background-color: #f0f7ff; padding: 15px; margin-bottom: 20px; border-left: 4px solid #0056b3; border-radius: 4px;">
+            <h4 style="margin-top: 0; margin-bottom: 10px; color: #0056b3;">Chi tiết trả góp</h4>
+            <p style="margin: 5px 0;"><strong>Thời hạn:</strong> {plan.total_months} tháng</p>
+            <p style="margin: 5px 0;"><strong>Thanh toán mỗi tháng:</strong> {format_vnd(float(plan.monthly_amount))}</p>
+            <p style="margin: 5px 0;"><strong>Thời hạn đóng tiền hàng tháng:</strong> {due_date}</p>
+            <p style="margin: 5px 0;"><strong>Ngày kết thúc (dự kiến):</strong> {end_date_str}</p>
+        </div>
+        """
 
     html_content = f"""
     <html>
@@ -166,7 +200,7 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
             <div style="width: 48%;">
                 <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">Thông tin người mua</h3>
                 <p><strong>Khách hàng:</strong> {buyer_name}</p>
-                <p><strong>Địa chỉ giao hàng:</strong> {order.shipping_address or 'Không có'}</p>
+                <p><strong>Địa chỉ giao hàng:</strong> {shipping_address}</p>
             </div>
         </div>
 
@@ -175,6 +209,8 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
             <p><strong>Trạng thái thanh toán:</strong> {payment_status_text}</p>
             <p><strong>Phương thức:</strong> {payment_method_text}</p>
         </div>
+        
+        {installment_html}
 
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
             <thead>
