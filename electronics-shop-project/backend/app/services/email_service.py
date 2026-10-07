@@ -203,14 +203,13 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
 
         <table style="width: 100%; margin-bottom: 20px;" border="0" cellpadding="0" cellspacing="0">
             <tr>
-                <td style="width: 48%; vertical-align: top;">
+                <td style="width: 50%; vertical-align: top; padding-right: 15px;">
                     <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">Thông tin người bán</h3>
                     <p style="margin: 3px 0;"><strong>CÔNG TY TNHH ELECTRONICS SHOP</strong></p>
                     <p style="margin: 3px 0;"><strong>MST:</strong> 0123456789</p>
                     <p style="margin: 3px 0;"><strong>Địa chỉ:</strong> 123 Đường Công Nghệ, Quận 1, TP.HCM</p>
                 </td>
-                <td style="width: 4%;"></td>
-                <td style="width: 48%; vertical-align: top;">
+                <td style="width: 50%; vertical-align: top; padding-left: 15px;">
                     <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">Thông tin người mua</h3>
                     <p style="margin: 3px 0;"><strong>Khách hàng:</strong> {buyer_name}</p>
                     <p style="margin: 3px 0;"><strong>Địa chỉ giao hàng:</strong> {shipping_address}</p>
