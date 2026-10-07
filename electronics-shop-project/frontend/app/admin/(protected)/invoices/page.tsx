@@ -155,7 +155,7 @@ export default function AdminInvoicesPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-circuit-muted text-xs">
-                    {new Date(o.created_at).toLocaleDateString("vi-VN")}
+                    {new Date(o.created_at).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <button
@@ -199,7 +199,7 @@ export default function AdminInvoicesPage() {
                       <p className="text-sm text-circuit-muted mt-1">Điện thoại, Laptop, PC Gaming</p>
                     </div>
                     <div className="text-right text-sm">
-                      <p className="text-circuit-muted">Ngày: {new Date(invoiceData.created_at).toLocaleDateString("vi-VN")}</p>
+                      <p className="text-circuit-muted">Ngày: {new Date(invoiceData.created_at).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</p>
                       <p className="text-circuit-muted">Mã đơn: <span className="text-circuit-copperLight">{invoiceData.order_code}</span></p>
                     </div>
                   </div>
