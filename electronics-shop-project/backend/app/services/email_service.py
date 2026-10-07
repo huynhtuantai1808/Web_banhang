@@ -21,7 +21,7 @@ def format_date(dt: datetime) -> str:
     return dt.astimezone(timezone(timedelta(hours=7))).strftime("%d/%m/%Y %H:%M")
 
 
-def _send_email_smtp(subject: str, html_content: str, to_email: str):
+def _send_email_smtp(subject: str, html_content: str, to_email: str, attachments: list = None):
     if not to_email:
         print("Cannot send email: recipient address is empty")
         return
@@ -31,6 +31,8 @@ def _send_email_smtp(subject: str, html_content: str, to_email: str):
         print(f"Subject: {subject}")
         print("Body:")
         print(html_content)
+        if attachments:
+            print(f"Attachments: {[a['filename'] for a in attachments]}")
         print("-------------------------------")
         return
 
@@ -40,6 +42,15 @@ def _send_email_smtp(subject: str, html_content: str, to_email: str):
     msg["To"] = to_email
     msg.set_content("Please enable HTML in your email client to view this message.")
     msg.add_alternative(html_content, subtype="html")
+
+    if attachments:
+        for attachment in attachments:
+            msg.add_attachment(
+                attachment['content'],
+                maintype=attachment['maintype'],
+                subtype=attachment['subtype'],
+                filename=attachment['filename']
+            )
 
     try:
         with smtplib.SMTP(settings.EMAIL_SMTP_HOST, settings.EMAIL_SMTP_PORT) as server:
@@ -245,7 +256,31 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
     </body>
     </html>
     """
-    _send_email_smtp(f"Hóa đơn điện tử - Đơn hàng {order.order_code}", html_content, to_email)
+    
+    attachments = []
+    try:
+        from xhtml2pdf import pisa
+        import io
+        pdf_buffer = io.BytesIO()
+        
+        # Add basic font encoding support for Vietnamese (Arial or Times New Roman, but we rely on xhtml2pdf default font encoding support if possible, or add meta tag)
+        pdf_html = html_content.replace('<html>', '<html><head><meta charset="utf-8"></head>')
+        
+        pisa_status = pisa.CreatePDF(
+            pdf_html, dest=pdf_buffer, encoding='utf-8'
+        )
+        if not pisa_status.err:
+            pdf_content = pdf_buffer.getvalue()
+            attachments.append({
+                "content": pdf_content,
+                "maintype": "application",
+                "subtype": "pdf",
+                "filename": f"Hoa_don_{order.order_code}.pdf"
+            })
+    except Exception as e:
+        print(f"Lỗi tạo PDF: {e}")
+
+    _send_email_smtp(f"Hóa đơn điện tử - Đơn hàng {order.order_code}", html_content, to_email, attachments)
 
 
 async def send_revenue_report_email(to_email: str, period: str, from_date: str, to_date: str, total_revenue: float, order_count: int, top_products: list):
