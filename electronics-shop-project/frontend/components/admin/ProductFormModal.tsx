@@ -103,8 +103,9 @@ export default function ProductFormModal({
       if (rows.length === 0) rows.push(emptySpec());
       setSpecRows(rows);
 
+      const randomCode = `SP-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
       setForm({
-        product_code: duplicateProduct ? `${sourceProduct.product_code}-COPY` : sourceProduct.product_code,
+        product_code: duplicateProduct ? randomCode : sourceProduct.product_code,
         name: sourceProduct.name,
         description: sourceProduct.description ?? "",
         long_description: sourceProduct.long_description ?? "",
