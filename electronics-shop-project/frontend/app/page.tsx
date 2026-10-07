@@ -73,8 +73,8 @@ function HomePageContent() {
       setGroupsLoading(true);
       try {
         const [hotData, onSaleData, allCategories] = await Promise.all([
-          listProducts({ is_hot: true, page_size: 8 }),
-          listProducts({ on_sale: true, page_size: 8 }),
+          listProducts({ is_hot: true, page_size: 8, grouped: true }),
+          listProducts({ on_sale: true, page_size: 8, grouped: true }),
           listCategories(),
         ]);
 
@@ -82,7 +82,7 @@ function HomePageContent() {
         const topCategories = allCategories.filter((c) => !c.parent_id).slice(0, 3);
         const catGroupsData = await Promise.all(
           topCategories.map(async (category) => {
-            const data = await listProducts({ category_id: category.id, page_size: 4 });
+            const data = await listProducts({ category_id: category.id, page_size: 4, grouped: true });
             return { category, products: data.items };
           })
         );

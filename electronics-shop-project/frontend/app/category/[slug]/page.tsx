@@ -86,7 +86,7 @@ function CategoryPageContent() {
           setFilters((prev) => ({ ...prev, category: current.name }));
         }
 
-        const data = await listProducts({ category_id: current.id, ...buildFilterParams(filters) });
+        const data = await listProducts({ category_id: current.id, ...buildFilterParams(filters), grouped: true });
         setProducts(data.items.map(toDisplayProduct));
       } catch (err) {
         setError(err instanceof ApiError ? err.message : "Không tải được danh mục sản phẩm");

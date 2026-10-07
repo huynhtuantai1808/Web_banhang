@@ -1,7 +1,7 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_, and_, func
+from sqlalchemy import select, or_, and_, func, cast, String
 
 from app.db.session import get_db
 from app.models.product import Product, Brand, Category, ProductImage
@@ -106,6 +106,7 @@ async def list_products(
     min_price: float | None = None,
     max_price: float | None = None,
     sort_by: str | None = Query(None, description="price_asc, price_desc, new, name_asc, name_desc, discount_desc"),
+    grouped: bool = Query(False, description="Chỉ lấy 1 sản phẩm đại diện cho mỗi dòng máy"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
@@ -139,6 +140,19 @@ async def list_products(
         stmt = stmt.where(Product.price >= min_price)
     if max_price is not None:
         stmt = stmt.where(Product.price <= max_price)
+
+    if grouped:
+        # Lấy sản phẩm đầu tiên của mỗi nhóm (hoặc chính nó nếu ko có nhóm)
+        subq = (
+            select(
+                Product.id,
+                func.row_number().over(
+                    partition_by=func.coalesce(Product.group_code, cast(Product.id, String)),
+                    order_by=Product.created_at.desc()
+                ).label("rn")
+            )
+        ).subquery()
+        stmt = stmt.join(subq, Product.id == subq.c.id).where(subq.c.rn == 1)
 
     # Đếm tổng trước khi order by
     count_stmt = select(func.count()).select_from(stmt.subquery())

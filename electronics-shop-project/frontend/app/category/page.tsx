@@ -85,7 +85,7 @@ function CategoryPageContent() {
       const range = f.priceLabel ? PRICE_RANGES[f.priceLabel] : undefined;
       if (range) Object.assign(params, range);
 
-      const data = await listProducts(params);
+      const data = await listProducts({ ...params, grouped: true });
       setProducts(data.items.map((prod) => toDisplayProduct(prod)));
       setTotalPages(data.total_pages || 1);
     } catch (err) {

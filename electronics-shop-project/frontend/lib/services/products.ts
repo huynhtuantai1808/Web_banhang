@@ -59,6 +59,7 @@ export interface ProductFilters {
   min_price?: number;
   max_price?: number;
   sort_by?: string;
+  grouped?: boolean;
   page?: number;
   page_size?: number;
 }
