@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List
 import uuid
+import uuid as _uuid_lib
 
 from app.db.session import get_db
 from app.models.chat import ChatRoom, ChatMessage
@@ -53,7 +54,7 @@ async def claim_room(
         raise HTTPException(status_code=400, detail="Phòng chat không ở trạng thái chờ")
         
     room.status = "active"
-    room.employee_id = uuid.UUID(employee_id)
+    room.employee_id = _uuid_lib.UUID(employee_id)
     await db.commit()
     return {"message": "Đã nhận phòng chat thành công"}
 

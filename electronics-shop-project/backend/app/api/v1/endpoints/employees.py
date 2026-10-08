@@ -1,4 +1,5 @@
 import uuid
+import uuid as _uuid_lib
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -115,7 +116,7 @@ async def create_employee(
     role = await _get_or_create_role(db, payload.employee_role)
 
     employee = Employee(
-        id=uuid.uuid4(),
+        id=_uuid_lib.uuid4(),
         employee_code=await _next_employee_code(db),
         full_name=payload.full_name,
         phone=payload.phone,

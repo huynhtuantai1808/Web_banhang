@@ -1,4 +1,5 @@
 import uuid
+import uuid as _uuid_lib
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -47,7 +48,7 @@ async def create_promotion(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail=f"Mã khuyến mãi '{payload.code}' đã tồn tại")
 
-    promo = Promotion(id=uuid.uuid4(), **payload.model_dump())
+    promo = Promotion(id=_uuid_lib.uuid4(), **payload.model_dump())
     db.add(promo)
     await db.commit()
     await db.refresh(promo)
@@ -110,7 +111,7 @@ async def assign_promotion_to_customer(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Khách hàng này đã được phân bổ mã khuyến mãi này rồi")
 
-    db.add(PromotionCustomer(id=uuid.uuid4(), promotion_id=promotion_id, customer_id=customer.id))
+    db.add(PromotionCustomer(id=_uuid_lib.uuid4(), promotion_id=promotion_id, customer_id=customer.id))
     await db.commit()
     return {"message": f"Đã phân bổ mã '{promo.code}' cho khách hàng {customer.full_name}"}
 
@@ -129,7 +130,7 @@ async def list_my_promotions(db: AsyncSession = Depends(get_db), customer_id: st
         select(Promotion)
         .join(PromotionCustomer, Promotion.id == PromotionCustomer.promotion_id)
         .where(
-            PromotionCustomer.customer_id == uuid.UUID(customer_id),
+            PromotionCustomer.customer_id == _uuid_lib.UUID(customer_id),
             PromotionCustomer.is_used.is_(False),
             Promotion.is_active.is_(True),
         )
@@ -146,7 +147,7 @@ async def validate_promo(
 ):
     """Kiểm tra mã khuyến mãi trước khi đặt hàng — dùng ở trang checkout để hiển thị số tiền được
     giảm ngay, KHÔNG đánh dấu đã dùng (chỉ `POST /orders` với promo_code mới thực sự áp dụng)."""
-    cart_result = await db.execute(select(Cart).where(Cart.customer_id == uuid.UUID(customer_id)))
+    cart_result = await db.execute(select(Cart).where(Cart.customer_id == _uuid_lib.UUID(customer_id)))
     cart = cart_result.scalar_one_or_none()
     if not cart:
         return ValidatePromoResponse(valid=False, message="Giỏ hàng đang trống")
@@ -165,7 +166,7 @@ async def validate_promo(
 
     try:
         _, discount, _ = await validate_and_compute_discount(
-            db, payload.code, uuid.UUID(customer_id), order_total_after_auto_discount
+            db, payload.code, _uuid_lib.UUID(customer_id), order_total_after_auto_discount
         )
         return ValidatePromoResponse(valid=True, discount_amount=discount, message="Áp dụng mã khuyến mãi thành công")
     except PromotionError as e:

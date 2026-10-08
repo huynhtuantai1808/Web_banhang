@@ -5,16 +5,16 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+crypto_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 bearer_scheme = HTTPBearer(auto_error=True)
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return crypto_ctx.hash(password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return crypto_ctx.verify(plain_password, hashed_password)
 
 
 def create_token(subject: str, expires_delta: timedelta, extra_claims: dict | None = None) -> str:

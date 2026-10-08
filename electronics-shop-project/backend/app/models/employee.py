@@ -1,7 +1,9 @@
 import uuid
+import uuid as _uuid_lib
 from datetime import datetime
 from sqlalchemy import String, Boolean, DateTime, ForeignKey, Integer, func
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID as _DB_UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base
 
@@ -16,7 +18,7 @@ class Role(Base):
 class Employee(Base):
     __tablename__ = "employees"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped["_uuid_lib.UUID"] = mapped_column(_DB_UUID(as_uuid=True), primary_key=True, default=_uuid_lib.uuid4)
     employee_code: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
     full_name: Mapped[str] = mapped_column(String(150), nullable=False)
     phone: Mapped[str] = mapped_column(String(15), unique=True, nullable=False)

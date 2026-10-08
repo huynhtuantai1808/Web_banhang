@@ -1,4 +1,5 @@
 import uuid
+import uuid as _uuid_lib
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -53,10 +54,10 @@ async def create_shipment(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Đơn hàng này đã có thông tin vận chuyển")
 
-    shipment = Shipment(id=uuid.uuid4(), order_id=order_id, **payload.model_dump())
+    shipment = Shipment(id=_uuid_lib.uuid4(), order_id=order_id, **payload.model_dump())
     db.add(shipment)
     await db.flush()
-    db.add(ShipmentStatusLog(id=uuid.uuid4(), shipment_id=shipment.id, status="pending", note="Khởi tạo vận đơn"))
+    db.add(ShipmentStatusLog(id=_uuid_lib.uuid4(), shipment_id=shipment.id, status="pending", note="Khởi tạo vận đơn"))
 
     await db.commit()
     await db.refresh(shipment)

@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Dict, List
 import uuid
+import uuid as _uuid_lib
 
 from app.db.session import get_db
 from app.models.chat import ChatRoom, ChatMessage
@@ -40,7 +41,7 @@ async def get_my_room(db: AsyncSession = Depends(get_db), customer_id: str = Dep
     """Lấy phòng chat của khách hàng hiện tại (nếu có)."""
     result = await db.execute(
         select(ChatRoom)
-        .where(ChatRoom.customer_id == uuid.UUID(customer_id))
+        .where(ChatRoom.customer_id == _uuid_lib.UUID(customer_id))
         .where(ChatRoom.status != "closed")
     )
     room = result.scalar_one_or_none()
@@ -73,18 +74,18 @@ async def get_my_room(db: AsyncSession = Depends(get_db), customer_id: str = Dep
 @router.post("/rooms")
 async def create_room(db: AsyncSession = Depends(get_db), customer_id: str = Depends(require_customer)):
     """Tạo phòng chat mới cho khách hàng."""
-    customer_uuid = uuid.UUID(customer_id)
+    cust_uid_obj = _uuid_lib.UUID(customer_id)
     # Kiểm tra xem có phòng nào đang mở không
     result = await db.execute(
         select(ChatRoom)
-        .where(ChatRoom.customer_id == customer_uuid)
+        .where(ChatRoom.customer_id == cust_uid_obj)
         .where(ChatRoom.status != "closed")
     )
     existing_room = result.scalar_one_or_none()
     if existing_room:
         return {"id": str(existing_room.id), "status": existing_room.status}
     
-    room = ChatRoom(customer_id=customer_uuid, status="waiting")
+    room = ChatRoom(customer_id=cust_uid_obj, status="waiting")
     db.add(room)
     await db.commit()
     await db.refresh(room)
@@ -116,7 +117,7 @@ async def websocket_endpoint(
                         msg = ChatMessage(
                             room_id=room_id,
                             sender_type=sender_type,
-                            sender_id=uuid.UUID(sender_id),
+                            sender_id=_uuid_lib.UUID(sender_id),
                             message=message
                         )
                         session.add(msg)

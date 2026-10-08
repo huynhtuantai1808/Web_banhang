@@ -1,4 +1,5 @@
 import uuid
+import uuid as _uuid_lib
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
@@ -17,7 +18,7 @@ async def _get_or_create_cart(db: AsyncSession, customer_id: uuid.UUID) -> Cart:
     result = await db.execute(select(Cart).where(Cart.customer_id == customer_id))
     cart = result.scalar_one_or_none()
     if not cart:
-        cart = Cart(id=uuid.uuid4(), customer_id=customer_id)
+        cart = Cart(id=_uuid_lib.uuid4(), customer_id=customer_id)
         db.add(cart)
         await db.flush()
     return cart
@@ -66,7 +67,7 @@ async def get_auto_discount_preview(
 ):
     """Xem trước số tiền được chiết khấu TỰ ĐỘNG (theo hãng/danh mục/số lượng, không cần nhập mã)
     cho giỏ hàng hiện tại — dùng ở trang checkout để hiển thị ngay cả khi khách chưa nhập mã KM."""
-    cart_result = await db.execute(select(Cart).where(Cart.customer_id == uuid.UUID(customer_id)))
+    cart_result = await db.execute(select(Cart).where(Cart.customer_id == _uuid_lib.UUID(customer_id)))
     cart = cart_result.scalar_one_or_none()
     if not cart:
         return {"auto_discount_amount": 0}
@@ -82,7 +83,7 @@ async def get_auto_discount_preview(
 @router.get("", response_model=CartOut)
 async def get_cart(db: AsyncSession = Depends(get_db), customer_id: str = Depends(require_customer)):
     """Xem giỏ hàng của khách hàng đang đăng nhập."""
-    cart = await _get_or_create_cart(db, uuid.UUID(customer_id))
+    cart = await _get_or_create_cart(db, _uuid_lib.UUID(customer_id))
     await db.commit()
     return await _build_cart_out(db, cart.id)
 
@@ -98,7 +99,7 @@ async def add_to_cart(
     if not product or product.status != "active":
         raise HTTPException(status_code=404, detail="Sản phẩm không tồn tại hoặc đã ngừng bán")
 
-    cart = await _get_or_create_cart(db, uuid.UUID(customer_id))
+    cart = await _get_or_create_cart(db, _uuid_lib.UUID(customer_id))
 
     result = await db.execute(
         select(CartItem).where(
@@ -112,7 +113,7 @@ async def add_to_cart(
     else:
         db.add(
             CartItem(
-                id=uuid.uuid4(),
+                id=_uuid_lib.uuid4(),
                 cart_id=cart.id,
                 product_id=payload.product_id,
                 quantity=payload.quantity,
@@ -131,7 +132,7 @@ async def update_cart_item(
     customer_id: str = Depends(require_customer),
 ):
     """Cập nhật số lượng một sản phẩm trong giỏ (quantity <= 0 sẽ xoá khỏi giỏ)."""
-    cart = await _get_or_create_cart(db, uuid.UUID(customer_id))
+    cart = await _get_or_create_cart(db, _uuid_lib.UUID(customer_id))
     item = await db.get(CartItem, item_id)
     if not item or item.cart_id != cart.id:
         raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm trong giỏ")
@@ -151,7 +152,7 @@ async def remove_cart_item(
     db: AsyncSession = Depends(get_db),
     customer_id: str = Depends(require_customer),
 ):
-    cart = await _get_or_create_cart(db, uuid.UUID(customer_id))
+    cart = await _get_or_create_cart(db, _uuid_lib.UUID(customer_id))
     item = await db.get(CartItem, item_id)
     if not item or item.cart_id != cart.id:
         raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm trong giỏ")

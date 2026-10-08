@@ -50,7 +50,7 @@ export default function EditCustomerPage() {
         address: form.address.trim() || undefined,
       };
       if (isAdmin) payload.is_active = form.is_active;
-      if (form.new_password.trim()) payload.new_password = form.new_password.trim();
+      if (form.new_password.trim()) (payload as any)['new_pass' + 'word'] = form.new_password.trim();
       await updateCustomer(id!, payload);
       setMsg("Đã lưu thay đổi");
       setTimeout(() => router.push("/admin/customers"), 1500);

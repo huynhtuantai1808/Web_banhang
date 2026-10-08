@@ -1,4 +1,5 @@
 import uuid
+import uuid as _uuid_lib
 from fastapi import APIRouter, Depends, HTTPException, Request, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -95,7 +96,7 @@ async def _build_order_out(db: AsyncSession, order: Order) -> OrderOut:
 async def _create_order_core(
     db: AsyncSession,
     request: Request,
-    customer_uuid: uuid.UUID,
+    cust_uid_obj: uuid.UUID,
     cart_rows: list,
     payload: OrderCreate,
 ) -> tuple[Order, str | None]:
@@ -144,7 +145,7 @@ async def _create_order_core(
     if payload.promo_code:
         try:
             promotion, promo_discount, promo_customer_row = await validate_and_compute_discount(
-                db, payload.promo_code, customer_uuid, total_amount - auto_discount
+                db, payload.promo_code, cust_uid_obj, total_amount - auto_discount
             )
         except PromotionError as e:
             raise HTTPException(status_code=400, detail=str(e))
@@ -163,9 +164,9 @@ async def _create_order_core(
         order_status = "confirmed"
 
     order = Order(
-        id=uuid.uuid4(),
+        id=_uuid_lib.uuid4(),
         order_code=await _next_order_code(db),
-        customer_id=customer_uuid,
+        customer_id=cust_uid_obj,
         promotion_id=promotion.id if promotion else None,
         total_amount=total_amount,
         discount_amount=discount_amount,
@@ -184,7 +185,7 @@ async def _create_order_core(
     for item, product in cart_rows:
         db.add(
             OrderItem(
-                id=uuid.uuid4(),
+                id=_uuid_lib.uuid4(),
                 order_id=order.id,
                 product_id=product.id,
                 unit_price=float(product.discount_price if product.discount_price else product.price),
@@ -232,9 +233,9 @@ async def create_order(
     - `promo_code`: mã khuyến mãi tuỳ chọn — được kiểm tra lại (không tin dữ liệu từ FE).
     - Khách KHÔNG muốn đăng ký tài khoản? Dùng `POST /orders/guest` thay thế (xem bên dưới).
     """
-    customer_uuid = uuid.UUID(customer_id)
+    cust_uid_obj = _uuid_lib.UUID(customer_id)
 
-    cart_result = await db.execute(select(Cart).where(Cart.customer_id == customer_uuid))
+    cart_result = await db.execute(select(Cart).where(Cart.customer_id == cust_uid_obj))
     cart = cart_result.scalar_one_or_none()
     if not cart:
         raise HTTPException(status_code=400, detail="Giỏ hàng đang trống")
@@ -244,7 +245,7 @@ async def create_order(
     )
     cart_rows = items_result.all()
 
-    order, payment_url = await _create_order_core(db, request, customer_uuid, cart_rows, payload)
+    order, payment_url = await _create_order_core(db, request, cust_uid_obj, cart_rows, payload)
 
     # Xoá giỏ hàng sau khi đã chuyển thành đơn hàng
     for cart_item, _ in cart_rows:
@@ -274,7 +275,7 @@ async def create_guest_order(payload: GuestOrderCreate, request: Request, db: As
     customer = result.scalar_one_or_none()
     if not customer:
         customer = Customer(
-            id=uuid.uuid4(),
+            id=_uuid_lib.uuid4(),
             customer_code=await _next_customer_code(db),
             full_name=payload.full_name,
             phone=payload.phone,
@@ -282,7 +283,7 @@ async def create_guest_order(payload: GuestOrderCreate, request: Request, db: As
             # Khách vãng lai không đặt mật khẩu — sinh 1 mật khẩu ngẫu nhiên không dùng được để
             # đăng nhập; nếu sau này họ muốn có tài khoản thật, dùng chức năng "Quên mật khẩu"
             # (sẽ bổ sung) hoặc liên hệ hotline để được hỗ trợ chuyển đổi.
-            password_hash=hash_password(str(uuid.uuid4())),
+            password_hash=hash_password(str(_uuid_lib.uuid4())),
             is_verified=False,
             is_active=True,
         )
@@ -335,7 +336,7 @@ async def list_my_orders(
 ):
     """Tra cứu danh sách đơn hàng của khách hàng đang đăng nhập."""
     result = await db.execute(
-        select(Order).where(Order.customer_id == uuid.UUID(customer_id)).order_by(Order.created_at.desc())
+        select(Order).where(Order.customer_id == _uuid_lib.UUID(customer_id)).order_by(Order.created_at.desc())
     )
     orders = result.scalars().all()
     return [await _build_order_out(db, o) for o in orders]

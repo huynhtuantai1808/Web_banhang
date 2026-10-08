@@ -1,7 +1,9 @@
 import uuid
+import uuid as _uuid_lib
 from datetime import datetime
 from sqlalchemy import String, Numeric, DateTime, ForeignKey, Integer, Text, func
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID as _DB_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base
 
@@ -9,9 +11,9 @@ from app.db.base import Base
 class Order(Base):
     __tablename__ = "orders"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped["_uuid_lib.UUID"] = mapped_column(_DB_UUID(as_uuid=True), primary_key=True, default=_uuid_lib.uuid4)
     order_code: Mapped[str] = mapped_column(String(30), unique=True, nullable=False)
-    customer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("customers.id"))
+    customer_id: Mapped["_uuid_lib.UUID"] = mapped_column(ForeignKey("customers.id"))
     promotion_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("promotions.id"))
     total_amount: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
     discount_amount: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
@@ -31,9 +33,9 @@ class Order(Base):
 class OrderItem(Base):
     __tablename__ = "order_items"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    order_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("orders.id", ondelete="CASCADE"))
-    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"))
+    id: Mapped["_uuid_lib.UUID"] = mapped_column(_DB_UUID(as_uuid=True), primary_key=True, default=_uuid_lib.uuid4)
+    order_id: Mapped["_uuid_lib.UUID"] = mapped_column(ForeignKey("orders.id", ondelete="CASCADE"))
+    product_id: Mapped["_uuid_lib.UUID"] = mapped_column(ForeignKey("products.id"))
     unit_price: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     device_code: Mapped[str | None] = mapped_column(String(100), nullable=True)

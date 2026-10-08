@@ -1,4 +1,5 @@
 import uuid
+import uuid as _uuid_lib
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -53,7 +54,7 @@ async def create_discount_rule(
     if not (0 < payload.discount_percent <= 100):
         raise HTTPException(status_code=400, detail="discount_percent phải trong khoảng (0, 100]")
 
-    rule = DiscountRule(id=uuid.uuid4(), **payload.model_dump())
+    rule = DiscountRule(id=_uuid_lib.uuid4(), **payload.model_dump())
     db.add(rule)
     await db.commit()
     await db.refresh(rule)

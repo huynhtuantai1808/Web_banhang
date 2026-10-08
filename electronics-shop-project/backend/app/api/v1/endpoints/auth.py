@@ -1,4 +1,5 @@
 import uuid
+import uuid as _uuid_lib
 from fastapi import APIRouter, Depends, HTTPException, status, Request, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -28,7 +29,7 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
         raise HTTPException(status_code=400, detail="Số điện thoại đã được đăng ký")
 
     customer = Customer(
-        id=uuid.uuid4(),
+        id=_uuid_lib.uuid4(),
         customer_code=await _generate_customer_code(db),
         full_name=payload.full_name,
         phone=payload.phone,

@@ -1,4 +1,5 @@
 import uuid
+import uuid as _uuid_lib
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_, and_, func, cast, String
@@ -245,7 +246,7 @@ async def create_product(
     category_id = payload.category_id if payload.category_id else await get_or_create_category(db, payload.category)
 
     product = Product(
-        id=uuid.uuid4(),
+        id=_uuid_lib.uuid4(),
         product_code=payload.product_code,
         name=payload.name,
         description=payload.description,
@@ -398,27 +399,27 @@ async def create_review(
         raise HTTPException(status_code=400, detail="Rating phải từ 1 đến 5 sao")
 
     customer = None
-    customer_uuid = None
+    cust_uid_obj = None
     guest_name = None
 
     if customer_id:
-        customer_uuid = uuid.UUID(customer_id)
+        cust_uid_obj = _uuid_lib.UUID(customer_id)
         existing = await db.execute(
             select(ProductReview).where(
                 ProductReview.product_id == product_id,
-                ProductReview.customer_id == customer_uuid,
+                ProductReview.customer_id == cust_uid_obj,
             )
         )
         if existing.scalar_one_or_none():
             raise HTTPException(status_code=409, detail="Bạn đã đánh giá sản phẩm này rồi")
-        customer = await db.get(Customer, customer_uuid)
+        customer = await db.get(Customer, cust_uid_obj)
     else:
         import secrets
         guest_name = f"Khách ẩn danh {secrets.choice(range(1000, 10000))}"
 
     review = ProductReview(
         product_id=product_id,
-        customer_id=customer_uuid,
+        customer_id=cust_uid_obj,
         guest_name=guest_name,
         rating=payload.rating,
         comment=payload.comment,

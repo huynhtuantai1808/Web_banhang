@@ -1,7 +1,9 @@
 import uuid
+import uuid as _uuid_lib
 from datetime import datetime
 from sqlalchemy import String, Numeric, Boolean, DateTime, ForeignKey, Integer, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID as _DB_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base
 
@@ -9,7 +11,7 @@ from app.db.base import Base
 class Promotion(Base):
     __tablename__ = "promotions"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped["_uuid_lib.UUID"] = mapped_column(_DB_UUID(as_uuid=True), primary_key=True, default=_uuid_lib.uuid4)
     code: Mapped[str] = mapped_column(String(30), unique=True, nullable=False)
     name: Mapped[str] = mapped_column(String(150), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
@@ -27,9 +29,9 @@ class PromotionCustomer(Base):
     __tablename__ = "promotion_customer"
     __table_args__ = (UniqueConstraint("promotion_id", "customer_id"),)
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    promotion_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("promotions.id", ondelete="CASCADE"))
-    customer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("customers.id", ondelete="CASCADE"))
+    id: Mapped["_uuid_lib.UUID"] = mapped_column(_DB_UUID(as_uuid=True), primary_key=True, default=_uuid_lib.uuid4)
+    promotion_id: Mapped["_uuid_lib.UUID"] = mapped_column(ForeignKey("promotions.id", ondelete="CASCADE"))
+    customer_id: Mapped["_uuid_lib.UUID"] = mapped_column(ForeignKey("customers.id", ondelete="CASCADE"))
     is_used: Mapped[bool] = mapped_column(Boolean, default=False)
     assigned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -39,7 +41,7 @@ class DiscountRule(Base):
     """Quy tắc chiết khấu theo danh mục/hãng/số lượng."""
     __tablename__ = "discount_rules"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped["_uuid_lib.UUID"] = mapped_column(_DB_UUID(as_uuid=True), primary_key=True, default=_uuid_lib.uuid4)
     category_id: Mapped[int | None] = mapped_column(ForeignKey("categories.id"))
     brand_id: Mapped[int | None] = mapped_column(ForeignKey("brands.id"))
     min_quantity: Mapped[int] = mapped_column(Integer, default=1)

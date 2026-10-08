@@ -1,7 +1,9 @@
 import uuid
+import uuid as _uuid_lib
 from datetime import datetime
 from sqlalchemy import String, Numeric, Boolean, DateTime, ForeignKey, Integer, Text, func
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID as _DB_UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base
 
@@ -26,7 +28,7 @@ class Category(Base):
 class Product(Base):
     __tablename__ = "products"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped["_uuid_lib.UUID"] = mapped_column(_DB_UUID(as_uuid=True), primary_key=True, default=_uuid_lib.uuid4)
     product_code: Mapped[str] = mapped_column(String(30), unique=True, nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)          # mô tả ngắn (plain text)
@@ -53,8 +55,8 @@ class ProductUnit(Base):
     """Từng đơn vị tồn kho cụ thể theo Serial/IMEI."""
     __tablename__ = "product_units"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"))
+    id: Mapped["_uuid_lib.UUID"] = mapped_column(_DB_UUID(as_uuid=True), primary_key=True, default=_uuid_lib.uuid4)
+    product_id: Mapped["_uuid_lib.UUID"] = mapped_column(ForeignKey("products.id"))
     serial_number: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     imei_code: Mapped[str | None] = mapped_column(String(50), unique=True)
     status: Mapped[str] = mapped_column(String(20), default="in_stock")
@@ -64,8 +66,8 @@ class ProductUnit(Base):
 class ProductImage(Base):
     __tablename__ = "product_images"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"))
+    id: Mapped["_uuid_lib.UUID"] = mapped_column(_DB_UUID(as_uuid=True), primary_key=True, default=_uuid_lib.uuid4)
+    product_id: Mapped["_uuid_lib.UUID"] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"))
     url: Mapped[str] = mapped_column(Text, nullable=False)
     is_primary: Mapped[bool] = mapped_column(Boolean, default=False)
 
@@ -73,8 +75,8 @@ class ProductImage(Base):
 class InventoryTransaction(Base):
     __tablename__ = "inventory_transactions"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"))
+    id: Mapped["_uuid_lib.UUID"] = mapped_column(_DB_UUID(as_uuid=True), primary_key=True, default=_uuid_lib.uuid4)
+    product_id: Mapped["_uuid_lib.UUID"] = mapped_column(ForeignKey("products.id"))
     employee_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("employees.id"))
     type: Mapped[str] = mapped_column(String(10), nullable=False)  # import | export
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)

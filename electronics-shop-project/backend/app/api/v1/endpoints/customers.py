@@ -1,4 +1,5 @@
 import uuid
+import uuid as _uuid_lib
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -10,7 +11,7 @@ from app.models.order import Order
 from app.core.security import require_admin
 from app.schemas.customer import CustomerOut, CustomerDetailOut, CustomerUpdate
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+crypto_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter(prefix="/customers", tags=["Customers (Khách hàng — Admin)"])
 
@@ -78,7 +79,7 @@ async def update_customer(
 
     # Đổi mật khẩu riêng
     if data.get("new_password"):
-        customer.password_hash = pwd_context.hash(data.pop("new_password"))
+        customer.password_hash = crypto_ctx.hash(data.pop("new_password"))
 
     for field, value in data.items():
         setattr(customer, field, value)

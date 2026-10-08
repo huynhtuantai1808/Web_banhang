@@ -1,4 +1,5 @@
 import uuid
+import uuid as _uuid_lib
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -35,7 +36,7 @@ async def upload_product_image(
         for img in result.scalars().all():
             img.is_primary = False
 
-    image = ProductImage(id=uuid.uuid4(), product_id=product_id, url=image_url, is_primary=is_primary)
+    image = ProductImage(id=_uuid_lib.uuid4(), product_id=product_id, url=image_url, is_primary=is_primary)
     db.add(image)
     await db.commit()
 

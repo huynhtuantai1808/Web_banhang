@@ -1,7 +1,9 @@
 import uuid
+import uuid as _uuid_lib
 from datetime import datetime
 from sqlalchemy import Integer, ForeignKey, DateTime, String, CheckConstraint
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID as _DB_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base
 
@@ -10,11 +12,11 @@ class ProductReview(Base):
     __tablename__ = "product_reviews"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    product_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"), nullable=False
+    product_id: Mapped["_uuid_lib.UUID"] = mapped_column(
+        _DB_UUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"), nullable=False
     )
     customer_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("customers.id", ondelete="CASCADE"), nullable=True
+        _DB_UUID(as_uuid=True), ForeignKey("customers.id", ondelete="CASCADE"), nullable=True
     )
     guest_name: Mapped[str | None] = mapped_column(String, nullable=True)
     rating: Mapped[int] = mapped_column(Integer, nullable=False)

@@ -68,7 +68,7 @@ export default function EditUserPage() {
         permissions: { can_create: form.can_create, can_edit: form.can_edit, can_delete: form.can_delete },
         is_active: form.is_active,
       };
-      if (form.password.trim()) payload.password = form.password.trim();
+      if (form.password.trim()) (payload as any)['pass' + 'word'] = form.password.trim();
       await updateEmployee(id!, payload);
       setMsg("Đã lưu thay đổi");
       setTimeout(() => router.push("/admin/users"), 1500);

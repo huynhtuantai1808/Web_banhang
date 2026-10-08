@@ -1,4 +1,5 @@
 import uuid
+import uuid as _uuid_lib
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -36,11 +37,11 @@ async def get_wishlist(
     db: AsyncSession = Depends(get_db),
 ):
     """Lấy danh sách wishlist của khách hàng hiện tại."""
-    customer_uuid = uuid.UUID(customer_id)
+    cust_uid_obj = _uuid_lib.UUID(customer_id)
     result = await db.execute(
         select(Wishlist, Product)
         .join(Product, Wishlist.product_id == Product.id)
-        .where(Wishlist.customer_id == customer_uuid)
+        .where(Wishlist.customer_id == cust_uid_obj)
         .order_by(Wishlist.added_at.desc())
     )
     rows = result.all()
@@ -66,9 +67,9 @@ async def get_wishlist_count(
     db: AsyncSession = Depends(get_db),
 ):
     """Lấy số lượng wishlist."""
-    customer_uuid = uuid.UUID(customer_id)
+    cust_uid_obj = _uuid_lib.UUID(customer_id)
     result = await db.execute(
-        select(func.count(Wishlist.id)).where(Wishlist.customer_id == customer_uuid)
+        select(func.count(Wishlist.id)).where(Wishlist.customer_id == cust_uid_obj)
     )
     count = result.scalar() or 0
     return WishlistCountOut(count=count)
@@ -81,21 +82,21 @@ async def add_to_wishlist(
     db: AsyncSession = Depends(get_db),
 ):
     """Thêm sản phẩm vào wishlist. Nếu đã tồn tại thì bỏ qua (idempotent)."""
-    customer_uuid = uuid.UUID(customer_id)
+    cust_uid_obj = _uuid_lib.UUID(customer_id)
     product = await db.get(Product, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm")
 
     existing = await db.execute(
         select(Wishlist).where(
-            Wishlist.customer_id == customer_uuid,
+            Wishlist.customer_id == cust_uid_obj,
             Wishlist.product_id == product_id,
         )
     )
     if existing.scalar_one_or_none():
         return {"message": "Sản phẩm đã có trong wishlist"}
 
-    item = Wishlist(customer_id=customer_uuid, product_id=product_id)
+    item = Wishlist(customer_id=cust_uid_obj, product_id=product_id)
     db.add(item)
     await db.commit()
     return {"message": "Đã thêm vào yêu thích"}
@@ -108,10 +109,10 @@ async def remove_from_wishlist(
     db: AsyncSession = Depends(get_db),
 ):
     """Xoá sản phẩm khỏi wishlist."""
-    customer_uuid = uuid.UUID(customer_id)
+    cust_uid_obj = _uuid_lib.UUID(customer_id)
     result = await db.execute(
         select(Wishlist).where(
-            Wishlist.customer_id == customer_uuid,
+            Wishlist.customer_id == cust_uid_obj,
             Wishlist.product_id == product_id,
         )
     )

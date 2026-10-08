@@ -1,4 +1,5 @@
 import uuid
+import uuid as _uuid_lib
 from typing import Annotated
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -141,7 +142,7 @@ async def create_inventory_transaction(
         
     new_stock = product.stock_quantity
 
-    transaction = InventoryTransaction(id=uuid.uuid4(), **payload.model_dump())
+    transaction = InventoryTransaction(id=_uuid_lib.uuid4(), **payload.model_dump())
     db.add(transaction)
     await db.commit()
     

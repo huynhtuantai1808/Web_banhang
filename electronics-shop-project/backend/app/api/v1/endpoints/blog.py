@@ -1,4 +1,5 @@
 import uuid
+import uuid as _uuid_lib
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -99,7 +100,7 @@ async def create_post(
     published_at = datetime.utcnow() if payload.is_published else None
 
     post = BlogPost(
-        id=uuid.uuid4(),
+        id=_uuid_lib.uuid4(),
         title=payload.title,
         slug=slug,
         summary=payload.summary,
@@ -109,7 +110,7 @@ async def create_post(
         is_published=payload.is_published,
         published_at=published_at,
         display_order=payload.display_order,
-        created_by=uuid.UUID(employee_id) if employee_id else None,
+        created_by=_uuid_lib.UUID(employee_id) if employee_id else None,
     )
     db.add(post)
     await db.commit()

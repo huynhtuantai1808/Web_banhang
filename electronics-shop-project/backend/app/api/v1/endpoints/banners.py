@@ -1,4 +1,5 @@
 import uuid
+import uuid as _uuid_lib
 from datetime import datetime
 from typing import Annotated
 from pydantic import BaseModel
@@ -113,7 +114,7 @@ async def create_banner(
 ):
     """Tạo banner mới (image_url đã được upload trước qua /upload-image)."""
     banner = Banner(
-        id=uuid.uuid4(),
+        id=_uuid_lib.uuid4(),
         title=payload.title,
         subtitle=payload.subtitle,
         description=payload.description,

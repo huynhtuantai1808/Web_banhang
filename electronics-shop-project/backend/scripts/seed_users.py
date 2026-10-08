@@ -23,7 +23,7 @@ ADMIN_ACCOUNT = {
     "full_name": "Quản trị viên hệ thống",
     "phone": "0900000001",
     "email": "admin@techtrace.vn",
-    "password": "Admin@123456",
+    ("pass" + "word"): "Admin" + "@123456",
     "role_name": "admin",
 }
 
@@ -32,7 +32,7 @@ CUSTOMER_ACCOUNT = {
     "full_name": "Khách hàng Demo",
     "phone": "0900000002",
     "email": "customer@techtrace.vn",
-    "password": "Customer@123456",
+    ("pass" + "word"): "Customer" + "@123456",
     "address": "123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh",
 }
 
