@@ -1,5 +1,5 @@
 import asyncio
-import random
+import secrets
 import uuid
 from app.core.redis_client import redis_client
 from app.core.config import settings
@@ -20,7 +20,7 @@ async def generate_otp(user_id: str) -> tuple[str, str]:
     otp_code: mã OTP thật, gửi qua SMS/Email, KHÔNG trả về client
     """
     otp_token = str(uuid.uuid4())
-    otp_code = str(random.randint(10 ** (settings.OTP_LENGTH - 1), 10 ** settings.OTP_LENGTH - 1))
+    otp_code = str(secrets.choice(range(10 ** (settings.OTP_LENGTH - 1), 10 ** settings.OTP_LENGTH)))
 
     await redis_client.set(_otp_key(otp_token), f"{user_id}:{otp_code}", ex=settings.OTP_TTL_SECONDS)
     await redis_client.set(_attempt_key(otp_token), 0, ex=settings.OTP_TTL_SECONDS)

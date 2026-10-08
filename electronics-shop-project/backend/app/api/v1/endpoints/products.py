@@ -402,7 +402,6 @@ async def create_review(
     guest_name = None
 
     if customer_id:
-        import random
         customer_uuid = uuid.UUID(customer_id)
         existing = await db.execute(
             select(ProductReview).where(
@@ -414,8 +413,8 @@ async def create_review(
             raise HTTPException(status_code=409, detail="Bạn đã đánh giá sản phẩm này rồi")
         customer = await db.get(Customer, customer_uuid)
     else:
-        import random
-        guest_name = f"Khách ẩn danh {random.randint(1000, 9999)}"
+        import secrets
+        guest_name = f"Khách ẩn danh {secrets.choice(range(1000, 10000))}"
 
     review = ProductReview(
         product_id=product_id,
