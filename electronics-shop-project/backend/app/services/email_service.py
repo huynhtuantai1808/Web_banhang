@@ -380,3 +380,52 @@ def send_preorder_arrived_notification(product_name: str, to_email: str, order_c
     </html>
     """
     _send_email_smtp(f"Sản phẩm {product_name} đã có hàng!", html_content, to_email)
+
+
+def send_installment_upcoming_email(to_email: str, order_code: str, period_no: int, due_date: str, amount: float):
+    if not to_email:
+        return
+        
+    html_content = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #17a2b8;">Thông báo: Sắp đến hạn thanh toán trả góp</h2>
+        <p>Xin chào quý khách,</p>
+        <p>Hệ thống Electronics Shop xin thông báo quý khách có một khoản thanh toán trả góp sắp đến hạn:</p>
+        <div style="background-color: #f8f9fa; border-left: 4px solid #17a2b8; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0; font-size: 16px;"><strong>Mã đơn hàng:</strong> {order_code}</p>
+            <p style="margin: 0; font-size: 16px;"><strong>Kỳ thanh toán:</strong> Kỳ {period_no}</p>
+            <p style="margin: 0; font-size: 16px;"><strong>Hạn thanh toán:</strong> {due_date}</p>
+            <p style="margin: 0; font-size: 16px;"><strong>Số tiền cần thanh toán:</strong> {format_vnd(int(amount))}</p>
+        </div>
+        <p>Vui lòng sắp xếp thanh toán trước hạn để tránh phát sinh phí trễ hạn. Nếu quý khách đã thanh toán, xin vui lòng bỏ qua email này.</p>
+        <p>Trân trọng,<br>Đội ngũ Electronics Shop</p>
+    </body>
+    </html>
+    """
+    _send_email_smtp(f"Sắp đến hạn thanh toán trả góp - Đơn {order_code}", html_content, to_email)
+
+
+def send_installment_overdue_email(to_email: str, order_code: str, period_no: int, due_date: str, amount: float):
+    if not to_email:
+        return
+        
+    html_content = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #dc3545;">Cảnh báo: Quá hạn thanh toán trả góp</h2>
+        <p>Xin chào quý khách,</p>
+        <p>Hệ thống Electronics Shop xin thông báo quý khách có một khoản thanh toán trả góp đã QUÁ HẠN:</p>
+        <div style="background-color: #fff3f3; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0; font-size: 16px;"><strong>Mã đơn hàng:</strong> {order_code}</p>
+            <p style="margin: 0; font-size: 16px;"><strong>Kỳ thanh toán:</strong> Kỳ {period_no}</p>
+            <p style="margin: 0; font-size: 16px;"><strong>Hạn thanh toán:</strong> {due_date} (Đã quá hạn)</p>
+            <p style="margin: 0; font-size: 16px; color: #dc3545;"><strong>Số tiền cần thanh toán:</strong> {format_vnd(int(amount))}</p>
+        </div>
+        <p>Vui lòng thanh toán NGAY LẬP TỨC để đảm bảo quyền lợi và tránh các hình thức xử lý nợ theo quy định của hợp đồng.</p>
+        <p>Nếu quý khách đã thanh toán trong vòng 24h qua, xin vui lòng bỏ qua email này.</p>
+        <p>Trân trọng,<br>Đội ngũ Electronics Shop</p>
+    </body>
+    </html>
+    """
+    _send_email_smtp(f"QUÁ HẠN THANH TOÁN TRẢ GÓP - Đơn {order_code}", html_content, to_email)

@@ -213,3 +213,60 @@ async def mark_installment_payment_paid(
         id=payment.id, period_no=payment.period_no, due_date=payment.due_date,
         amount=float(payment.amount), status=payment.status,
     )
+
+
+@router.post("/admin/installments/check-due")
+async def check_due_installments(
+    db: AsyncSession = Depends(get_db),
+    _employee_id: str = Depends(require_permission("can_edit")),
+):
+    """
+    Quét qua các kỳ trả góp chưa thanh toán:
+    - Nếu quá hạn (due_date < today) thì gửi email cảnh báo.
+    - Nếu sắp đến hạn (due_date == today + 3 ngày) thì gửi email nhắc nhở.
+    """
+    from datetime import date, timedelta
+    from app.services.email_service import send_installment_upcoming_email, send_installment_overdue_email
+    
+    today = date.today()
+    upcoming_date = today + timedelta(days=3)
+    
+    result = await db.execute(
+        select(InstallmentPayment, InstallmentPlan, Order, Customer)
+        .join(InstallmentPlan, InstallmentPayment.plan_id == InstallmentPlan.id)
+        .join(Order, InstallmentPlan.order_id == Order.id)
+        .join(Customer, Order.customer_id == Customer.id)
+        .where(InstallmentPayment.status == "unpaid")
+    )
+    
+    unpaid_payments = result.all()
+    upcoming_count = 0
+    overdue_count = 0
+    
+    for payment, plan, order, customer in unpaid_payments:
+        if not customer.email:
+            continue
+            
+        if payment.due_date == upcoming_date:
+            send_installment_upcoming_email(
+                to_email=customer.email,
+                order_code=order.order_code,
+                period_no=payment.period_no,
+                due_date=payment.due_date.strftime("%d/%m/%Y"),
+                amount=float(payment.amount)
+            )
+            upcoming_count += 1
+            
+        elif payment.due_date < today:
+            send_installment_overdue_email(
+                to_email=customer.email,
+                order_code=order.order_code,
+                period_no=payment.period_no,
+                due_date=payment.due_date.strftime("%d/%m/%Y"),
+                amount=float(payment.amount)
+            )
+            overdue_count += 1
+            
+    return {
+        "message": f"Đã quét và gửi {upcoming_count} email nhắc nhở sắp tới hạn, {overdue_count} email cảnh báo quá hạn."
+    }
