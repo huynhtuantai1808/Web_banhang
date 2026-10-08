@@ -239,7 +239,7 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
         
         {installment_html}
 
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; line-height: 1.2;" border="0" cellpadding="0" cellspacing="0">
             <thead>
                 <tr style="background-color: #f8f9fa;">
                     <th style="padding: 5px; border-bottom: 2px solid #ddd; text-align: left;">Sản phẩm</th>
@@ -253,12 +253,16 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
             </tbody>
         </table>
 
-        <div style="width: 350px; float: right;">
-            <table style="width: 100%;" border="0" cellpadding="0" cellspacing="0">
-                {summary_html}
-            </table>
-        </div>
-        <div style="clear: both;"></div>
+        <table style="width: 100%;" border="0" cellpadding="0" cellspacing="0">
+            <tr>
+                <td style="width: 50%;"></td>
+                <td style="width: 50%;">
+                    <table style="width: 100%; line-height: 1.2;" border="0" cellpadding="0" cellspacing="0">
+                        {summary_html}
+                    </table>
+                </td>
+            </tr>
+        </table>
 
         <div style="margin-top: 30px; text-align: center; font-size: 0.9em; color: #666; border-top: 1px solid #ccc; padding-top: 10px;">
             Tra cứu hóa đơn điện tử tại: <a href="https://electronicsshop.local/invoice">https://electronicsshop.local/invoice</a><br/>
