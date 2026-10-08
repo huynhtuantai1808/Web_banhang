@@ -183,7 +183,7 @@ const fetchReport = useCallback(async () => {
                       <XAxis dataKey="shortDate" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888' }} dy={10} />
                       <YAxis yAxisId="left" tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888' }} dx={-10} />
                       <Tooltip 
-                        formatter={(value: number, name: string) => [formatVND(value), name === 'revenue' ? 'Thực hiện' : 'Mục tiêu']}
+                        formatter={(value: any, name: any) => [formatVND(Number(value) || 0), name === 'revenue' ? 'Thực hiện' : 'Mục tiêu']}
                         labelFormatter={(label) => `Ngày ${label}`}
                         contentStyle={{ backgroundColor: '#1a1a1a', borderColor: '#333', borderRadius: '8px' }}
                       />
