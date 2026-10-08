@@ -642,3 +642,6 @@ Cần bổ sung tiếp:
   - Hiển thị UI sao đánh giá linh hoạt dựa trên dữ liệu thật.
   - Thêm chức năng cho Admin ẩn/hiện (is_hidden) bình luận.
 - **Dọn Dẹp Workspace**: Đã dọn dẹp các tệp .md tạm nhằm giữ gọn thư mục project (Tin gọn Workspace).
+
+- **Hóa đơn điện tử (PDF)**: Tích hợp thư viện `xhtml2pdf` để tự động sinh hóa đơn điện tử đính kèm vào email gửi khách hàng (múi giờ UTC+7, font Arial tiếng Việt, tự động căn chỉnh bố cục gọn gàng).
+- **Background Tasks cho Email/OTP**: Đưa tác vụ gửi OTP qua SMTP vào tiến trình chạy ngầm (FastAPI BackgroundTasks), giảm thời gian phản hồi API đăng nhập của khách hàng từ 10s xuống còn dưới 1s.

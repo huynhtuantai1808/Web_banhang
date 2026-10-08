@@ -252,3 +252,6 @@ Hai cấp phân quyền:
 - **Frontend SiteSettingsProvider**: Inject cấu hình site_settings ở cấp độ gốc của Frontend để mọi Component có thể dùng mà không cần query lại.
 - **Lọc Sản Phẩm Động (Dynamic Search/Filter)**: Bọc Suspense ở các page sử dụng useSearchParams (Next.js App Router yêu cầu) để xử lý URL query cho lọc Hãng, lọc Giá, Tìm kiếm sản phẩm.
 - **Review/Đánh giá (Khách vãng lai)**: Hỗ trợ đánh giá ẩn danh (nullable customer_id), giao diện 5 sao linh động, Admin có quyền ẩn/hiện đánh giá.
+
+- **Hóa đơn điện tử (PDF)**: Tích hợp thư viện `xhtml2pdf` để tự động sinh hóa đơn điện tử đính kèm vào email gửi khách hàng (múi giờ UTC+7, font Arial tiếng Việt, tự động căn chỉnh bố cục gọn gàng).
+- **Background Tasks cho Email/OTP**: Đưa tác vụ gửi OTP qua SMTP vào tiến trình chạy ngầm (FastAPI BackgroundTasks), giảm thời gian phản hồi API đăng nhập của khách hàng từ 10s xuống còn dưới 1s.
