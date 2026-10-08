@@ -319,7 +319,7 @@ def send_electronic_invoice(order: Order, items: list, user: Customer = None, gu
     _send_email_smtp(f"Hóa đơn điện tử - Đơn hàng {order.order_code}", html_content, to_email, attachments)
 
 
-async def send_revenue_report_email(to_email: str, period: str, from_date: str, to_date: str, total_revenue: float, order_count: int, top_products: list):
+async def send_revenue_report_email(to_email: str, period: str, from_date: str, to_date: str, total_revenue: float, order_count: int, top_products: list, attachments: list = None):
     html_content = f"""
     <html>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -357,7 +357,7 @@ async def send_revenue_report_email(to_email: str, period: str, from_date: str, 
     </body>
     </html>
     """
-    _send_email_smtp(f"Báo cáo doanh thu {period.upper()}", html_content, to_email)
+    _send_email_smtp(f"Báo cáo doanh thu {period.upper()}", html_content, to_email, attachments)
 
 
 def send_preorder_arrived_notification(product_name: str, to_email: str, order_code: str):

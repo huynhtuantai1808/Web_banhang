@@ -1,3 +1,5 @@
+import pandas as pd
+import io
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -207,6 +209,51 @@ async def send_revenue_email(
         for name, qty, rev in top_products_result.all()
     ]
 
+    orders_result = await db.execute(
+        select(Order, Customer.full_name)
+        .outerjoin(Customer, Order.customer_id == Customer.id)
+        .where(
+            and_(
+                Order.status.in_(["confirmed", "completed", "shipping"]),
+                Order.created_at >= start,
+                Order.created_at < end,
+            )
+        )
+        .order_by(Order.created_at.desc())
+    )
+    orders_data = []
+    for order, customer_name in orders_result.all():
+        orders_data.append({
+            "Mã đơn hàng": order.order_code,
+            "Khách hàng": customer_name or "Khách vãng lai",
+            "Trạng thái": order.status,
+            "Thanh toán": order.payment_status,
+            "Tổng tiền (VND)": float(order.final_amount),
+            "Ngày đặt": order.created_at.strftime("%Y-%m-%d %H:%M:%S") if order.created_at else ""
+        })
+    
+    if orders_data:
+        orders_data.append({
+            "Mã đơn hàng": "TỔNG CỘNG",
+            "Khách hàng": "",
+            "Trạng thái": "",
+            "Thanh toán": "",
+            "Tổng tiền (VND)": float(total_revenue),
+            "Ngày đặt": ""
+        })
+
+    df = pd.DataFrame(orders_data)
+    excel_buffer = io.BytesIO()
+    with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Báo cáo')
+    
+    attachments = [{
+        "content": excel_buffer.getvalue(),
+        "maintype": "application",
+        "subtype": "vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "filename": f"Bao_cao_doanh_thu_{period}.xlsx"
+    }]
+
     try:
         await send_revenue_report_email(
             to_email=to_email,
@@ -216,6 +263,7 @@ async def send_revenue_email(
             total_revenue=total_revenue,
             order_count=order_count,
             top_products=top_products,
+            attachments=attachments,
         )
         return {"message": f"Đã gửi báo cáo doanh thu tới {to_email}"}
     except Exception as e:
