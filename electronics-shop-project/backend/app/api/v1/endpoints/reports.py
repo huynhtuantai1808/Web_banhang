@@ -60,7 +60,7 @@ async def get_revenue_report(
     revenue_result = await db.execute(
         select(func.coalesce(func.sum(Order.final_amount), 0)).where(
             and_(
-                Order.payment_status == "paid",
+                Order.status.in_(["confirmed", "completed", "shipping"]),
                 Order.created_at >= start,
                 Order.created_at < end,
             )
@@ -107,7 +107,7 @@ async def get_revenue_report(
         .join(Customer, Order.customer_id == Customer.id)
         .where(
             and_(
-                Order.payment_status == "paid",
+                Order.status.in_(["confirmed", "completed", "shipping"]),
                 Order.created_at >= start,
                 Order.created_at < end,
             )
@@ -129,7 +129,7 @@ async def get_revenue_report(
         )
         .where(
             and_(
-                Order.payment_status == "paid",
+                Order.status.in_(["confirmed", "completed", "shipping"]),
                 Order.created_at >= start,
                 Order.created_at < end,
             )
@@ -168,7 +168,7 @@ async def send_revenue_email(
     revenue_result = await db.execute(
         select(func.coalesce(func.sum(Order.final_amount), 0)).where(
             and_(
-                Order.payment_status == "paid",
+                Order.status.in_(["confirmed", "completed", "shipping"]),
                 Order.created_at >= start,
                 Order.created_at < end,
             )

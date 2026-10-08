@@ -43,7 +43,7 @@ async def get_customer(
 
     stats_result = await db.execute(
         select(func.count(Order.id), func.coalesce(func.sum(Order.final_amount), 0)).where(
-            Order.customer_id == customer_id, Order.payment_status == "paid"
+            Order.customer_id == customer_id, Order.status.in_(["confirmed", "completed", "shipping"])
         )
     )
     total_orders, total_spent = stats_result.one()
