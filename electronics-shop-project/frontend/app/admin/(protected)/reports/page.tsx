@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { BarChart3, Loader2, Send, Calendar, TrendingUp, Package, Users, Mail, DollarSign } from "lucide-react";
+import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { getRevenueReport, sendRevenueEmail, RevenueReport } from "@/lib/services/reports";
 import { ApiError } from "@/lib/apiClient";
 
@@ -169,28 +170,28 @@ const fetchReport = useCallback(async () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Daily Revenue Chart */}
+            {/* Combo Revenue Chart */}
             <div className="lg:col-span-2 rounded-lg border border-circuit-line bg-circuit-panel p-5">
-              <h3 className="font-mono text-xs text-circuit-copperLight uppercase mb-4">Doanh thu theo ngày</h3>
+              <h3 className="font-mono text-xs text-circuit-copperLight uppercase mb-4">Theo dõi Doanh thu</h3>
               {report.daily_revenue.length === 0 ? (
                 <div className="text-center py-10 text-circuit-muted text-sm">Chưa có dữ liệu doanh thu trong kỳ này.</div>
               ) : (
-                <div className="flex items-end gap-1 h-40">
-                  {report.daily_revenue.map((d, i) => {
-                    const heightPct = (d.revenue / maxRevenue) * 100;
-                    return (
-                      <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                        <div
-                          className="w-full rounded-t-sm bg-circuit-copper/70 hover:bg-circuit-copper transition-colors cursor-default min-h-[2px]"
-                          style={{ height: `${Math.max(heightPct, 2)}%` }}
-                          title={`${d.date}: ${formatVND(d.revenue)}`}
-                        />
-                        <span className="text-[9px] text-circuit-muted font-mono">
-                          {d.date.slice(5)}
-                        </span>
-                      </div>
-                    );
-                  })}
+                <div className="h-[300px] w-full mt-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={report.daily_revenue.map(d => ({ ...d, shortDate: d.date.slice(5), target: maxRevenue > 0 ? d.revenue + maxRevenue * 0.2 : 0 }))}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333" />
+                      <XAxis dataKey="shortDate" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888' }} dy={10} />
+                      <YAxis yAxisId="left" tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888' }} dx={-10} />
+                      <Tooltip 
+                        formatter={(value: number, name: string) => [formatVND(value), name === 'revenue' ? 'Thực hiện' : 'Mục tiêu']}
+                        labelFormatter={(label) => `Ngày ${label}`}
+                        contentStyle={{ backgroundColor: '#1a1a1a', borderColor: '#333', borderRadius: '8px' }}
+                      />
+                      <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
+                      <Bar yAxisId="left" dataKey="revenue" name="Thực hiện" fill="#2dd4bf" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                      <Line yAxisId="left" type="monotone" dataKey="target" name="Mục tiêu" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4, fill: '#3b82f6', strokeWidth: 0 }} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
                 </div>
               )}
             </div>
