@@ -1,5 +1,5 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -43,7 +43,7 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
 
 @router.post("/login", response_model=LoginStepOneResponse)
 @limiter.limit("5/minute")
-async def login_step1(request: Request, payload: LoginRequest, db: AsyncSession = Depends(get_db)):
+async def login_step1(request: Request, payload: LoginRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     """Bước 1: xác thực mật khẩu bằng phone HOẶC email, sau đó gửi OTP."""
     if not payload.phone and not payload.email:
         raise HTTPException(status_code=422, detail="Cần cung cấp số điện thoại hoặc email")
@@ -63,8 +63,8 @@ async def login_step1(request: Request, payload: LoginRequest, db: AsyncSession 
         raise HTTPException(status_code=403, detail="Tài khoản đã bị khoá")
 
     otp_token, otp_code = await generate_otp(str(customer.id))
-    # Ưu tiên gửi OTP qua email nếu có, nếu không thì qua SMS
-    await send_otp_via_sms_or_email(customer.phone, otp_code, email=customer.email)
+    # Ưu tiên gửi OTP qua email nếu có, nếu không thì qua SMS (gửi ở background để phản hồi API nhanh hơn)
+    background_tasks.add_task(send_otp_via_sms_or_email, customer.phone, otp_code, email=customer.email)
 
     return LoginStepOneResponse(otp_token=otp_token)
 
